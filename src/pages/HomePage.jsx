@@ -395,7 +395,7 @@ export default function HomePage() {
                   <Icon className={`w-7 h-7 mb-1 ${color === 'gold' ? 'text-gold-400' : color === 'sky' ? 'text-sky-400' : 'text-sage-400'}`} />
                   <span className={`font-mono text-xs font-bold ${color === 'gold' ? 'text-gold-400' : color === 'sky' ? 'text-sky-400' : 'text-sage-400'}`}>{step}</span>
                 </div>
-                <div className="flex-1 pt-3">
+                <div className="flex-1 pt-3 max-w-md">
                   <h3 className="font-display text-2xl font-bold text-white mb-2">{title}</h3>
                   <p className="text-muted leading-relaxed max-w-md">{desc}</p>
                 </div>
