@@ -113,6 +113,7 @@ body {
     rgba(56,182,240,0.3),
     rgba(232,180,41,0.1)
   );
+  pointer-events: none;
 
   -webkit-mask: linear-gradient(#fff 0 0) content-box,
               linear-gradient(#fff 0 0);
@@ -152,4 +153,41 @@ body {
 
 @keyframes shimmer {
   to { background-position: 200% center; }
+}
+/* Global UX Affordances */
+.hover-pull {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hover-pull:hover {
+  transform: translateY(-4px);
+}
+
+.clickable-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.clickable-card:hover {
+  border-color: rgba(232, 180, 41, 0.4);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(232, 180, 41, 0.05);
+}
+
+/* Group hover animations for arrows */
+.group:hover .group-hover-arrow {
+  transform: translateX(4px);
+  opacity: 1;
+}
+
+/* Custom Scrollbar for dark theme */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.1);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(232, 180, 41, 0.2);
 }

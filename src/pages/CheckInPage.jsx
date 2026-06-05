@@ -6,8 +6,13 @@ import { Link } from 'react-router-dom'
 import {
   CheckCircle, Plane, ChevronRight, ArrowRight,
   Download, Smartphone, QrCode, ShieldCheck, AlertTriangle,
-  ChevronLeft, Sparkles, MapPin, Star
+  ChevronLeft, Sparkles, MapPin, Star,
+  Info
 } from 'lucide-react'
+import StepProgress from '../components/common/StepProgress'
+import StickyActionBar from '../components/common/StickyActionBar'
+import PolicyBanner from '../components/common/PolicyBanner'
+import Tooltip from '../components/common/Tooltip'
 
 // ── Seat map data ────────────────────────────────────────────────────────────
 const ROWS = 30
@@ -215,28 +220,19 @@ useEffect(() => {
             <ChevronRight className="w-3.5 h-3.5" />
             <span className="text-white">Web Check-in</span>
           </div>
-          <h1 className="font-display text-4xl font-bold text-white mb-1">Web Check-in</h1>
-          <p className="text-muted">AI 619 · Delhi → Mumbai · 15 March 2025</p>
+          <h1 className="font-display text-4xl font-bold text-white mb-2">Web Check-in</h1>
+          <p className="text-muted text-lg">Select a seat and confirm details to get your boarding pass</p>
+          <div className="flex items-center gap-2 mt-4 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full w-fit">
+            <Plane className="w-3.5 h-3.5 text-gold-400" />
+            <span className="text-xs font-mono text-white/80">AI 619 · Delhi (DEL) → Mumbai (BOM) · 15 March</span>
+          </div>
         </motion.div>
 
         {/* Step indicator */}
-        <div className="flex items-center gap-3 mb-8">
-          {['Verify Identity', 'Choose Seat', 'Boarding Pass'].map((s, i) => (
-            <React.Fragment key={s}>
-              <div className={`flex items-center gap-2 ${i <= step ? 'text-gold-400' : 'text-muted'}`}>
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border ${
-                  i < step ? 'bg-gold-400 border-gold-400 text-void' :
-                  i === step ? 'bg-gold-400/15 border-gold-400' :
-                  'bg-surface border-border'
-                }`}>
-                  {i < step ? <CheckCircle className="w-3.5 h-3.5" /> : i + 1}
-                </div>
-                <span className="text-sm font-medium hidden sm:block">{s}</span>
-              </div>
-              {i < 2 && <div className={`flex-1 h-px ${i < step ? 'bg-gold-400' : 'bg-border'}`} />}
-            </React.Fragment>
-          ))}
-        </div>
+        <StepProgress 
+          steps={['Verify Identity', 'Choose Seat', 'Boarding Pass']} 
+          currentStep={step} 
+        />
 
         <AnimatePresence mode="wait">
 
@@ -329,19 +325,25 @@ useEffect(() => {
                     </div>
                   </div>
 
-                  {/* Legend */}
-                  <div className="flex items-center gap-4 text-xs text-muted mb-4 flex-wrap">
-                    {[
-                      { color: 'bg-surface border border-border', label: 'Standard (Free)' },
-                      { color: 'bg-sky-500/20 border border-sky-500/30', label: 'Extra Legroom (+₹500)' },
-                      { color: 'bg-violet-500/20 border border-violet-500/30', label: 'Premium (+₹800)' },
-                      { color: 'bg-border/30 border border-border', label: 'Occupied' },
-                    ].map(({ color, label }) => (
-                      <div key={label} className="flex items-center gap-1.5">
-                        <div className={`w-4 h-4 rounded ${color}`} />
-                        <span>{label}</span>
-                      </div>
-                    ))}
+                  {/* Legend - Prominent Swatches */}
+                  <div className="mb-6 p-4 bg-white/5 border border-white/5 rounded-2xl">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-3 font-semibold">Seat Categories</p>
+                    <div className="flex items-center gap-6 text-xs text-muted flex-wrap">
+                      {[
+                        { color: 'bg-surface border border-white/10', label: 'Standard', sub: 'Free' },
+                        { color: 'bg-sky-500/20 border border-sky-500/30', label: 'Legroom', sub: '+₹500' },
+                        { color: 'bg-violet-500/20 border border-violet-500/30', label: 'Premium', sub: '+₹800' },
+                        { color: 'bg-border/30 border border-border opacity-50', label: 'Occupied', sub: 'N/A' },
+                      ].map(({ color, label, sub }) => (
+                        <div key={label} className="flex items-center gap-3">
+                          <div className={`w-6 h-6 rounded-lg ${color}`} />
+                          <div>
+                            <div className="text-white font-medium-">{label}</div>
+                            <div className="text-[10px] opacity-60">{sub}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Plane shape wrapper */}
@@ -554,6 +556,22 @@ useEffect(() => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Mobile Sticky Bar */}
+        {step === 1 && selectedSeat && (
+          <StickyActionBar>
+            <div className="flex flex-col">
+              <span className="text-white font-bold text-lg">Seat {selectedSeat}</span>
+              <span className="text-muted text-xs capitalize">{getSeatClass(parseInt(selectedSeat))} · {seatPrice > 0 ? `₹${seatPrice}` : 'Free'}</span>
+            </div>
+            <button
+              onClick={() => setStep(2)}
+              className="px-6 py-3 bg-gold-gradient text-void font-bold rounded-xl shadow-gold flex items-center gap-2 text-sm"
+            >
+              Confirm & Check-in <ArrowRight className="w-4 h-4" />
+            </button>
+          </StickyActionBar>
+        )}
       </div>
     </div>
         )

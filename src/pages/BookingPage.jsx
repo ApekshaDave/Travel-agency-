@@ -4,8 +4,11 @@ import { useLocation, Link } from 'react-router-dom'
 import {
   User, Mail, Phone, CreditCard, Lock, CheckCircle,
   Plane, Clock, ArrowRight, Shield, 
-  Sparkles
+  Sparkles, ShieldCheck
 } from 'lucide-react'
+import StepProgress from '../components/common/StepProgress'
+import StickyActionBar from '../components/common/StickyActionBar'
+import PolicyBanner from '../components/common/PolicyBanner'
 
 const STEPS = ['Traveler Details', 'Add-ons', 'Payment', 'Confirmation']
 
@@ -15,38 +18,6 @@ const mockFlight = {
   to: 'BOM', toCity: 'Mumbai',
   depart: '09:30', arrive: '11:50', duration: '2h 20m', stops: 0,
   price: 5800, class: 'Economy', logo: '🔴',
-}
-
-function StepIndicator({ current }) {
-  return (
-    <div className="flex items-center justify-center mb-10">
-      {STEPS.map((step, i) => (
-        <>
-          <div className="flex flex-col items-center">
-            <motion.div
-              className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-300 ${
-                i < current
-                  ? 'bg-gold-400 border-gold-400 text-void'
-                  : i === current
-                  ? 'bg-gold-400/15 border-gold-400 text-gold-400'
-                  : 'bg-surface border-border text-muted'
-              }`}
-            >
-              {i < current ? <CheckCircle className="w-4 h-4" /> : i + 1}
-            </motion.div>
-            <span className={`text-xs mt-1.5 hidden sm:block ${
-              i === current ? 'text-gold-400 font-medium' : 'text-muted'
-            }`}>{step}</span>
-          </div>
-          {i < STEPS.length - 1 && (
-            <div className={`flex-1 h-px mx-2 max-w-16 transition-all duration-500 ${
-              i < current ? 'bg-gold-400' : 'bg-border'
-            }`} />
-          )}
-        </>
-      ))}
-    </div>
-  )
 }
 
 export default function BookingPage() {
@@ -82,7 +53,7 @@ export default function BookingPage() {
           animate={{ opacity: 1, scale: 1 }}
           className="max-w-lg w-full"
         >
-          <StepIndicator current={3} />
+          <StepProgress steps={STEPS} currentStep={3} />
           <div className="glass gradient-border rounded-3xl p-10 text-center">
             <motion.div
               initial={{ scale: 0 }}
@@ -137,11 +108,11 @@ export default function BookingPage() {
     <div className="min-h-screen pt-24 pb-16 px-4">
       <div className="max-w-4xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-          <h1 className="font-display text-3xl font-bold text-white mb-1">Complete Your Booking</h1>
-          <p className="text-muted text-sm">Secure booking powered by VoyageAI</p>
+          <h1 className="font-display text-3xl font-bold text-white mb-2">Complete Your Booking</h1>
+          <p className="text-muted text-lg">Review details and confirm payment to secure your seat</p>
         </motion.div>
 
-        <StepIndicator current={step} />
+        <StepProgress steps={STEPS} currentStep={step} />
 
         <div className="grid lg:grid-cols-[1fr_320px] gap-6">
           {/* Main form */}
@@ -159,15 +130,17 @@ export default function BookingPage() {
                   <h2 className="font-display text-xl font-bold text-white mb-5">Traveler Details</h2>
                   <div className="grid sm:grid-cols-2 gap-4">
                     {[
-                      { key: 'firstName', label: 'First Name', icon: User, placeholder: 'As on passport' },
-                      { key: 'lastName', label: 'Last Name', icon: User, placeholder: 'As on passport' },
-                      { key: 'email', label: 'Email', icon: Mail, placeholder: 'ticket@email.com', type: 'email' },
-                      { key: 'phone', label: 'Phone', icon: Phone, placeholder: '+91 98765 43210', type: 'tel' },
-                      { key: 'dob', label: 'Date of Birth', icon: null, placeholder: '', type: 'date' },
-                      { key: 'passport', label: 'Passport Number', icon: null, placeholder: 'For international flights' },
-                    ].map(({ key, label, icon: Icon, placeholder, type = 'text' }) => (
+                      { key: 'firstName', label: `First Name`, required: true, icon: User, placeholder: 'As on passport' },
+                      { key: 'lastName', label: `Last Name`, required: true, icon: User, placeholder: 'As on passport' },
+                      { key: 'email', label: `Email`, required: true, icon: Mail, placeholder: 'ticket@email.com', type: 'email' },
+                      { key: 'phone', label: `Phone`, required: true, icon: Phone, placeholder: '+91 98765 43210', type: 'tel' },
+                      { key: 'dob', label: 'Date of Birth', required: true, icon: null, placeholder: '', type: 'date' },
+                      { key: 'passport', label: 'Passport Number', required: false, icon: null, placeholder: 'Optional for domestic' },
+                    ].map(({ key, label, required, icon: Icon, placeholder, type = 'text' }) => (
                       <div key={key}>
-                        <label className="text-xs text-muted mb-1.5 block uppercase tracking-wider">{label}</label>
+                        <label className="text-xs text-muted mb-1.5 block uppercase tracking-wider">
+                          {label} {required && <span className="text-red-400">*</span>}
+                        </label>
                         <div className="relative">
                           {Icon && <Icon className="absolute left-3 top-3 w-4 h-4 text-muted" />}
                           <input
@@ -414,6 +387,25 @@ export default function BookingPage() {
           </motion.div>
         </div>
       </div>
+
+      {/* Sticky Mobile Footer */}
+      {step < 3 && (
+        <StickyActionBar>
+          <div className="flex flex-col">
+            <span className="text-white font-bold text-lg">₹{total.toLocaleString()}</span>
+            <span className="text-muted text-[10px] uppercase tracking-wider italic">Total Amount</span>
+          </div>
+          <button
+            onClick={() => {
+              if (step === 2) handleConfirm()
+              else setStep(step + 1)
+            }}
+            className="px-6 py-3 bg-gold-gradient text-void font-bold rounded-xl shadow-gold flex items-center gap-2 text-sm"
+          >
+            {step === 2 ? 'Pay & Confirm' : 'Continue'} <ArrowRight className="w-4 h-4" />
+          </button>
+        </StickyActionBar>
+      )}
     </div>
   )
 }

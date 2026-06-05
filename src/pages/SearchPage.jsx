@@ -170,10 +170,11 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false)
   const [selectedFlight, setSelectedFlight] = useState(null)
   const [sortBy, setSortBy] = useState('price')
+  const [view, setView] = useState('input') // input, results
 
   const handleSearch = () => {
     setLoading(true)
-    setSearched(false)
+    setView('results')
     setTimeout(() => {
       setLoading(false)
       setSearched(true)
@@ -195,153 +196,100 @@ export default function SearchPage() {
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
       <div className="max-w-5xl mx-auto">
-        {/* Header */}
+        {/* Header - Phased Title */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="font-display text-4xl font-bold text-white mb-2">Search Flights</h1>
-          <p className="text-muted">
-            Or try{' '}
-            <Link to="/chat" className="text-gold-400 hover:text-gold-300 underline underline-offset-2">
-              AI-powered search
-            </Link>{' '}
-            — just describe your trip in plain language.
-          </p>
+          <div className="flex items-center justify-between">
+            <h1 className="font-display text-4xl font-bold text-white mb-2">
+              {view === 'input' ? 'Plan Your Flight' : 'Select Departure'}
+            </h1>
+            {view === 'results' && (
+              <button 
+                onClick={() => setView('input')} 
+                className="text-gold-400 text-sm font-medium hover:underline"
+              >
+                Change Search
+              </button>
+            )}
+          </div>
+          {view === 'input' && (
+             <p className="text-muted">Enter your details or try <Link to="/chat" className="text-gold-400 underline">AI Planning</Link></p>
+          )}
         </motion.div>
 
-        {/* Search form */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="glass gradient-border rounded-3xl p-6 mb-8"
-        >
-          {/* Trip type */}
-          <div className="flex gap-1 mb-6">
-            {['oneWay', 'roundTrip', 'multiCity'].map(type => (
-              <button
-                key={type}
-                onClick={() => setTripType(type)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                  tripType === type
-                    ? 'bg-gold-400/15 text-gold-400 border border-gold-400/25'
-                    : 'text-muted hover:text-white'
-                }`}
-              >
-                {type === 'oneWay' ? 'One Way' : type === 'roundTrip' ? 'Round Trip' : 'Multi-City'}
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_1fr_1fr_auto] gap-3 items-end">
-            {/* From */}
-            <div>
-              <label className="text-xs text-muted mb-1.5 block font-medium uppercase tracking-wider">From</label>
-              <div className="relative">
-                <Plane className="absolute left-3 top-3 w-4 h-4 text-muted rotate-45" />
-                <input
-                  value={from}
-                  onChange={e => setFrom(e.target.value)}
-                  className="ai-input w-full pl-9 pr-3 py-3 rounded-xl text-white text-sm"
-                  placeholder="City or Airport"
-                />
-              </div>
-            </div>
-
-            {/* Swap */}
-            <button
-              onClick={swapCities}
-              className="p-3 glass border border-border hover:border-gold-400/30 rounded-xl text-muted hover:text-gold-400 transition-all self-end"
+        {/* Phased Search Form */}
+        <AnimatePresence mode="wait">
+          {view === 'input' ? (
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="glass gradient-border rounded-3xl p-6 mb-8 overflow-hidden"
             >
-              <ArrowLeftRight className="w-4 h-4" />
-            </button>
-
-            {/* To */}
-            <div>
-              <label className="text-xs text-muted mb-1.5 block font-medium uppercase tracking-wider">To</label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 w-4 h-4 text-muted" />
-                <input
-                  value={to}
-                  onChange={e => setTo(e.target.value)}
-                  className="ai-input w-full pl-9 pr-3 py-3 rounded-xl text-white text-sm"
-                  placeholder="City or Airport"
-                />
+               {/* Search form content... (keeping existing inputs) */}
+               <div className="flex gap-1 mb-6">
+                {['oneWay', 'roundTrip', 'multiCity'].map(type => (
+                  <button key={type} onClick={() => setTripType(type)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${tripType === type ? 'bg-gold-400/15 text-gold-400 border border-gold-400/25' : 'text-muted hover:text-white'}`}>{type === 'oneWay' ? 'One Way' : 'Round Trip'}</button>
+                ))}
               </div>
-            </div>
 
-            {/* Date */}
-            <div>
-              <label className="text-xs text-muted mb-1.5 block font-medium uppercase tracking-wider">Depart</label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-3 w-4 h-4 text-muted" />
-                <input
-                  type="date"
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                  className="ai-input w-full pl-9 pr-3 py-3 rounded-xl text-white text-sm"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_1fr_1fr_auto] gap-3 items-end">
+                <div>
+                  <label className="text-xs text-muted mb-1.5 block font-medium uppercase tracking-wider">From</label>
+                  <input value={from} onChange={e => setFrom(e.target.value)} className="ai-input w-full px-4 py-3 rounded-xl text-white text-sm" />
+                </div>
+                <button onClick={swapCities} className="p-3 glass border border-border rounded-xl text-muted self-end"><ArrowLeftRight className="w-4 h-4" /></button>
+                <div>
+                  <label className="text-xs text-muted mb-1.5 block font-medium uppercase tracking-wider">To</label>
+                  <input value={to} onChange={e => setTo(e.target.value)} className="ai-input w-full px-4 py-3 rounded-xl text-white text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted mb-1.5 block font-medium uppercase tracking-wider">Date</label>
+                  <input type="date" value={date} onChange={e => setDate(e.target.value)} className="ai-input w-full px-4 py-3 rounded-xl text-white text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted mb-1.5 block font-medium uppercase tracking-wider">Travelers</label>
+                   <select value={travelers} onChange={e => setTravelers(e.target.value)} className="ai-input w-full px-4 py-3 rounded-xl text-white text-sm appearance-none">
+                      {[1,2,3,4].map(n => <option key={n} value={n}>{n} traveler</option>)}
+                   </select>
+                </div>
+                <button onClick={handleSearch} className="px-8 py-3 bg-gold-gradient text-void font-bold rounded-xl shadow-gold hover:scale-105 transition-all self-end flex items-center gap-2">
+                  <Search className="w-4 h-4" /> Find Flights
+                </button>
               </div>
-            </div>
-
-            {/* Travelers */}
-            <div>
-              <label className="text-xs text-muted mb-1.5 block font-medium uppercase tracking-wider">Travelers</label>
-              <div className="relative">
-                <Users className="absolute left-3 top-3 w-4 h-4 text-muted" />
-                <select
-                  value={travelers}
-                  onChange={e => setTravelers(e.target.value)}
-                  className="ai-input w-full pl-9 pr-3 py-3 rounded-xl text-white text-sm appearance-none"
-                >
-                  {[1,2,3,4,5,6].map(n => (
-                    <option key={n} value={n} className="bg-deep">{n} {n === 1 ? 'Traveler' : 'Travelers'}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Search button */}
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={handleSearch}
-              disabled={loading}
-              className="px-6 py-3 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold rounded-xl shadow-gold-sm hover:shadow-gold transition-all flex items-center gap-2 self-end"
+            </motion.div>
+          ) : (
+            <motion.div
+              key="summary"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="glass border border-border/40 rounded-2xl p-4 mb-8 flex items-center justify-between"
             >
-              {loading ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                >
-                  <Search className="w-4 h-4" />
-                </motion.div>
-              ) : (
-                <Search className="w-4 h-4" />
-              )}
-              Search
-            </motion.button>
-          </div>
-
-          {/* Class selector */}
-          <div className="mt-4 flex gap-2">
-            {['Economy', 'Premium Economy', 'Business', 'First Class'].map(cls => (
-              <button
-                key={cls}
-                onClick={() => setCabinClass(cls)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  cabinClass === cls
-                    ? 'bg-gold-400/15 text-gold-400 border border-gold-400/25'
-                    : 'text-muted hover:text-white border border-transparent'
-                }`}
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-3">
+                  <div className="text-lg font-bold text-white">{from.split('(')[1]?.replace(')','')}</div>
+                  <ArrowRight className="w-4 h-4 text-muted" />
+                  <div className="text-lg font-bold text-white">{to.split('(')[1]?.replace(')','')}</div>
+                </div>
+                <div className="h-8 w-px bg-border mx-2" />
+                <div className="space-y-px">
+                  <div className="text-xs font-bold text-white">{new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                  <div className="text-[10px] text-muted uppercase tracking-widest">{travelers} Traveler · {cabinClass}</div>
+                </div>
+              </div>
+              <button 
+                onClick={() => setView('input')} 
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-medium border border-border/30 transition-all"
               >
-                {cls}
+                Modify
               </button>
-            ))}
-          </div>
-        </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Loading */}
         <AnimatePresence>

@@ -298,16 +298,18 @@ export default function ChatPage() {
           </motion.div>
         )}
 
-        {/* Input area */}
         <div className="py-4 border-t border-border/40">
-          <div className="glass gradient-border rounded-2xl p-3 flex items-end gap-3">
+          <div 
+            className="glass gradient-border rounded-2xl p-3 flex items-end gap-3 cursor-text"
+            onClick={() => inputRef.current?.focus()}
+          >
             <textarea
               ref={inputRef}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Ask me anything — flights, destinations, visas, itineraries..."
-              className="flex-1 bg-transparent text-white text-sm placeholder-muted resize-none outline-none min-h-[44px] max-h-32 leading-relaxed py-1"
+              className="flex-1 bg-transparent text-white text-sm placeholder-muted resize-none outline-none min-h-[44px] max-h-32 leading-relaxed py-1 relative z-10"
               rows={1}
             />
             <div className="flex items-center gap-2">

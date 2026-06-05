@@ -32,6 +32,7 @@ const CASES = [
       { role: 'user', msg: 'Yes please try that one', time: '10:32 AM' },
       { role: 'ai', msg: 'That card also declined. This may require manual agent assistance. Transferring you now.', time: '10:32 AM' },
     ],
+    sla: '08:15',
   },
   {
     id: 'ESC-002',
@@ -53,6 +54,7 @@ const CASES = [
       { role: 'ai', msg: 'Found a great option via Heathrow. Before I confirm — Indian passport holders need a UK Direct Airside Transit Visa for LHR. This costs ~£35 and takes 5-10 days. Shall I find a direct alternative instead?', time: '09:15 AM' },
       { role: 'user', msg: 'I need this date, can a travel agent help me?', time: '09:17 AM' },
     ],
+    sla: '12:34',
   },
   {
     id: 'ESC-003',
@@ -115,6 +117,7 @@ const CASES = [
       { role: 'user', msg: 'I paid but never got my ticket!', time: '03:30 PM' },
       { role: 'ai', msg: 'I can see your payment of ₹22,400 was received (Ref: PAY-2024031205). The ticket generation had a technical error. Escalating to our team immediately — you will receive your ticket within 2 hours.', time: '03:30 PM' },
     ],
+    sla: '04:12',
   },
 ]
 
@@ -143,6 +146,72 @@ const TYPE_ICONS = {
   corporate_policy: '🏢',
   refund: '↩️',
   technical: '⚙️',
+}
+
+// ── Case Card Component ──────────────────────────────────────────────────────
+function CaseCard({ c, i, selectedCase, setSelectedCase, handleResolve }) {
+  const priority = PRIORITY_STYLES[c.priority]
+  const priorityBorder = {
+    high: 'border-l-red-400',
+    medium: 'border-l-amber-400',
+    low: 'border-l-sage-400',
+  }[c.priority]
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: i * 0.05 }}
+      onClick={() => setSelectedCase(selectedCase?.id === c.id ? null : c)}
+      className={`glass border-l-4 rounded-2xl p-4 cursor-pointer transition-all duration-200 group flex items-start gap-4 ${
+        selectedCase?.id === c.id
+          ? 'border-gold-400/30 bg-gold-400/5'
+          : `border-border border-l-border/50 hover:border-gold-400/30 ${priorityBorder}`
+      }`}
+    >
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap mb-1.5">
+          <span className="text-lg">{TYPE_ICONS[c.type]}</span>
+          <span className="font-semibold text-white text-sm group-hover:text-gold-300 transition-colors">{c.typeLabel}</span>
+          <span className={`px-2 py-0.5 text-xs rounded-full border font-medium ${priority.badge}`}>
+            {priority.label}
+          </span>
+          {c.sla && c.status !== 'resolved' && (
+            <span className="flex items-center gap-1 text-[10px] font-mono text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded-lg border border-red-400/20">
+              <Clock className="w-2.5 h-2.5" /> SLA: {c.sla}
+            </span>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-x-3 gap-y-1 text-[11px] text-muted flex-wrap">
+          <span className="flex items-center gap-1 font-medium text-white/70"><User className="w-3 h-3" />{c.customer}</span>
+          <span className="flex items-center gap-1"><Plane className="w-3 h-3" />{c.route}</span>
+          <span>{c.amount}</span>
+          <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{c.created}</span>
+        </div>
+
+        <p className="mt-3 text-muted/80 text-xs leading-relaxed line-clamp-2 md:line-clamp-none bg-white/5 p-2 rounded-lg border border-white/5 italic">
+          "{c.aiSummary}"
+        </p>
+      </div>
+
+      <div className="flex flex-col items-end gap-3 self-center">
+        {c.status !== 'resolved' && (
+          <motion.button
+            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+            onClick={(e) => { e.stopPropagation(); handleResolve(c.id) }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-sage-400 text-void text-[10px] rounded-lg font-bold shadow-lg"
+          >
+            <CheckCircle className="w-3 h-3" /> Resolve
+          </motion.button>
+        )}
+        <div className="flex items-center gap-2 text-muted group-hover:text-gold-400 transition-colors">
+          <span className="text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity">View Details</span>
+          <ArrowRight className="w-4 h-4" />
+        </div>
+      </div>
+    </motion.div>
+  )
 }
 
 // ── Case Detail Panel ────────────────────────────────────────────────────────
@@ -265,17 +334,30 @@ function CaseDetail({ caseData, onClose, onResolve }) {
 
       {/* Actions footer */}
       {caseData.status !== 'resolved' && (
-        <div className="p-4 border-t border-border/60 flex gap-2">
-          <button className="flex-1 py-2.5 glass border border-border rounded-xl text-sm text-muted hover:text-white transition-all">
-            Escalate Further
-          </button>
+        <div className="p-4 border-t border-border/60 space-y-2">
           <motion.button
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-            onClick={() => { onResolve(caseData.id); toast.success('Case marked as resolved') }}
-            className="flex-1 py-2.5 bg-gradient-to-r from-sage-500 to-sage-400 text-void font-bold rounded-xl text-sm flex items-center justify-center gap-2"
+            onClick={() => { onResolve(caseData.id); toast.success('Action performed: ' + caseData.aiAction) }}
+            className="w-full py-3 bg-gold-gradient text-void font-bold rounded-xl text-sm flex flex-col items-center justify-center leading-tight shadow-gold"
           >
-            <CheckCircle className="w-4 h-4" /> Mark Resolved
+            <span>{caseData.aiAction}</span>
+            <span className="text-[10px] opacity-70 font-medium mt-0.5">AI Recommended Action</span>
           </motion.button>
+          
+          <div className="flex gap-2">
+            <button className="flex-1 py-2 glass border border-border rounded-lg text-xs text-muted hover:text-white transition-all flex items-center justify-center gap-1.5">
+              <Phone className="w-3.5 h-3.5" /> Call
+            </button>
+            <button className="flex-1 py-2 glass border border-border rounded-lg text-xs text-muted hover:text-white transition-all flex items-center justify-center gap-1.5">
+              <Mail className="w-3.5 h-3.5" /> Email
+            </button>
+            <button 
+              onClick={() => { onResolve(caseData.id); toast.success('Case resolved manually') }}
+              className="flex-1 py-2 glass border border-border rounded-lg text-xs text-sage-400 hover:bg-sage-400/10 transition-all flex items-center justify-center gap-1.5"
+            >
+              <CheckCircle className="w-3.5 h-3.5" /> Resolve
+            </button>
+          </div>
         </div>
       )}
     </motion.div>
@@ -288,6 +370,7 @@ export default function AgentDashboard() {
   const [selectedCase, setSelectedCase] = useState(null)
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [view, setView] = useState('summary') // summary, queue, work
 
   const [aiTip, setAiTip] = useState('')
 
@@ -321,169 +404,141 @@ useEffect(() => {
   </div>
 )}
 
-        {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="py-6 flex items-start justify-between flex-wrap gap-4">
+        {/* Header - Phased Navigation */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="py-6 flex items-end justify-between border-b border-border/40 mb-8">
           <div>
-            <div className="flex items-center gap-3 mb-1">
-              <div className="w-9 h-9 rounded-xl bg-red-500/15 border border-red-500/20 flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-red-400" />
-              </div>
-              <h1 className="font-display text-3xl font-bold text-white">Agent Dashboard</h1>
-              <span className="px-2 py-0.5 bg-red-500/15 text-red-400 border border-red-500/20 text-xs rounded-full font-medium animate-pulse">
-                {cases.filter(c => c.status === 'open').length} Live
-              </span>
+            <h1 className="font-display text-4xl font-bold text-white mb-2">Agent Control</h1>
+            <div className="flex items-center gap-1">
+              {['summary', 'queue'].map(v => (
+                <button
+                  key={v}
+                  onClick={() => { setView(v); setSelectedCase(null) }}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium capitalize transition-all ${
+                    view === v ? 'text-gold-400 bg-gold-400/5' : 'text-muted hover:text-white'
+                  }`}
+                >
+                  {v}
+                </button>
+              ))}
+              {selectedCase && (
+                <div className="flex items-center gap-2 text-gold-400">
+                  <ChevronRight className="w-4 h-4 text-muted" />
+                  <span className="px-3 py-1 bg-gold-400/10 rounded-lg text-xs font-bold">Active: {selectedCase.id}</span>
+                </div>
+              )}
             </div>
-            <p className="text-muted text-sm">Exception cases escalated from AI — requires human action</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 px-3 py-2 glass border border-border rounded-xl text-sm text-muted hover:text-white transition-all">
-              <Bell className="w-4 h-4" /> Notifications
-            </button>
-            <button className="flex items-center gap-2 px-3 py-2 glass border border-border rounded-xl text-sm text-muted hover:text-white transition-all">
-              <BarChart3 className="w-4 h-4" /> Reports
-            </button>
+            <span className="px-3 py-1.5 bg-red-500/10 text-red-400 text-xs rounded-full font-bold animate-pulse flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
+              {cases.filter(c => c.status === 'open').length} High Priority
+            </span>
           </div>
         </motion.div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          {STATS.map(({ label, value, icon: Icon, color, bg }, i) => (
-            <motion.div
-              key={label}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.07 }}
-              className={`glass border rounded-2xl p-4 ${bg}`}
-            >
-              <Icon className={`w-5 h-5 ${color} mb-2`} />
-              <div className="font-bold text-2xl text-white">{value}</div>
-              <div className="text-muted text-xs mt-0.5">{label}</div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Main layout */}
-        <div className={`grid gap-5 ${selectedCase ? 'lg:grid-cols-[1fr_380px]' : 'grid-cols-1'}`}>
-
-          {/* Cases list */}
-          <div>
-            {/* Filters & search */}
-            <div className="flex items-center gap-3 mb-4 flex-wrap">
-              <div className="relative flex-1 min-w-48">
-                <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted" />
-                <input
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Search by customer, route, ID..."
-                  className="ai-input w-full pl-9 pr-4 py-2.5 rounded-xl text-white text-sm"
-                />
-              </div>
-              <div className="flex gap-1">
-                {['all', 'open', 'pending', 'resolved'].map(f => (
-                  <button
-                    key={f}
-                    onClick={() => setFilter(f)}
-                    className={`px-3 py-2 rounded-xl text-xs font-medium capitalize transition-all ${
-                      filter === f
-                        ? 'bg-gold-400/15 text-gold-400 border border-gold-400/20'
-                        : 'text-muted hover:text-white border border-transparent'
-                    }`}
-                  >
-                    {f}
-                  </button>
+        {/* Dynamic Views */}
+        <div className="min-h-[600px]">
+          {view === 'summary' && !selectedCase && (
+            <div className="space-y-12">
+               {/* Stats (Compact) */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {STATS.map(({ label, value, icon: Icon, color, bg }, i) => (
+                  <div key={label} className={`glass border rounded-2xl p-4 ${bg}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <Icon className={`w-4 h-4 ${color}`} />
+                      <span className="text-[10px] uppercase font-bold text-white/40 tracking-widest">{label}</span>
+                    </div>
+                    <div className="font-bold text-2xl text-white">{value}</div>
+                  </div>
                 ))}
               </div>
-            </div>
 
-            {/* Cases */}
-            <div className="space-y-3">
-              {filtered.length === 0 && (
-                <div className="text-center py-12">
-                  <CheckCircle className="w-10 h-10 text-sage-400/40 mx-auto mb-3" />
-                  <p className="text-muted">No cases match your filter.</p>
+              {/* Urgent Phased Triage */}
+              <div>
+                <h2 className="text-white font-bold text-xl mb-6 flex items-center gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                  Needs Your Immediate Focus
+                </h2>
+                <div className="grid md:grid-cols-2 gap-4">
+                    {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').slice(0, 4).map((c, i) => (
+                      <CaseCard 
+                        key={c.id} c={c} i={i} 
+                        handleResolve={handleResolve}
+                        setSelectedCase={(caseItem) => { setSelectedCase(caseItem); setView('work') }}
+                      />
+                    ))}
                 </div>
-              )}
-              {filtered.map((c, i) => {
-                const priority = PRIORITY_STYLES[c.priority]
-                return (
-                  <motion.div
-                    key={c.id}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    onClick={() => setSelectedCase(selectedCase?.id === c.id ? null : c)}
-                    className={`glass border rounded-2xl p-4 cursor-pointer transition-all duration-200 group ${
-                      selectedCase?.id === c.id
-                        ? 'border-gold-400/30 bg-gold-400/5'
-                        : 'border-border hover:border-border/80'
-                    }`}
-                  >
-                    <div className="flex items-start gap-4 flex-wrap">
-                      {/* Priority dot + type */}
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                          <span className={`w-2 h-2 rounded-full ${priority.dot} ${c.status === 'open' ? 'animate-pulse' : ''}`} />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                            <span className="text-lg">{TYPE_ICONS[c.type]}</span>
-                            <span className="font-semibold text-white text-sm group-hover:text-gold-300 transition-colors">{c.typeLabel}</span>
-                            <span className={`px-2 py-0.5 text-xs rounded-full border font-medium ${priority.badge}`}>
-                              {priority.label}
-                            </span>
-                            <span className={`px-2 py-0.5 text-xs rounded-full border font-medium capitalize ${STATUS_STYLES[c.status]}`}>
-                              {c.status}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-muted flex-wrap">
-                            <span className="flex items-center gap-1"><User className="w-3 h-3" />{c.customer}</span>
-                            <span>·</span>
-                            <span className="flex items-center gap-1"><Plane className="w-3 h-3" />{c.route}</span>
-                            <span>·</span>
-                            <span>{c.amount}</span>
-                            <span>·</span>
-                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{c.created}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* AI summary preview */}
-                      <div className="flex-1 min-w-48 hidden md:block">
-                        <p className="text-muted text-xs leading-relaxed line-clamp-2">{c.aiSummary}</p>
-                      </div>
-
-                      {/* Action */}
-                      <div className="flex items-center gap-2 ml-auto flex-shrink-0">
-                        {c.status !== 'resolved' && (
-                          <motion.button
-                            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                            onClick={(e) => { e.stopPropagation(); handleResolve(c.id) }}
-                            className="flex items-center gap-1 px-2.5 py-1.5 bg-sage-400/15 border border-sage-400/20 text-sage-400 text-xs rounded-lg font-medium"
-                          >
-                            <CheckCircle className="w-3 h-3" /> Resolve
-                          </motion.button>
-                        )}
-                        <Eye className="w-4 h-4 text-muted group-hover:text-gold-400 transition-colors" />
-                      </div>
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Case detail panel */}
-          <AnimatePresence>
-            {selectedCase && (
-              <div className="h-fit sticky top-24 max-h-[calc(100vh-120px)] overflow-hidden flex flex-col">
-                <CaseDetail
-                  caseData={selectedCase}
-                  onClose={() => setSelectedCase(null)}
-                  onResolve={handleResolve}
-                />
+                {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').length > 4 && (
+                  <button onClick={() => setView('queue')} className="mt-6 w-full py-4 glass border border-border rounded-2xl text-muted hover:text-white transition-all text-sm font-medium">
+                    View all {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').length} high-priority cases
+                  </button>
+                )}
               </div>
-            )}
-          </AnimatePresence>
+            </div>
+          )}
+
+          {(view === 'queue' || view === 'work') && (
+            <div className={`grid gap-6 ${selectedCase ? 'lg:grid-cols-[320px_1fr]' : 'grid-cols-1'}`}>
+              
+              {/* Sidebar List (only when in work mode) */}
+              <div className={`${selectedCase ? 'block' : 'hidden'} space-y-3 max-h-[calc(100vh-180px)] overflow-y-auto pr-2 custom-scrollbar`}>
+                 <div className="text-[10px] font-bold text-muted uppercase tracking-widest px-2 mb-2">Remaining Tasks</div>
+                 {cases.filter(c => c.status !== 'resolved').map((c, i) => (
+                    <div 
+                      key={c.id}
+                      onClick={() => setSelectedCase(c)}
+                      className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                        selectedCase?.id === c.id 
+                          ? 'bg-gold-400/10 border-gold-400/30' 
+                          : 'border-border hover:border-white/10 text-muted'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-mono">{c.id}</span>
+                        <div className={`w-1.5 h-1.5 rounded-full ${PRIORITY_STYLES[c.priority].dot}`} />
+                      </div>
+                      <div className="text-xs font-bold text-white truncate">{c.customer}</div>
+                      <div className="text-[10px] opacity-60 truncate">{c.typeLabel}</div>
+                    </div>
+                 ))}
+              </div>
+
+              {/* Main Workspace */}
+              <div className="min-w-0">
+                {selectedCase ? (
+                  <CaseDetail
+                    caseData={selectedCase}
+                    onClose={() => { setSelectedCase(null); setView('summary') }}
+                    onResolve={handleResolve}
+                  />
+                ) : (
+                  <div className="space-y-4">
+                     <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-white font-bold text-xl uppercase tracking-tighter">Full Queue</h2>
+                        <div className="flex items-center gap-2">
+                           <input 
+                              placeholder="Search tickets..." 
+                              className="bg-surface border border-border text-xs px-4 py-2 rounded-xl outline-none focus:border-gold-400/30 transition-all w-64"
+                              value={search}
+                              onChange={e => setSearch(e.target.value)}
+                           />
+                        </div>
+                     </div>
+                     <div className="space-y-3">
+                        {filtered.map((c, i) => (
+                           <CaseCard 
+                              key={c.id} c={c} i={i} 
+                              handleResolve={handleResolve}
+                              selectedCase={selectedCase}
+                              setSelectedCase={(caseItem) => { setSelectedCase(caseItem); setView('work') }}
+                           />
+                        ))}
+                     </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

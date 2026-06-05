@@ -11,6 +11,7 @@ import ChatPage from './pages/ChatPage'
 import DashboardPage from './pages/DashboardPage'
 import CorporatePage from './pages/CorporatePage'
 import ItineraryPage from './pages/ItineraryPage'
+import LoginPage from './pages/LoginPage'
 
 // Phase 2
 import PostBookingHub from './pages/PostBookingHub'
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/corporate" element={<CorporatePage />} />
             <Route path="/itinerary" element={<ItineraryPage />} />
+            <Route path="/login" element={<LoginPage />} />
 
             {/* Phase 2 */}
             <Route path="/post-booking" element={<PostBookingHub />} />

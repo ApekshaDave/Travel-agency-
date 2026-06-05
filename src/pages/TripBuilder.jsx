@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
@@ -108,6 +108,7 @@ function TripSegment({ segment, onRemove, index }) {
 // ── Main TripBuilder ──────────────────────────────────────────────────────────
 export default function TripBuilder() {
   const [prompt, setPrompt] = useState('')
+  const inputRef = useRef(null)
   const [generating, setGenerating] = useState(false)
   const [activeTrip, setActiveTrip] = useState(null)
   const [error, setError] = useState(null)
@@ -169,13 +170,17 @@ export default function TripBuilder() {
           <label className="text-xs text-muted uppercase tracking-wider mb-3 block flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-gold-400" /> Describe Your Trip (Groq AI)
           </label>
-          <div className="flex gap-3">
+          <div 
+            className="flex gap-3 cursor-text"
+            onClick={() => inputRef.current?.focus()}
+          >
             <textarea
+              ref={inputRef}
               value={prompt}
               onChange={e => setPrompt(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleGenerate())}
               placeholder='e.g. "Plan a 6-day trip from Delhi covering Agra and Jaipur, budget ₹50,000, mid-March"'
-              className="flex-1 bg-transparent text-white text-sm placeholder-muted resize-none outline-none min-h-[60px] leading-relaxed"
+              className="flex-1 bg-transparent text-white text-sm placeholder-muted resize-none outline-none min-h-[60px] leading-relaxed relative z-10"
               rows={2}
             />
             <motion.button

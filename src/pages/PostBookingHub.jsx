@@ -127,6 +127,23 @@ export default function PostBookingHub() {
           <p className="text-muted">Everything you need before, during, and after your flight.</p>
         </motion.div>
 
+        {/* AI Prompt Bar */}
+        <motion.div
+           initial={{ opacity: 0, y: 10 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ delay: 0.1 }}
+           className="mb-8 flex items-center gap-3 p-4 glass border border-gold-400/20 rounded-2xl group focus-within:border-gold-400/50 transition-all hover:bg-gold-400/5"
+        >
+          <Sparkles className="w-5 h-5 text-gold-400 flex-shrink-0" />
+          <input
+            placeholder="Not sure? Ask — 'Can I change my seat?' or 'How do I get a refund?'"
+            className="flex-1 bg-transparent text-white text-sm placeholder-muted outline-none"
+            onKeyDown={e => e.key === 'Enter' && navigate(`/chat?prompt=${e.target.value}`)}
+          />
+          <kbd className="hidden sm:block px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px] text-muted-foreground font-mono">ENTER</kbd>
+          <ArrowRight className="w-4 h-4 text-muted group-focus-within:text-gold-400 group-focus-within:translate-x-1 transition-all" />
+        </motion.div>
+
         {/* Flight Summary Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -234,35 +251,72 @@ export default function PostBookingHub() {
           {/* Services grid */}
           <div>
             <h2 className="font-display text-2xl font-bold text-white mb-4">What do you need?</h2>
-            <div className="grid sm:grid-cols-2 gap-4 mb-8">
-              {SERVICES.map(({ id, icon: Icon, title, desc, badge, badgeColor, color, glow, link }, i) => (
-                <motion.div
-                  key={id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.06 }}
-                  whileHover={{ y: -3 }}
+            <div className="grid grid-cols-1 gap-4 mb-8">
+              {/* Featured Check-in when open */}
+              {ACTIVE_BOOKING.checkinOpen && (
+                <Link
+                  to="/post-booking/checkin"
+                  className="glass border border-sage-400/40 bg-sage-400/5 ring-1 ring-sage-400/20 rounded-2xl p-6 group transition-all duration-300 relative overflow-hidden"
                 >
-                  <Link
-                    to={link}
-                    className={`block glass border border-border ${glow} rounded-2xl p-5 group transition-all duration-200`}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className={`w-10 h-10 rounded-xl bg-surface flex items-center justify-center ${color}`}>
-                        <Icon className="w-5 h-5" />
+                  <div className="absolute -right-8 -top-8 w-24 h-24 bg-sage-400/10 rounded-full blur-2xl group-hover:scale-150 transition-transform" />
+                  <div className="flex items-start justify-between">
+                    <div className="flex gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-sage-400 text-void flex items-center justify-center shadow-lg shadow-sage-400/20">
+                        <CheckCircle className="w-6 h-6" />
                       </div>
-                      <span className={`px-2 py-0.5 text-xs rounded-full border font-medium ${badgeColor}`}>
-                        {badge}
-                      </span>
+                      <div>
+                        <h3 className="font-bold text-white text-xl group-hover:text-gold-300 transition-colors">Web Check-in is Open</h3>
+                        <p className="text-muted text-sm mt-0.5">Select your seat and get your mobile boarding pass</p>
+                        <p className="text-sage-400 text-xs font-mono mt-2 flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-sage-400 animate-pulse" />
+                          Closes at {ACTIVE_BOOKING.checkinCloses} — {ACTIVE_BOOKING.checkinCloses === '07:30' ? '6 hours from now' : 'Limited time left'}
+                        </p>
+                      </div>
                     </div>
-                    <h3 className="font-semibold text-white mb-1 group-hover:text-gold-300 transition-colors">{title}</h3>
-                    <p className="text-muted text-xs leading-relaxed">{desc}</p>
-                    <div className="flex items-center gap-1 mt-3 text-xs text-muted group-hover:text-white transition-colors">
-                      Get started <ChevronRight className="w-3 h-3" />
+                    <div className="flex flex-col items-end gap-2">
+                      <span className="px-3 py-1 bg-sage-400/20 text-sage-400 border border-sage-400/20 text-xs rounded-full font-bold">Priority Action</span>
+                      <ArrowRight className="w-5 h-5 text-sage-400 group-hover:translate-x-1 transition-all" />
                     </div>
-                  </Link>
-                </motion.div>
-              ))}
+                  </div>
+                </Link>
+              )}
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                {SERVICES.filter(s => s.id !== 'checkin' || !ACTIVE_BOOKING.checkinOpen).map(({ id, icon: Icon, title, desc, badge, badgeColor, color, glow, link }, i) => (
+                  <motion.div
+                    key={id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.06 }}
+                  >
+                    <Link
+                      to={link}
+                      className={`block glass border border-border ${glow} rounded-2xl p-5 group transition-all duration-200 h-full`}
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className={`w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center ${color}`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <span className={`px-2 py-0.5 text-[10px] rounded-full border font-bold uppercase tracking-wider ${badgeColor}`}>
+                          {badge}
+                        </span>
+                      </div>
+                      <h3 className="font-semibold text-white text-sm mb-1 group-hover:text-gold-300 transition-colors">{title}</h3>
+                      <p className="text-muted text-[11px] leading-relaxed line-clamp-2">{desc}</p>
+                      
+                      {/* Context snippets */}
+                      <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] text-muted group-hover:text-white transition-colors">
+                        <span className="font-mono">
+                          {id === 'addons' ? 'Until 2h before departure' : 
+                           id === 'change' ? 'Fare diff. + ₹2,000' :
+                           id === 'cancel' ? 'Refund Estimate: ₹4,800' : 'Available 24/7'}
+                        </span>
+                        <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-all" />
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
             </div>
 
             {/* AI Assistant strip */}
