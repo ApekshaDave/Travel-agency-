@@ -273,7 +273,7 @@ export default function TrainSearch() {
           className="glass gradient-border rounded-3xl p-5 mb-8"
         >
           {/* Quota selector */}
-          <div className="flex gap-2 mb-4">
+          <div className="flex flex-wrap gap-2 mb-4">
             {[
               { id: 'GN', label: 'General' },
               { id: 'TQ', label: 'Tatkal' },
