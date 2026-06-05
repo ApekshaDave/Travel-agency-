@@ -84,10 +84,9 @@ export default function HomePage() {
         </motion.div>
 
         <motion.div
-          style={{ y: heroY }}
+          style={{ y: heroY, opacity: heroOpacity }}
           className="relative z-10 max-w-5xl mx-auto px-6 text-center"
         >
-          <motion.div style={{ opacity: heroOpacity }}>
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -123,7 +122,6 @@ export default function HomePage() {
             Just describe your trip. VoyageAI understands you, finds the best flights,
             books instantly, and manages everything after — all through natural conversation.
           </motion.p>
-          </motion.div>
 
           {/* Chat demo input */}
           <motion.div
