@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
-  Search, Plane, ArrowLeftRight, Calendar, Users,
-  Clock, Zap, Star, ChevronDown, ArrowRight, Sparkles, MapPin, Shield
+  Search, Plane, ArrowLeftRight,
+  Clock, Zap, Star, ChevronDown, ArrowRight, Sparkles, Shield
 } from 'lucide-react'
 
 const MOCK_FLIGHTS = [
@@ -165,7 +165,7 @@ export default function SearchPage() {
   const [to, setTo] = useState('Mumbai (BOM)')
   const [date, setDate] = useState('2025-03-15')
   const [travelers, setTravelers] = useState(1)
-  const [cabinClass, setCabinClass] = useState('Economy')
+  const [cabinClass] = useState('Economy')
   const [searched, setSearched] = useState(false)
   const [loading, setLoading] = useState(false)
   const [selectedFlight, setSelectedFlight] = useState(null)
@@ -233,7 +233,7 @@ export default function SearchPage() {
                {/* Search form content... (keeping existing inputs) */}
                <div className="flex gap-1 mb-6">
                 {['oneWay', 'roundTrip', 'multiCity'].map(type => (
-                  <button key={type} onClick={() => setTripType(type)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${tripType === type ? 'bg-gold-400/15 text-gold-400 border border-gold-400/25' : 'text-muted hover:text-white'}`}>{type === 'oneWay' ? 'One Way' : 'Round Trip'}</button>
+                  <button key={type} onClick={() => setTripType(type)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${tripType === type ? 'bg-gold-400/15 text-gold-400 border border-gold-400/25' : 'text-muted hover:text-white'}`}>{type === 'oneWay'? 'One Way': type === 'roundTrip'? 'Round Trip': 'Multi City'}</button>
                 ))}
               </div>
 

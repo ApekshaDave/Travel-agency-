@@ -2,9 +2,22 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
-  Building2, Users, Shield, CheckCircle, ArrowRight,
-  Sparkles, TrendingDown, Clock, Zap,
-  BarChart3, Globe2, ChevronRight, DollarSign, AlertTriangle, Settings
+  Building2,
+  Users,
+  Shield,
+  CheckCircle,
+  ArrowRight,
+  Sparkles,
+  TrendingDown,
+  Clock,
+  Zap,
+  BarChart3,
+  Globe2,
+  ChevronRight,
+  DollarSign,
+  AlertTriangle,
+  Settings,
+  Lock
 } from 'lucide-react'
 
 const POLICIES = [

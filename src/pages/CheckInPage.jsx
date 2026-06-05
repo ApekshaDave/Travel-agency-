@@ -6,13 +6,10 @@ import { Link } from 'react-router-dom'
 import {
   CheckCircle, Plane, ChevronRight, ArrowRight,
   Download, Smartphone, QrCode, ShieldCheck, AlertTriangle,
-  ChevronLeft, Sparkles, MapPin, Star,
-  Info
+  ChevronLeft, Sparkles, MapPin, Star
 } from 'lucide-react'
 import StepProgress from '../components/common/StepProgress'
 import StickyActionBar from '../components/common/StickyActionBar'
-import PolicyBanner from '../components/common/PolicyBanner'
-import Tooltip from '../components/common/Tooltip'
 
 // ── Seat map data ────────────────────────────────────────────────────────────
 const ROWS = 30
@@ -222,7 +219,7 @@ useEffect(() => {
           </div>
           <h1 className="font-display text-4xl font-bold text-white mb-2">Web Check-in</h1>
           <p className="text-muted text-lg">Select a seat and confirm details to get your boarding pass</p>
-          <div className="flex items-center gap-2 mt-4 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full w-fit">
+          <div className="flex items-center gap-2 mt-4 mb-8 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full w-fit">
             <Plane className="w-3.5 h-3.5 text-gold-400" />
             <span className="text-xs font-mono text-white/80">AI 619 · Delhi (DEL) → Mumbai (BOM) · 15 March</span>
           </div>
