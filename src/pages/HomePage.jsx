@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import {
-  Sparkles, ArrowRight, Plane, Globe2, ShieldCheck, Zap, Bot,
+  Sparkles, ArrowRight, Plane, Globe2, Zap,
   MessageSquare, TrendingUp, MapPin, ChevronRight,
   Clock, Users, Building2, Train, Bus, CheckCircle, Map
 } from 'lucide-react'
@@ -16,50 +16,7 @@ const DESTINATIONS = [
   { city: 'Maldives', country: 'Maldives', temp: '30°C', tag: 'Paradise & Reefs', color: 'from-teal-500/20 to-cyan-600/10', img: 'https://images.unsplash.com/photo-1573843981267-be1999ff37cd?w=400&q=80' },
 ]
 
-const FEATURES = [
-  {
-    icon: Bot,
-    title: 'Conversational Booking',
-    desc: 'Just describe your trip in plain language. Our AI understands intent, budget, and preferences — no forms, no filters.',
-    color: 'text-gold-400',
-    glow: 'shadow-gold-sm',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Smart Risk Warnings',
-    desc: 'Transit visa requirements, travel advisories, and policy violations are flagged before you confirm — not after.',
-    color: 'text-sky-400',
-    glow: 'shadow-sky',
-  },
-  {
-    icon: Building2,
-    title: 'Corporate Self-Booking',
-    desc: 'Company fare caps, traveler profiles, and approval flows are enforced automatically in the background.',
-    color: 'text-sage-400',
-    glow: '',
-  },
-  {
-    icon: Zap,
-    title: 'Post-Booking Automation',
-    desc: 'Web check-in, seat selection, baggage add-ons, and change requests — all through the same AI interface.',
-    color: 'text-gold-400',
-    glow: '',
-  },
-  {
-    icon: MessageSquare,
-    title: 'Multilingual & Voice',
-    desc: 'Speak or type in your language. VoyageAI supports text and voice conversation across multiple languages.',
-    color: 'text-sky-400',
-    glow: '',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Price Intelligence',
-    desc: 'AI monitors fare trends and alerts you to book before prices rise — or waits when they\'re expected to drop.',
-    color: 'text-sage-400',
-    glow: '',
-  },
-]
+
 
 const STATS = [
   { value: '94%', label: 'Bookings automated', icon: Zap },
@@ -68,13 +25,7 @@ const STATS = [
   { value: '50K+', label: 'Happy travelers', icon: Users },
 ]
 
-const QUICK_SELECT = [
-  { label: 'Flights', path: '/search', icon: Plane },
-  { label: 'Hotels', path: '/hotels', icon: Building2 },
-  { label: 'Buses', path: '/buses', icon: Bus },
-  { label: 'Trains', path: '/trains', icon: Train },
-  { label: 'AI Plan', path: '/chat', icon: Sparkles },
-]
+
 
 const CHAT_EXAMPLES = [
   '"Book me Delhi to Singapore next Friday, economy, under ₹20,000"',
@@ -155,7 +106,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="font-display text-6xl md:text-7xl lg:text-8xl font-bold leading-[0.92] mb-6"
+            className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold leading-tight md:leading-[0.92] mb-6 px-2"
           >
             <span className="text-white">Travel the way</span>
             <br />
@@ -231,7 +182,7 @@ export default function HomePage() {
 
         {/* Scroll indicator - Moved to bottom-right to avoid CTA overlap */}
         <motion.div
-          className="absolute bottom-10 right-10 flex flex-col items-center gap-3"
+          className="hidden md:flex absolute bottom-6 right-4 md:bottom-10 md:right-10 flex-col items-center gap-3"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
@@ -275,15 +226,15 @@ export default function HomePage() {
 
       {/* ─── QUICK SELECT ─────────────────────────────────────────── */}
       <section className="py-12 px-6 border-b border-border/40 bg-surface/5">
-        <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-center gap-12">
-          <span className="text-[10px] uppercase font-display font-bold text-white tracking-[0.3em] opacity-40">Quick Select:</span>
+        <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-center gap-4 md:gap-12">
+          <span className="w-full text-center md:w-auto text-[10px] uppercase font-display font-bold text-white tracking-[0.2em] opacity-40 mb-2 md:mb-0">Quick Select</span>
           {[
             { label: 'Hotels', icon: Building2, path: '/hotels', color: 'hover:text-sky-400' },
             { label: 'Buses', icon: Bus, path: '/buses', color: 'hover:text-gold-400' },
             { label: 'Trains', icon: Train, path: '/trains', color: 'hover:text-sage-400' },
             { label: 'Trip Builder', icon: Map, path: '/trip-builder', color: 'hover:text-gold-400' },
           ].map(m => (
-            <Link key={m.label} to={m.path} className={`flex items-center gap-3 group transition-all transform hover:scale-105`}>
+            <Link key={m.label} to={m.path} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/5">
               <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center group-hover:border-gold-400/30 transition-all">
                 <m.icon className="w-5 h-5 text-muted group-hover:text-gold-400 transition-colors" />
               </div>
