@@ -1,30 +1,76 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   Mail, Lock, ArrowRight, Globe,
   Sparkles, ShieldCheck, Plane, CheckCircle2
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { FaGithub } from "react-icons/fa";
+import { FaGithub } from "react-icons/fa"
+import { useAuth } from '../context/AuthContext'
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true)
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState({ name: '', email: '', password: '' })
+  
   const navigate = useNavigate()
+  const location = useLocation()
+  const { login, signup } = useAuth()
 
-  const handleSubmit = (e) => {
+  const from = location.state?.from?.pathname || '/dashboard'
+
+  const validate = () => {
+    let isValid = true
+    const newErrors = { name: '', email: '', password: '' }
+
+    if (!isLogin && !name.trim()) {
+      newErrors.name = 'Full name is required'
+      isValid = false
+    }
+
+    if (!email) {
+      newErrors.email = 'Email is required'
+      isValid = false
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Please enter a valid email address'
+      isValid = false
+    }
+
+    if (!password) {
+      newErrors.password = 'Password is required'
+      isValid = false
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters'
+      isValid = false
+    }
+
+    setErrors(newErrors)
+    return isValid
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
+    if (!validate()) return
 
-    // Simulate auth
-    setTimeout(() => {
+    setLoading(true)
+    try {
+      if (isLogin) {
+        await login(email, password)
+        toast.success('Welcome back to VoyageAI!')
+      } else {
+        await signup(email, password, name)
+        toast.success('Account created successfully!')
+      }
+      navigate(from, { replace: true })
+    } catch (err) {
+      toast.error(err.message || 'Authentication failed')
+    } finally {
       setLoading(false)
-      toast.success(isLogin ? 'Welcome back to VoyageAI!' : 'Account created successfully!')
-      navigate('/dashboard')
-    }, 1500)
+    }
   }
 
   return (
@@ -123,11 +169,16 @@ export default function LoginPage() {
                     <CheckCircle2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-gold-400 transition-colors" />
                     <input
                       type="text"
-                      required
+                      value={name}
+                      onChange={(e) => {
+                        setName(e.target.value)
+                        if (errors.name) setErrors(prev => ({ ...prev, name: '' }))
+                      }}
                       placeholder="John Doe"
                       className="ai-input w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm"
                     />
                   </div>
+                  {errors.name && <p className="text-red-400 text-xs mt-1 ml-1 font-medium">{errors.name}</p>}
                 </div>
               )}
 
@@ -138,12 +189,15 @@ export default function LoginPage() {
                   <input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      if (errors.email) setErrors(prev => ({ ...prev, email: '' }))
+                    }}
                     placeholder="name@company.com"
                     className="ai-input w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm"
                   />
                 </div>
+                {errors.email && <p className="text-red-400 text-xs mt-1 ml-1 font-medium">{errors.email}</p>}
               </div>
 
               <div className="space-y-1.5">
@@ -158,12 +212,15 @@ export default function LoginPage() {
                   <input
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      if (errors.password) setErrors(prev => ({ ...prev, password: '' }))
+                    }}
                     placeholder="••••••••"
                     className="ai-input w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm"
                   />
                 </div>
+                {errors.password && <p className="text-red-400 text-xs mt-1 ml-1 font-medium">{errors.password}</p>}
               </div>
 
               <motion.button
@@ -209,7 +266,10 @@ export default function LoginPage() {
             <p className="mt-10 text-center text-sm text-muted">
               {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
               <button
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => {
+                  setIsLogin(!isLogin)
+                  setErrors({ name: '', email: '', password: '' })
+                }}
                 className="text-gold-400 font-bold hover:underline"
               >
                 {isLogin ? 'Sign up' : 'Log in'}

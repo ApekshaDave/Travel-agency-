@@ -3,6 +3,12 @@ import { Toaster } from 'react-hot-toast'
 import { AnimatePresence } from 'framer-motion'
 import Navbar from './components/layout/navbar.jsx'
 
+// Auth & Errors
+import { AuthProvider } from './context/AuthContext.jsx'
+import ErrorBoundary from './components/common/ErrorBoundary.jsx'
+import ProtectedRoute from './components/common/ProtectedRoute.jsx'
+import NotFoundPage from './pages/NotFoundPage.jsx'
+
 // Phase 1
 import HomePage from './pages/HomePage'
 import SearchPage from './pages/SearchPage'
@@ -38,58 +44,156 @@ import TripBuilder from './pages/TripBuilder'
 
 export default function App() {
   return (
-    <Router>
-      <div className="grain min-h-screen bg-void font-body">
-        <Navbar />
-        <AnimatePresence mode="wait">
-          <Routes>
-            {/* Phase 1 */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/flights" element={<SearchPage />} />
-            <Route path="/book" element={<BookingPage />} />
-            <Route path="/chat" element={<ChatPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/corporate" element={<CorporatePage />} />
-            <Route path="/itinerary" element={<ItineraryPage />} />
-            <Route path="/login" element={<LoginPage />} />
+    <AuthProvider>
+      <Router>
+        <div className="grain min-h-screen bg-void font-body">
+          <Navbar />
+          <AnimatePresence mode="wait">
+            <ErrorBoundary showDetail={true}>
+              <Routes>
+                {/* Phase 1 */}
+                <Route path="/" element={<HomePage />} />
+                <Route path="/search" element={<SearchPage />} />
+                <Route path="/flights" element={<SearchPage />} />
+                <Route path="/book" element={<BookingPage />} />
+                <Route path="/chat" element={<ChatPage />} />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <DashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/corporate" element={<CorporatePage />} />
+                <Route path="/itinerary" element={<ItineraryPage />} />
+                <Route path="/login" element={<LoginPage />} />
 
-            {/* Phase 2 */}
-            <Route path="/post-booking" element={<PostBookingHub />} />
-            <Route path="/post-booking/checkin" element={<CheckInPage />} />
-            <Route path="/post-booking/addons" element={<AddonsPage />} />
-            <Route path="/post-booking/change" element={<ChangeFlight />} />
-            <Route path="/post-booking/status" element={<FlightStatusPage />} />
-            <Route path="/agent" element={<AgentDashboard />} />
+                {/* Phase 2 */}
+                <Route
+                  path="/post-booking"
+                  element={
+                    <ProtectedRoute>
+                      <PostBookingHub />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/post-booking/checkin"
+                  element={
+                    <ProtectedRoute>
+                      <CheckInPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/post-booking/addons"
+                  element={
+                    <ProtectedRoute>
+                      <AddonsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/post-booking/change"
+                  element={
+                    <ProtectedRoute>
+                      <ChangeFlight />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/post-booking/status"
+                  element={
+                    <ProtectedRoute>
+                      <FlightStatusPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/agent"
+                  element={
+                    <ProtectedRoute requiredRole="agent">
+                      <AgentDashboard />
+                    </ProtectedRoute>
+                  }
+                />
 
-            {/* Phase 3 */}
-            <Route path="/finance" element={<FinanceDashboard />} />
-            <Route path="/finance/invoices" element={<InvoiceManager />} />
-            <Route path="/finance/billing" element={<BillingManager />} />
-            <Route path="/finance/refunds" element={<RefundProcessing />} />
-            <Route path="/finance/corporate" element={<CorporateStatements />} />
-            <Route path="/finance/notifications" element={<AdminNotifications />} />
+                {/* Phase 3 */}
+                <Route
+                  path="/finance"
+                  element={
+                    <ProtectedRoute requiredRole="finance">
+                      <FinanceDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/finance/invoices"
+                  element={
+                    <ProtectedRoute requiredRole="finance">
+                      <InvoiceManager />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/finance/billing"
+                  element={
+                    <ProtectedRoute requiredRole="finance">
+                      <BillingManager />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/finance/refunds"
+                  element={
+                    <ProtectedRoute requiredRole="finance">
+                      <RefundProcessing />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/finance/corporate"
+                  element={
+                    <ProtectedRoute requiredRole="finance">
+                      <CorporateStatements />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/finance/notifications"
+                  element={
+                    <ProtectedRoute requiredRole="finance">
+                      <AdminNotifications />
+                    </ProtectedRoute>
+                  }
+                />
 
-            {/* Phase 4 */}
-            <Route path="/hotels" element={<HotelSearch />} />
-            <Route path="/trains" element={<TrainSearch />} />
-            <Route path="/buses" element={<BusSearch />} />
-            <Route path="/visa" element={<VisaChecker />} />
-            <Route path="/trip-builder" element={<TripBuilder />} />
-          </Routes>
-        </AnimatePresence>
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            style: {
-              background: '#161F2E',
-              color: '#E8EDF5',
-              border: '1px solid #1E2D42',
-              fontFamily: 'DM Sans',
-            },
-          }}
-        />
-      </div>
-    </Router>
+                {/* Phase 4 */}
+                <Route path="/hotels" element={<HotelSearch />} />
+                <Route path="/trains" element={<TrainSearch />} />
+                <Route path="/buses" element={<BusSearch />} />
+                <Route path="/visa" element={<VisaChecker />} />
+                <Route path="/trip-builder" element={<TripBuilder />} />
+
+                {/* 404 Catch-All */}
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </ErrorBoundary>
+          </AnimatePresence>
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              style: {
+                background: '#161F2E',
+                color: '#E8EDF5',
+                border: '1px solid #1E2D42',
+                fontFamily: 'DM Sans',
+              },
+            }}
+          />
+        </div>
+      </Router>
+    </AuthProvider>
   )
 }

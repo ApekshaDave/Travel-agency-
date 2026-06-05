@@ -374,10 +374,10 @@ export default function AgentDashboard() {
 
   const [aiTip, setAiTip] = useState('')
 
-useEffect(() => {
-  getAIRecommendation('Give a concise travel tip...')
-    .then(setAiTip).catch(() => {})
-}, [])
+  useEffect(() => {
+    getAIRecommendation('Give a concise travel tip...')
+      .then(setAiTip).catch(() => {})
+  }, [])
 
   const filtered = cases.filter(c => {
     if (filter !== 'all' && c.status !== filter) return false

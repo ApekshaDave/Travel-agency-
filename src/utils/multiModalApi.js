@@ -178,10 +178,20 @@ Return this exact JSON:
     }
   ],
   "highlights": ["Top highlight 1", "Top highlight 2", "Top highlight 3"],
-  "tips": ["Practical tip 1", "Practical tip 2"]
+  "tips": ["Practical tip 1", "Practical tip 2"],
+  "placesToVisit": [
+    {
+      "name": "Attraction Name",
+      "description": "Short description of what visitors can see or enjoy here",
+      "funFact": "A fun or surprising local trivia/insight",
+      "recommendedTime": "e.g. Sunset, Early Morning",
+      "visitDuration": "e.g. 2 hours",
+      "category": "History|Food|Nature|Adventure|Shopping"
+    }
+  ]
 }`
 
-  return askGroqJSON(userPrompt, system, { maxTokens: 1200, temperature: 0.6 })
+  return askGroqJSON(userPrompt, system, { maxTokens: 3000, temperature: 0.6 })
 }
 
 // ─── Chat (VoyageAI assistant) ────────────────────────────────────────────────

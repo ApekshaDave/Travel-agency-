@@ -5,6 +5,10 @@ import {
   Search, Plane, ArrowLeftRight,
   Clock, Zap, Star, ChevronDown, ArrowRight, Sparkles, Shield
 } from 'lucide-react'
+import { searchFlights } from '../utils/multiModalApi'
+import { useBookingStore } from '../store/bookingStore'
+import toast from 'react-hot-toast'
+import FlightCard from '../components/features/FlightCard'
 
 const MOCK_FLIGHTS = [
   {
@@ -37,148 +41,73 @@ const MOCK_FLIGHTS = [
   },
 ]
 
-function FlightCard({ flight, onSelect }) {
-  const [expanded, setExpanded] = useState(false)
-
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`glass border rounded-2xl overflow-hidden transition-all duration-300 ${
-        flight.recommended ? 'border-gold-400/30' : 'border-border hover:border-border/80'
-      }`}
-    >
-      {flight.recommended && (
-        <div className="px-5 py-2 bg-gradient-to-r from-gold-400/10 to-transparent border-b border-gold-400/20 flex items-center gap-2">
-          <Star className="w-3.5 h-3.5 text-gold-400 fill-gold-400" />
-          <span className="text-xs text-gold-300 font-medium">Recommended by VoyageAI</span>
-        </div>
-      )}
-
-      <div className="p-5">
-        <div className="flex items-center gap-4 flex-wrap">
-          {/* Airline */}
-          <div className="flex items-center gap-2 w-28">
-            <span className="text-2xl">{flight.logo}</span>
-            <div>
-              <div className="text-white text-sm font-semibold">{flight.airline}</div>
-              <div className="text-muted text-xs font-mono">{flight.code}</div>
-            </div>
-          </div>
-
-          {/* Route */}
-          <div className="flex-1 flex items-center gap-3 min-w-48">
-            <div className="text-center">
-              <div className="text-white font-bold text-xl">{flight.depart}</div>
-              <div className="text-muted text-xs font-mono">{flight.from}</div>
-            </div>
-            <div className="flex-1 flex flex-col items-center">
-              <div className="text-muted text-xs mb-1 flex items-center gap-1">
-                <Clock className="w-3 h-3" /> {flight.duration}
-              </div>
-              <div className="w-full flex items-center gap-1">
-                <div className="flex-1 h-px bg-gradient-to-r from-border to-gold-400/30" />
-                <Plane className="w-3.5 h-3.5 text-gold-400" />
-                <div className="flex-1 h-px bg-gradient-to-r from-gold-400/30 to-border" />
-              </div>
-              <div className="text-muted text-xs mt-1">{flight.stops === 0 ? '✓ Direct' : `${flight.stops} stop`}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-white font-bold text-xl">{flight.arrive}</div>
-              <div className="text-muted text-xs font-mono">{flight.to}</div>
-            </div>
-          </div>
-
-          {/* Price + CTA */}
-          <div className="flex items-center gap-4 ml-auto">
-            <div className="text-right">
-              <div className="text-gold-400 font-bold text-2xl">₹{flight.price.toLocaleString()}</div>
-              <div className="text-muted text-xs">{flight.class} · {flight.seats} seats left</div>
-              {flight.tag && (
-                <span className="inline-block mt-1 px-2 py-0.5 bg-surface text-xs text-gold-400 border border-gold-400/20 rounded-full">
-                  {flight.tag}
-                </span>
-              )}
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => onSelect(flight)}
-              className="px-5 py-3 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold text-sm rounded-xl shadow-gold-sm hover:shadow-gold transition-all duration-200 flex items-center gap-2"
-            >
-              Select <ArrowRight className="w-4 h-4" />
-            </motion.button>
-          </div>
-        </div>
-
-        {/* Amenities + expand */}
-        <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between">
-          <div className="flex gap-4">
-            {flight.amenities.map(a => (
-              <span key={a} className="text-xs text-muted flex items-center gap-1">
-                <Zap className="w-3 h-3 text-sage-400" /> {a}
-              </span>
-            ))}
-          </div>
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="text-xs text-muted hover:text-white transition-colors flex items-center gap-1"
-          >
-            Details <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-          </button>
-        </div>
-
-        <AnimatePresence>
-          {expanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="mt-4 pt-4 border-t border-border/30 grid grid-cols-3 gap-4 text-sm">
-                <div>
-                  <div className="text-muted text-xs mb-1">Baggage</div>
-                  <div className="text-white">15kg cabin + 15kg check-in</div>
-                </div>
-                <div>
-                  <div className="text-muted text-xs mb-1">Cancellation</div>
-                  <div className="text-white">₹3,500 fee</div>
-                </div>
-                <div>
-                  <div className="text-muted text-xs mb-1">Date Change</div>
-                  <div className="text-white">₹2,000 + fare diff</div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </motion.div>
-  )
-}
-
 export default function SearchPage() {
   const [tripType, setTripType] = useState('oneWay')
   const [from, setFrom] = useState('Delhi (DEL)')
   const [to, setTo] = useState('Mumbai (BOM)')
-  const [date, setDate] = useState('2025-03-15')
+  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
   const [travelers, setTravelers] = useState(1)
   const [cabinClass] = useState('Economy')
   const [searched, setSearched] = useState(false)
   const [loading, setLoading] = useState(false)
   const [selectedFlight, setSelectedFlight] = useState(null)
   const [sortBy, setSortBy] = useState('price')
-  const [view, setView] = useState('input') // input, results
+  const [view, setView] = useState('input')
+  const [flightsList, setFlightsList] = useState(MOCK_FLIGHTS)
 
-  const handleSearch = () => {
+  const setSelectedFlightStore = useBookingStore(state => state.setSelectedFlight)
+  const setSearchParamsStore = useBookingStore(state => state.setSearchParams)
+
+  const handleSearch = async () => {
     setLoading(true)
     setView('results')
-    setTimeout(() => {
-      setLoading(false)
+    setSelectedFlight(null)
+    try {
+      setSearchParamsStore({
+        from,
+        to,
+        date,
+        travelers,
+        cabinClass
+      })
+
+      const cleanFrom = from.includes('(') ? from.split('(')[1]?.replace(')', '') : from
+      const cleanTo = to.includes('(') ? to.split('(')[1]?.replace(')', '') : to
+
+      const res = await searchFlights({
+        from: cleanFrom,
+        to: cleanTo,
+        date,
+        passengers: travelers,
+        travelClass: cabinClass
+      })
+
+      if (res && res.flights && res.flights.length > 0) {
+        const mapped = res.flights.map((f, index) => ({
+          ...f,
+          id: f.id || `ai-${index}-${Date.now()}`,
+          code: f.flightNo || f.code || 'AI 101',
+          seats: f.seatsLeft || f.seats || 5,
+          fromCity: f.fromCity || from.split(' ')[0] || from,
+          toCity: f.toCity || to.split(' ')[0] || to,
+          from: f.from || cleanFrom,
+          to: f.to || cleanTo,
+          tag: f.tag || (f.recommended ? 'Recommended' : ''),
+          amenities: f.amenities || ['USB charging']
+        }))
+        setFlightsList(mapped)
+      } else {
+        setFlightsList(MOCK_FLIGHTS)
+      }
       setSearched(true)
-    }, 1600)
+    } catch (err) {
+      console.error('AI Flight Search failed:', err)
+      toast.error('AI Search failed. Showing offline flight listings.')
+      setFlightsList(MOCK_FLIGHTS)
+      setSearched(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const swapCities = () => {
@@ -186,7 +115,7 @@ export default function SearchPage() {
     setTo(from)
   }
 
-  const sortedFlights = [...MOCK_FLIGHTS].sort((a, b) => {
+  const sortedFlights = [...flightsList].sort((a, b) => {
     if (sortBy === 'price') return a.price - b.price
     if (sortBy === 'duration') return a.duration.localeCompare(b.duration)
     if (sortBy === 'depart') return a.depart.localeCompare(b.depart)
@@ -230,7 +159,6 @@ export default function SearchPage() {
               exit={{ opacity: 0, height: 0 }}
               className="glass gradient-border rounded-3xl p-6 mb-8 overflow-hidden"
             >
-               {/* Search form content... (keeping existing inputs) */}
                <div className="flex gap-1 mb-6">
                 {['oneWay', 'roundTrip', 'multiCity'].map(type => (
                   <button key={type} onClick={() => setTripType(type)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${tripType === type ? 'bg-gold-400/15 text-gold-400 border border-gold-400/25' : 'text-muted hover:text-white'}`}>{type === 'oneWay'? 'One Way': type === 'roundTrip'? 'Round Trip': 'Multi City'}</button>
@@ -253,7 +181,7 @@ export default function SearchPage() {
                 </div>
                 <div>
                   <label className="text-xs text-muted mb-1.5 block font-medium uppercase tracking-wider">Travelers</label>
-                   <select value={travelers} onChange={e => setTravelers(e.target.value)} className="ai-input w-full px-4 py-3 rounded-xl text-white text-sm appearance-none">
+                   <select value={travelers} onChange={e => setTravelers(parseInt(e.target.value))} className="ai-input w-full px-4 py-3 rounded-xl text-white text-sm appearance-none">
                       {[1,2,3,4].map(n => <option key={n} value={n}>{n} traveler</option>)}
                    </select>
                 </div>
@@ -401,7 +329,7 @@ export default function SearchPage() {
                     <div className="mt-4 flex items-center gap-3">
                       <Link
                         to="/book"
-                        state={{ flight: selectedFlight }}
+                        onClick={() => setSelectedFlightStore(selectedFlight)}
                         className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold rounded-xl shadow-gold hover:shadow-[0_0_40px_rgba(232,180,41,0.4)] transition-all"
                       >
                         <Shield className="w-4 h-4" />

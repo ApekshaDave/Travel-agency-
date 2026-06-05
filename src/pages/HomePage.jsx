@@ -34,6 +34,27 @@ const CHAT_EXAMPLES = [
   '"Change my Mumbai flight to the evening departure"',
 ]
 
+function DestinationCardImage({ src, alt, color }) {
+  const [error, setError] = useState(false)
+
+  if (error) {
+    return (
+      <div className={`absolute inset-0 bg-gradient-to-br ${color} transition-transform duration-700 group-hover:scale-110 flex items-center justify-center`}>
+        <MapPin className="w-12 h-12 text-gold-400/40 animate-pulse" />
+      </div>
+    )
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      onError={() => setError(true)}
+      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+    />
+  )
+}
+
 export default function HomePage() {
   const [chatIdx, setChatIdx] = useState(0)
   const [chatVisible, setChatVisible] = useState(true)
@@ -379,10 +400,7 @@ export default function HomePage() {
                 className="group relative overflow-hidden rounded-3xl cursor-pointer h-64"
               >
                 {/* Image */}
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                  style={{ backgroundImage: `url(${img})` }}
-                />
+                <DestinationCardImage src={img} alt={city} color={color} />
                 {/* Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-void/90 via-void/30 to-transparent" />
                 <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
@@ -467,7 +485,7 @@ export default function HomePage() {
               </div>
               <span className="font-display font-bold text-white">VoyageAI</span>
             </div>
-            <p className="text-muted text-sm">© 2025 VoyageAI · AI-First Travel Platform · Phase 1</p>
+            <p className="text-muted text-sm">© 2025 VoyageAI · AI-First Travel Platform</p>
             <div className="flex gap-6 text-sm text-muted">
               <a href="#" className="hover:text-gold-400 transition-colors">Privacy</a>
               <a href="#" className="hover:text-gold-400 transition-colors">Terms</a>

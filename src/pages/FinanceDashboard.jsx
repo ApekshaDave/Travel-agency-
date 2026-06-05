@@ -68,9 +68,35 @@ export default function FinanceDashboard() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [activeChart, setActiveChart] = useState('area')
 
-  const summary = getLedgerSummary(MOCK_LEDGER)
+  const getFilteredLedgerByDate = () => {
+    return MOCK_LEDGER.filter(tx => {
+      const day = parseInt(tx.date.split('-')[2], 10)
+      if (dateRange === 'week' && day < 13) return false
+      if (dateRange === 'month' && day < 11) return false
+      if (dateRange === 'quarter' && day < 5) return false
+      return true
+    })
+  }
 
-  const filteredLedger = MOCK_LEDGER.filter(tx => {
+  const getFilteredRevenueData = () => {
+    switch (dateRange) {
+      case 'week':
+        return REVENUE_DATA.slice(-2)
+      case 'month':
+        return REVENUE_DATA.slice(-3)
+      case 'quarter':
+        return REVENUE_DATA.slice(-4)
+      case 'year':
+      default:
+        return REVENUE_DATA
+    }
+  }
+
+  const dateFilteredLedger = getFilteredLedgerByDate()
+  const summary = getLedgerSummary(dateFilteredLedger)
+  const filteredRevenueData = getFilteredRevenueData()
+
+  const filteredLedger = dateFilteredLedger.filter(tx => {
     if (filterCategory !== 'all' && tx.category !== filterCategory) return false
     if (filterStatus !== 'all' && tx.status !== filterStatus) return false
     if (searchTx && !tx.description.toLowerCase().includes(searchTx.toLowerCase()) &&
@@ -134,7 +160,7 @@ export default function FinanceDashboard() {
               </div>
               <h1 className="font-display text-3xl font-bold text-white">Finance Dashboard</h1>
             </div>
-            <p className="text-muted text-sm">Revenue, billing, invoices and payment ledger — Phase 3</p>
+            <p className="text-muted text-sm">Revenue, billing, invoices and payment ledger</p>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
@@ -226,7 +252,7 @@ export default function FinanceDashboard() {
             </div>
             <ResponsiveContainer width="100%" height={220}>
               {activeChart === 'area' ? (
-                <AreaChart data={REVENUE_DATA}>
+                <AreaChart data={filteredRevenueData}>
                   <defs>
                     <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#E8B429" stopOpacity={0.3} />
@@ -251,7 +277,7 @@ export default function FinanceDashboard() {
                   <Area type="monotone" dataKey="addons" name="Add-ons" stroke="#7EC8A4" strokeWidth={2} fill="url(#sageGrad)" />
                 </AreaChart>
               ) : (
-                <BarChart data={REVENUE_DATA}>
+                <BarChart data={filteredRevenueData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(30,45,66,0.8)" />
                   <XAxis dataKey="month" tick={{ fill: '#4B6070', fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: '#4B6070', fontSize: 10 }} axisLine={false} tickLine={false}

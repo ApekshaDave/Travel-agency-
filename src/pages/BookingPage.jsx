@@ -9,6 +9,8 @@ import {
 import StepProgress from '../components/common/StepProgress'
 import StickyActionBar from '../components/common/StickyActionBar'
 import PolicyBanner from '../components/common/PolicyBanner'
+import { useBookingStore } from '../store/bookingStore'
+import toast from 'react-hot-toast'
 
 const STEPS = ['Traveler Details', 'Add-ons', 'Payment', 'Confirmation']
 
@@ -21,26 +23,134 @@ const mockFlight = {
 }
 
 export default function BookingPage() {
-  const location = useLocation()
-  const flight = location.state?.flight || mockFlight
+  const {
+    selectedFlight,
+    travelerDetails,
+    setTravelerDetails,
+    addons: storeAddons,
+    setAddons: setStoreAddons,
+    setBookingRef: setStoreBookingRef
+  } = useBookingStore()
+
+  const flight = selectedFlight || mockFlight
   const [step, setStep] = useState(0)
   const [form, setForm] = useState({
-    firstName: '', lastName: '', email: '', phone: '',
-    dob: '', passport: '', nationality: '',
+    firstName: travelerDetails?.firstName || '',
+    lastName: travelerDetails?.lastName || '',
+    email: travelerDetails?.email || '',
+    phone: travelerDetails?.phone || '',
+    dob: travelerDetails?.dob || '',
+    passport: travelerDetails?.passport || '',
+    nationality: travelerDetails?.nationality || '',
   })
-  const [addons, setAddons] = useState({ meal: false, baggage: false, insurance: false, lounge: false })
+  const [addons, setAddons] = useState(storeAddons || { meal: false, baggage: false, insurance: false, lounge: false })
+  const [paymentMethod, setPaymentMethod] = useState('card')
+  const [paymentForm, setPaymentForm] = useState({
+    cardNumber: '', expiry: '', cvv: '', cardName: '',
+    upiId: '',
+    bank: '',
+  })
   const [paying, setPaying] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
   const [bookingRef] = useState(() => `VAI-${Math.random().toString(36).substring(2,8).toUpperCase()}`)
 
+  const [errors, setErrors] = useState({})
+  const [paymentErrors, setPaymentErrors] = useState({})
+
   const addonTotal = (addons.meal ? 350 : 0) + (addons.baggage ? 800 : 0) + (addons.insurance ? 499 : 0) + (addons.lounge ? 1200 : 0)
   const total = flight.price + addonTotal
 
+  const validateTravelerDetails = () => {
+    const newErrors = {}
+    if (!form.firstName.trim()) newErrors.firstName = 'First name is required'
+    if (!form.lastName.trim()) newErrors.lastName = 'Last name is required'
+    
+    if (!form.email.trim()) {
+      newErrors.email = 'Email is required'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = 'Invalid email address'
+    }
+
+    if (!form.phone.trim()) {
+      newErrors.phone = 'Phone number is required'
+    } else if (!/^\+?[\d\s-]{10,15}$/.test(form.phone)) {
+      newErrors.phone = 'Invalid phone number (10-15 digits)'
+    }
+
+    if (!form.dob) {
+      newErrors.dob = 'Date of birth is required'
+    } else {
+      const dobDate = new Date(form.dob)
+      const today = new Date()
+      if (dobDate >= today) {
+        newErrors.dob = 'Date of birth must be in the past'
+      }
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const validatePayment = () => {
+    const newErrors = {}
+    if (paymentMethod === 'card') {
+      const cleanCard = paymentForm.cardNumber.replace(/\s+/g, '')
+      if (!cleanCard) {
+        newErrors.cardNumber = 'Card number is required'
+      } else if (!/^\d{15,19}$/.test(cleanCard)) {
+        newErrors.cardNumber = 'Card number should be 15-19 digits'
+      }
+
+      if (!paymentForm.expiry.trim()) {
+        newErrors.expiry = 'Expiry is required'
+      } else if (!/^(0[1-9]|1[0-2])\/?([0-9]{2})$/.test(paymentForm.expiry.trim())) {
+        newErrors.expiry = 'Use MM/YY format'
+      }
+
+      if (!paymentForm.cvv.trim()) {
+        newErrors.cvv = 'CVV is required'
+      } else if (!/^\d{3,4}$/.test(paymentForm.cvv.trim())) {
+        newErrors.cvv = 'Must be 3 or 4 digits'
+      }
+
+      if (!paymentForm.cardName.trim()) {
+        newErrors.cardName = 'Name on card is required'
+      }
+    } else if (paymentMethod === 'upi') {
+      if (!paymentForm.upiId.trim()) {
+        newErrors.upiId = 'UPI ID is required'
+      } else if (!/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/.test(paymentForm.upiId.trim())) {
+        newErrors.upiId = 'Invalid UPI ID format (e.g. name@bank)'
+      }
+    } else if (paymentMethod === 'netbanking') {
+      if (!paymentForm.bank) {
+        newErrors.bank = 'Please select a bank'
+      }
+    }
+
+    setPaymentErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleStep0Next = () => {
+    if (validateTravelerDetails()) {
+      setTravelerDetails(form)
+      setStep(1)
+    } else {
+      toast.error('Please fix the errors in the traveler details form.')
+    }
+  }
+
   const handleConfirm = () => {
+    if (!validatePayment()) {
+      toast.error('Please fill in the payment details correctly.')
+      return
+    }
     setPaying(true)
     setTimeout(() => {
       setPaying(false)
       setConfirmed(true)
+      setStoreBookingRef(bookingRef)
       setStep(3)
     }, 2200)
   }
@@ -145,12 +255,16 @@ export default function BookingPage() {
                           {Icon && <Icon className="absolute left-3 top-3 w-4 h-4 text-muted" />}
                           <input
                             type={type}
-                            value={form[key]}
-                            onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                            value={form[key] || ''}
+                            onChange={e => {
+                              setForm(f => ({ ...f, [key]: e.target.value }))
+                              if (errors[key]) setErrors(prev => ({ ...prev, [key]: '' }))
+                            }}
                             placeholder={placeholder}
                             className={`ai-input w-full py-3 rounded-xl text-white text-sm ${Icon ? 'pl-9 pr-3' : 'px-3'}`}
                           />
                         </div>
+                        {errors[key] && <p className="text-red-400 text-xs mt-1 font-medium">{errors[key]}</p>}
                       </div>
                     ))}
                   </div>
@@ -163,7 +277,7 @@ export default function BookingPage() {
                   </div>
 
                   <button
-                    onClick={() => setStep(1)}
+                    onClick={handleStep0Next}
                     className="mt-5 w-full py-3.5 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold rounded-xl shadow-gold-sm hover:shadow-gold transition-all flex items-center justify-center gap-2"
                   >
                     Continue to Add-ons <ArrowRight className="w-4 h-4" />
@@ -227,7 +341,10 @@ export default function BookingPage() {
                       Back
                     </button>
                     <button
-                      onClick={() => setStep(2)}
+                      onClick={() => {
+                        setStoreAddons(addons)
+                        setStep(2)
+                      }}
                       className="flex-1 py-3 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold rounded-xl shadow-gold-sm flex items-center justify-center gap-2"
                     >
                       Continue to Payment <ArrowRight className="w-4 h-4" />
@@ -248,45 +365,150 @@ export default function BookingPage() {
                   <h2 className="font-display text-xl font-bold text-white mb-5">Payment</h2>
 
                   <div className="flex gap-3 mb-5">
-                    {['Credit/Debit Card', 'UPI', 'Net Banking'].map(method => (
+                    {[
+                      { id: 'card', label: 'Credit/Debit Card' },
+                      { id: 'upi', label: 'UPI' },
+                      { id: 'netbanking', label: 'Net Banking' }
+                    ].map(method => (
                       <button
-                        key={method}
-                        className="flex-1 py-2.5 glass border border-border hover:border-gold-400/30 rounded-xl text-sm text-muted hover:text-white transition-all"
+                        key={method.id}
+                        type="button"
+                        onClick={() => {
+                          setPaymentMethod(method.id)
+                          setPaymentErrors({})
+                        }}
+                        className={`flex-1 py-2.5 border rounded-xl text-sm transition-all ${
+                          paymentMethod === method.id
+                            ? 'bg-gold-400/10 border-gold-400 text-gold-400 font-medium'
+                            : 'glass border-border text-muted hover:text-white hover:border-gold-400/20'
+                        }`}
                       >
-                        {method}
+                        {method.label}
                       </button>
                     ))}
                   </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-xs text-muted mb-1.5 block uppercase tracking-wider">Card Number</label>
-                      <div className="relative">
-                        <CreditCard className="absolute left-3 top-3 w-4 h-4 text-muted" />
-                        <input
-                          placeholder="4242 4242 4242 4242"
-                          className="ai-input w-full pl-9 pr-3 py-3 rounded-xl text-white text-sm font-mono"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                  {paymentMethod === 'card' && (
+                    <div className="space-y-4">
                       <div>
-                        <label className="text-xs text-muted mb-1.5 block uppercase tracking-wider">Expiry</label>
-                        <input placeholder="MM / YY" className="ai-input w-full px-3 py-3 rounded-xl text-white text-sm font-mono" />
-                      </div>
-                      <div>
-                        <label className="text-xs text-muted mb-1.5 block uppercase tracking-wider">CVV</label>
+                        <label className="text-xs text-muted mb-1.5 block uppercase tracking-wider">Card Number</label>
                         <div className="relative">
-                          <Lock className="absolute left-3 top-3 w-4 h-4 text-muted" />
-                          <input placeholder="•••" className="ai-input w-full pl-9 pr-3 py-3 rounded-xl text-white text-sm font-mono" />
+                          <CreditCard className="absolute left-3 top-3 w-4 h-4 text-muted" />
+                          <input
+                            type="text"
+                            value={paymentForm.cardNumber}
+                            onChange={e => {
+                              const value = e.target.value.replace(/\D/g, '').slice(0, 16)
+                              const formatted = value.match(/.{1,4}/g)?.join(' ') || value
+                              setPaymentForm(f => ({ ...f, cardNumber: formatted }))
+                              if (paymentErrors.cardNumber) setPaymentErrors(prev => ({ ...prev, cardNumber: '' }))
+                            }}
+                            placeholder="4242 4242 4242 4242"
+                            className="ai-input w-full pl-9 pr-3 py-3 rounded-xl text-white text-sm font-mono"
+                          />
+                        </div>
+                        {paymentErrors.cardNumber && <p className="text-red-400 text-xs mt-1 font-medium">{paymentErrors.cardNumber}</p>}
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs text-muted mb-1.5 block uppercase tracking-wider">Expiry</label>
+                          <input
+                            type="text"
+                            value={paymentForm.expiry}
+                            onChange={e => {
+                              let value = e.target.value.replace(/\D/g, '').slice(0, 4)
+                              if (value.length > 2) {
+                                value = value.slice(0, 2) + '/' + value.slice(2)
+                              }
+                              setPaymentForm(f => ({ ...f, expiry: value }))
+                              if (paymentErrors.expiry) setPaymentErrors(prev => ({ ...prev, expiry: '' }))
+                            }}
+                            placeholder="MM / YY"
+                            className="ai-input w-full px-3 py-3 rounded-xl text-white text-sm font-mono"
+                          />
+                          {paymentErrors.expiry && <p className="text-red-400 text-xs mt-1 font-medium">{paymentErrors.expiry}</p>}
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted mb-1.5 block uppercase tracking-wider">CVV</label>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-3 w-4 h-4 text-muted" />
+                            <input
+                              type="password"
+                              value={paymentForm.cvv}
+                              onChange={e => {
+                                const value = e.target.value.replace(/\D/g, '').slice(0, 4)
+                                setPaymentForm(f => ({ ...f, cvv: value }))
+                                if (paymentErrors.cvv) setPaymentErrors(prev => ({ ...prev, cvv: '' }))
+                              }}
+                              placeholder="•••"
+                              className="ai-input w-full pl-9 pr-3 py-3 rounded-xl text-white text-sm font-mono"
+                            />
+                          </div>
+                          {paymentErrors.cvv && <p className="text-red-400 text-xs mt-1 font-medium">{paymentErrors.cvv}</p>}
                         </div>
                       </div>
+                      <div>
+                        <label className="text-xs text-muted mb-1.5 block uppercase tracking-wider">Name on Card</label>
+                        <input
+                          type="text"
+                          value={paymentForm.cardName}
+                          onChange={e => {
+                            setPaymentForm(f => ({ ...f, cardName: e.target.value }))
+                            if (paymentErrors.cardName) setPaymentErrors(prev => ({ ...prev, cardName: '' }))
+                          }}
+                          placeholder="FULL NAME"
+                          className="ai-input w-full px-3 py-3 rounded-xl text-white text-sm uppercase"
+                        />
+                        {paymentErrors.cardName && <p className="text-red-400 text-xs mt-1 font-medium">{paymentErrors.cardName}</p>}
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-xs text-muted mb-1.5 block uppercase tracking-wider">Name on Card</label>
-                      <input placeholder="FULL NAME" className="ai-input w-full px-3 py-3 rounded-xl text-white text-sm uppercase" />
+                  )}
+
+                  {paymentMethod === 'upi' && (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-xs text-muted mb-1.5 block uppercase tracking-wider">UPI ID / VPA</label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={paymentForm.upiId}
+                            onChange={e => {
+                              setPaymentForm(f => ({ ...f, upiId: e.target.value }))
+                              if (paymentErrors.upiId) setPaymentErrors(prev => ({ ...prev, upiId: '' }))
+                            }}
+                            placeholder="john@okaxis"
+                            className="ai-input w-full px-3 py-3 rounded-xl text-white text-sm"
+                          />
+                        </div>
+                        {paymentErrors.upiId && <p className="text-red-400 text-xs mt-1 font-medium">{paymentErrors.upiId}</p>}
+                        <p className="text-[10px] text-muted mt-1.5">Enter your Virtual Payment Address (e.g., name@upi)</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {paymentMethod === 'netbanking' && (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-xs text-muted mb-1.5 block uppercase tracking-wider">Select Bank</label>
+                        <select
+                          value={paymentForm.bank}
+                          onChange={e => {
+                            setPaymentForm(f => ({ ...f, bank: e.target.value }))
+                            if (paymentErrors.bank) setPaymentErrors(prev => ({ ...prev, bank: '' }))
+                          }}
+                          className="ai-input w-full px-3 py-3 rounded-xl text-white text-sm bg-void border border-border"
+                        >
+                          <option value="" className="bg-void text-white">-- Select Your Bank --</option>
+                          <option value="sbi" className="bg-void text-white">State Bank of India</option>
+                          <option value="hdfc" className="bg-void text-white">HDFC Bank</option>
+                          <option value="icici" className="bg-void text-white">ICICI Bank</option>
+                          <option value="axis" className="bg-void text-white">Axis Bank</option>
+                          <option value="kotak" className="bg-void text-white">Kotak Mahindra Bank</option>
+                        </select>
+                        {paymentErrors.bank && <p className="text-red-400 text-xs mt-1 font-medium">{paymentErrors.bank}</p>}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="mt-4 flex items-center gap-2 text-xs text-muted">
                     <Lock className="w-3.5 h-3.5 text-sage-400" />
@@ -397,8 +619,12 @@ export default function BookingPage() {
           </div>
           <button
             onClick={() => {
-              if (step === 2) handleConfirm()
-              else setStep(step + 1)
+              if (step === 0) handleStep0Next()
+              else if (step === 1) {
+                setStoreAddons(addons)
+                setStep(2)
+              }
+              else if (step === 2) handleConfirm()
             }}
             className="px-6 py-3 bg-gold-gradient text-void font-bold rounded-xl shadow-gold flex items-center gap-2 text-sm"
           >

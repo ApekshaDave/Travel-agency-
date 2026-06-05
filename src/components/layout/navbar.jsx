@@ -112,19 +112,22 @@ export default function Navbar() {
         {/* Desktop - Sequenced */}
         <div className="hidden lg:flex items-center gap-6">
           <div className="flex items-center gap-1 border-r border-border pr-6 mr-2">
-            {NAV_LINKS.map(link => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                  active === link.to 
-                    ? 'text-gold-400 bg-gold-400/5 shadow-[0_0_20px_rgba(232,180,41,0.05)]' 
-                    : 'text-muted hover:text-white'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {NAV_LINKS.map(link => {
+              const isLinkActive = active === link.to || active.startsWith(link.to + '/')
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                    isLinkActive 
+                      ? 'text-gold-400 bg-gold-400/5 shadow-[0_0_20px_rgba(232,180,41,0.05)]' 
+                      : 'text-muted hover:text-white'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              )
+            })}
           </div>
 
           <div className="flex items-center gap-2">
@@ -146,7 +149,7 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Menu - Simplified */}
+      {/* Mobile Menu - Fully Improved */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -157,17 +160,78 @@ export default function Navbar() {
           >
             <div className="p-6 space-y-6">
               <div className="space-y-1">
-                <p className="text-[10px] uppercase tracking-widest text-muted mb-2 px-3">Plan Voyage</p>
-                {NAV_LINKS.map(l => (
-                  <Link key={l.to} to={l.to} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-white font-medium">{l.label}</Link>
-                ))}
+                <p className="text-[10px] uppercase tracking-widest text-gold-400 mb-2 px-3 font-semibold">Plan Voyage</p>
+                {NAV_LINKS.map(l => {
+                  const isLinkActive = active === l.to || active.startsWith(l.to + '/')
+                  return (
+                    <Link
+                      key={l.to}
+                      to={l.to}
+                      onClick={() => setMobileOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl font-medium transition-all ${
+                        isLinkActive
+                          ? 'text-gold-400 bg-gold-400/5'
+                          : 'text-white hover:text-gold-400 hover:bg-white/5'
+                      }`}
+                    >
+                      <l.icon className="w-4 h-4 text-gold-400/80" />
+                      {l.label}
+                    </Link>
+                  )
+                })}
               </div>
+
               <div className="space-y-1">
-                <p className="text-[10px] uppercase tracking-widest text-muted mb-2 px-3">Account</p>
-                {USER_LINKS.map(l => (
-                  <Link key={l.to} to={l.to} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2 text-muted text-sm">{l.label}</Link>
-                ))}
+                <p className="text-[10px] uppercase tracking-widest text-muted mb-2 px-3 font-semibold">My Travel</p>
+                {USER_LINKS.map(l => {
+                  const isLinkActive = active === l.to || active.startsWith(l.to + '/')
+                  return (
+                    <Link
+                      key={l.to}
+                      to={l.to}
+                      onClick={() => setMobileOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2 text-sm rounded-xl transition-all ${
+                        isLinkActive
+                          ? 'text-gold-400 bg-gold-400/5'
+                          : 'text-muted hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <l.icon className="w-4 h-4 text-sky-400/70" />
+                      {l.label}
+                    </Link>
+                  )
+                })}
               </div>
+
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase tracking-widest text-red-400/70 mb-2 px-3 font-semibold">Staff Desk</p>
+                {STAFF_LINKS.map(l => {
+                  const isLinkActive = active === l.to || active.startsWith(l.to + '/')
+                  return (
+                    <Link
+                      key={l.to}
+                      to={l.to}
+                      onClick={() => setMobileOpen(false)}
+                      className={`flex items-center justify-between px-3 py-2 text-sm rounded-xl transition-all ${
+                        isLinkActive
+                          ? 'text-red-400 bg-red-500/5'
+                          : 'text-muted hover:text-red-400 hover:bg-red-500/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <l.icon className="w-4 h-4 text-red-400/70" />
+                        <span>{l.label}</span>
+                      </div>
+                      {l.badge && (
+                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500/20 text-red-400">
+                          {l.badge}
+                        </span>
+                      )}
+                    </Link>
+                  )
+                })}
+              </div>
+
               <div className="pt-4 border-t border-white/5">
                 <Link 
                   to="/login" 

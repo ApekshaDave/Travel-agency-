@@ -2,8 +2,8 @@ import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
-  Sparkles, Plane, Train, Bus, Building2, Trash2, Clock,  ChevronRight,
-  CheckCircle, DollarSign, Zap
+  Sparkles, Plane, Train, Bus, Building2, Trash2, Clock, ChevronRight,
+  CheckCircle, DollarSign, Zap, Compass, Landmark, Utensils, Trees, ShoppingBag, MapPin
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { generateMultiModalTrip } from '../utils/multiModalApi'
@@ -33,6 +33,32 @@ const PRESET_TRIPS = [
       { id: 'f', type: 'hotel', from: 'Jaipur', to: '', date: '23–25 Mar', detail: 'Jai Mahal Palace · 2 nights', price: 18000, icon: '🏨' },
       { id: 'g', type: 'flight', from: 'Jaipur', to: 'Mumbai', date: '25 Mar', detail: 'Air India AI 473 · 18:30–20:15', price: 3800, icon: '✈️' },
     ],
+    placesToVisit: [
+      {
+        name: 'Taj Mahal (Agra)',
+        description: 'The world\'s most famous monument of love. Stroll through the lush gardens and marvel at the intricate white marble inlay work.',
+        funFact: 'The color of Taj Mahal changes depending on the time of day and presence of clouds.',
+        recommendedTime: 'Sunrise',
+        visitDuration: '2-3 hours',
+        category: 'History'
+      },
+      {
+        name: 'Amber Fort (Jaipur)',
+        description: 'A grand hilltop fortress featuring magnificent courtyards, detailed frescoes, and the dazzling Sheesh Mahal (Mirror Palace).',
+        funFact: 'The mirrors inside Sheesh Mahal are imported from Belgium and can light up the room with a single candle.',
+        recommendedTime: 'Morning',
+        visitDuration: '3 hours',
+        category: 'Adventure'
+      },
+      {
+        name: 'Hawa Mahal (Jaipur)',
+        description: 'The famous "Palace of Winds" featuring a unique five-story honeycomb facade constructed of pink and red sandstone.',
+        funFact: 'It has 953 small windows (jharokhas) designed to let royal women observe street activities without being seen.',
+        recommendedTime: 'Early Morning',
+        visitDuration: '1 hour',
+        category: 'History'
+      }
+    ]
   },
   {
     id: 'kerala-backwaters',
@@ -49,6 +75,32 @@ const PRESET_TRIPS = [
       { id: 'f', type: 'hotel', from: 'Kovalam', to: '', date: '18–20 Apr', detail: 'Leela Kovalam · 2 nights', price: 22000, icon: '🏨' },
       { id: 'g', type: 'flight', from: 'Trivandrum', to: 'Delhi', date: '20 Apr', detail: 'IndiGo 6E 841 · 11:00–14:00', price: 5600, icon: '✈️' },
     ],
+    placesToVisit: [
+      {
+        name: 'Fort Kochi Chinese Fishing Nets',
+        description: 'Watch fishermen operate the massive, cantilevered Chinese fishing nets along the coastline, especially beautiful against the setting sun.',
+        funFact: 'These nets were originally introduced by Chinese explorer Zheng He in the 14th century.',
+        recommendedTime: 'Sunset',
+        visitDuration: '1 hour',
+        category: 'Nature'
+      },
+      {
+        name: 'Alleppey Backwaters Houseboat',
+        description: 'Glide along tranquil, palm-fringed canals, vast paddy fields, and peaceful lakeside villages on a traditional thatched-roof houseboat.',
+        funFact: 'Alleppey is known as the "Venice of the East" due to its extensive network of canals.',
+        recommendedTime: 'Afternoon',
+        visitDuration: '4-6 hours',
+        category: 'Nature'
+      },
+      {
+        name: 'Kovalam Beach & Lighthouse',
+        description: 'Relax on the sandy crescent shores of Kovalam and climb the spiral stairs of the red-and-white striped lighthouse for panoramic vistas.',
+        funFact: 'The lighthouse beach is one of the most photographed shorelines in southern India.',
+        recommendedTime: 'Evening',
+        visitDuration: '2 hours',
+        category: 'Adventure'
+      }
+    ]
   },
 ]
 
@@ -388,10 +440,104 @@ export default function TripBuilder() {
                   )}
                 </div>
               </div>
+
+              {/* Attractions & Places to Visit section */}
+              {activeTrip.placesToVisit && activeTrip.placesToVisit.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="mt-12 pt-8 border-t border-border/40"
+                >
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-gold-400/10 border border-gold-400/20 flex items-center justify-center">
+                      <Compass className="w-5 h-5 text-gold-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-display text-2xl font-bold text-white">Places to Visit & Enjoy</h3>
+                      <p className="text-muted text-xs">Handpicked spots and local attractions you should experience</p>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {activeTrip.placesToVisit.map((place, idx) => {
+                      const cat = getCategoryDetails(place.category)
+                      const CatIcon = cat.icon
+                      return (
+                        <motion.div
+                          key={idx}
+                          whileHover={{ y: -6, scale: 1.01 }}
+                          className="glass border border-border hover:border-gold-400/20 rounded-2xl p-5 flex flex-col justify-between transition-all group relative overflow-hidden"
+                        >
+                          <div className={`absolute top-0 right-0 w-24 h-24 rounded-full filter blur-[40px] opacity-10 transition-opacity group-hover:opacity-25 ${cat.bg.split(' ')[0]}`} />
+                          
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-3">
+                              <span className={`px-2.5 py-0.5 rounded-lg border text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${cat.bg} ${cat.color}`}>
+                                <CatIcon className="w-3.5 h-3.5" />
+                                {cat.label}
+                              </span>
+                              
+                              <div className="flex items-center gap-1.5 text-[10px] text-muted font-semibold">
+                                <Clock className="w-3.5 h-3.5" />
+                                <span>{place.visitDuration}</span>
+                              </div>
+                            </div>
+
+                            <h4 className="text-white font-bold text-base mb-2 group-hover:text-gold-300 transition-colors">
+                              {place.name}
+                            </h4>
+                            
+                            <p className="text-muted text-xs leading-relaxed mb-4">
+                              {place.description}
+                            </p>
+                          </div>
+
+                          <div className="pt-4 border-t border-border/30 space-y-2 mt-auto">
+                            {place.recommendedTime && (
+                              <div className="flex items-center gap-1.5 text-[10px] text-white/70">
+                                <span className="text-muted">Best Time:</span>
+                                <span className="font-semibold text-gold-400">{place.recommendedTime}</span>
+                              </div>
+                            )}
+                            {place.funFact && (
+                              <div className="p-3 rounded-xl bg-white/5 border border-white/5 text-[10px] text-gold-300/80 italic leading-relaxed">
+                                <span className="font-bold not-italic text-gold-400">💡 Local Insight:</span> {place.funFact}
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )
+                    })}
+                  </div>
+                </motion.div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
     </div>
   )
+}
+
+// ── Category helper function ──────────────────────────────────────────────────
+const getCategoryDetails = (category) => {
+  const normalized = (category || '').toLowerCase()
+  if (normalized.includes('history') || normalized.includes('culture') || normalized.includes('monument')) {
+    return { icon: Landmark, color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/20', label: 'History' }
+  }
+  if (normalized.includes('food') || normalized.includes('dining') || normalized.includes('restaurant') || normalized.includes('cafe')) {
+    return { icon: Utensils, color: 'text-rose-400', bg: 'bg-rose-400/10 border-rose-400/20', label: 'Food' }
+  }
+  if (normalized.includes('nature') || normalized.includes('beach') || normalized.includes('scenic') || normalized.includes('park')) {
+    return { icon: Trees, color: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/20', label: 'Nature' }
+  }
+  if (normalized.includes('adventure') || normalized.includes('activity') || normalized.includes('explore')) {
+    return { icon: Compass, color: 'text-sky-400', bg: 'bg-sky-400/10 border-sky-400/20', label: 'Adventure' }
+  }
+  if (normalized.includes('shopping') || normalized.includes('market') || normalized.includes('bazaar')) {
+    return { icon: ShoppingBag, color: 'text-violet-400', bg: 'bg-violet-400/10 border-violet-400/20', label: 'Shopping' }
+  }
+  // Default fallback
+  return { icon: MapPin, color: 'text-gold-400', bg: 'bg-gold-400/10 border-gold-400/20', label: category || 'Attraction' }
 }

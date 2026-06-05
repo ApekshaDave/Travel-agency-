@@ -7,6 +7,8 @@ import {
   AlertTriangle, CheckCircle, Clock
 } from 'lucide-react'
 import { callVoyageAI } from '../utils/multiModalApi'
+import toast from 'react-hot-toast'
+import FlightCard from '../components/features/FlightCard'
 
 // ── Quick suggestions ─────────────────────────────────────────────────────────
 const SUGGESTIONS = [
@@ -18,68 +20,7 @@ const SUGGESTIONS = [
   { label: '🔄 Change my flight', prompt: 'I need to change my existing flight booking' },
 ]
 
-// ── Flight card component ─────────────────────────────────────────────────────
-function FlightCard({ flight, onSelect }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      className="glass border border-border hover:border-gold-400/30 rounded-2xl p-4 cursor-pointer group transition-all duration-200"
-      onClick={() => onSelect(flight)}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-surface rounded-lg flex items-center justify-center">
-            <Plane className="w-4 h-4 text-gold-400" />
-          </div>
-          <span className="font-semibold text-white text-sm">{flight.airline}</span>
-          {flight.recommended && (
-            <span className="px-2 py-0.5 bg-gold-400/15 text-gold-400 text-xs rounded-full font-medium border border-gold-400/20">
-              Best Value
-            </span>
-          )}
-        </div>
-        <div className="text-right">
-          <div className="font-bold text-gold-400 text-lg">₹{flight.price.toLocaleString()}</div>
-          <div className="text-muted text-xs">{flight.class}</div>
-        </div>
-      </div>
-      <div className="flex items-center justify-between text-sm">
-        <div>
-          <div className="font-semibold text-white">{flight.depart}</div>
-          <div className="text-muted text-xs">{flight.from}</div>
-        </div>
-        <div className="flex flex-col items-center">
-          <div className="flex items-center gap-1 text-muted text-xs mb-1">
-            <Clock className="w-3 h-3" /> {flight.duration}
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-10 h-px bg-border" />
-            <Plane className="w-3 h-3 text-muted" />
-            <div className="w-10 h-px bg-border" />
-          </div>
-          <div className="text-muted text-xs mt-1">{flight.stops === 0 ? 'Direct' : `${flight.stops} stop`}</div>
-        </div>
-        <div className="text-right">
-          <div className="font-semibold text-white">{flight.arrive}</div>
-          <div className="text-muted text-xs">{flight.to}</div>
-        </div>
-      </div>
-      <div className="mt-3 pt-3 border-t border-border/50 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {flight.amenities?.map(a => (
-            <span key={a} className="text-xs text-muted flex items-center gap-1">
-              <CheckCircle className="w-3 h-3 text-sage-400" /> {a}
-            </span>
-          ))}
-        </div>
-        <span className="text-xs text-gold-400 font-medium group-hover:gap-2 flex items-center gap-1 transition-all">
-          Select <ArrowRight className="w-3 h-3" />
-        </span>
-      </div>
-    </motion.div>
-  )
-}
+
 
 // ── Warning card ──────────────────────────────────────────────────────────────
 function WarningCard({ warning }) {
@@ -133,7 +74,7 @@ function Message({ msg }) {
         {msg.flights && (
           <div className="w-full space-y-3">
             {msg.flights.map((f, i) => (
-              <FlightCard key={i} flight={f} onSelect={() => {}} />
+              <FlightCard key={i} flight={f} onSelect={() => {}} variant="chat" />
             ))}
           </div>
         )}
@@ -190,12 +131,65 @@ export default function ChatPage() {
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [apiHistory, setApiHistory] = useState([])
+  const [isListening, setIsListening] = useState(false)
+  const recognitionRef = useRef(null)
   const bottomRef = useRef(null)
   const inputRef = useRef(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isTyping])
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (SpeechRecognition) {
+      const rec = new SpeechRecognition()
+      rec.continuous = false
+      rec.interimResults = false
+      rec.lang = 'en-US'
+
+      rec.onstart = () => {
+        setIsListening(true)
+        toast.success('Listening... Speak now.')
+      }
+
+      rec.onend = () => {
+        setIsListening(false)
+      }
+
+      rec.onerror = (e) => {
+        console.error('Speech recognition error', e)
+        setIsListening(false)
+        if (e.error !== 'no-speech') {
+          toast.error(`Speech error: ${e.error}`)
+        }
+      }
+
+      rec.onresult = (e) => {
+        const transcript = e.results[0][0].transcript
+        if (transcript) {
+          setInput(prev => (prev ? prev + ' ' + transcript : transcript))
+          toast.success('Speech recognized!')
+        }
+      }
+
+      recognitionRef.current = rec
+    }
+  }, [])
+
+  const toggleListening = (e) => {
+    e.stopPropagation()
+    if (!recognitionRef.current) {
+      toast.error('Speech recognition is not supported in this browser.')
+      return
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop()
+    } else {
+      recognitionRef.current.start()
+    }
+  }
 
   const sendMessage = async (text) => {
     const userText = text || input.trim()
@@ -209,7 +203,6 @@ export default function ChatPage() {
     setApiHistory(newHistory)
 
     try {
-      // callVoyageAI in multiModalApi.js now uses Groq under the hood
       const reply = await callVoyageAI(newHistory)
       setMessages(prev => [...prev, { role: 'assistant', content: reply, ts: Date.now() }])
       setApiHistory(prev => [...prev, { role: 'assistant', content: reply }])
@@ -290,7 +283,7 @@ export default function ChatPage() {
               <button
                 key={label}
                 onClick={() => sendMessage(prompt)}
-                className="px-3 py-2 glass border border-border hover:border-gold-400/30 rounded-xl text-xs text-muted hover:text-white transition-all"
+                className="px-3 py-2 glass border border-border hover:border-gold-400/30 rounded-xl text-sm text-muted hover:text-white transition-all"
               >
                 {label}
               </button>
@@ -313,7 +306,14 @@ export default function ChatPage() {
               rows={1}
             />
             <div className="flex items-center gap-2">
-              <button className="p-2 text-muted hover:text-sky-400 transition-colors">
+              <button
+                type="button"
+                onClick={toggleListening}
+                className={`p-2 transition-colors rounded-lg ${
+                  isListening ? 'text-red-400 bg-red-400/10 animate-pulse' : 'text-muted hover:text-sky-400'
+                }`}
+                title={isListening ? 'Stop listening' : 'Start voice input'}
+              >
                 <Mic className="w-5 h-5" />
               </button>
               <motion.button
