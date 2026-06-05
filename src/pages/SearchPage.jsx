@@ -1,0 +1,500 @@
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Link } from 'react-router-dom'
+import {
+  Search, Plane, ArrowLeftRight, Calendar, Users,
+  Clock, Zap, Star, ChevronDown, ArrowRight, Sparkles, MapPin, Shield
+} from 'lucide-react'
+
+const MOCK_FLIGHTS = [
+  {
+    id: 1, airline: 'IndiGo', code: '6E 204', logo: '🔵',
+    from: 'DEL', fromCity: 'Delhi', to: 'BOM', toCity: 'Mumbai',
+    depart: '06:00', arrive: '08:10', duration: '2h 10m', stops: 0,
+    price: 4299, class: 'Economy', seats: 4, tag: 'Cheapest',
+    amenities: ['USB charging', 'Snacks'],
+  },
+  {
+    id: 2, airline: 'Air India', code: 'AI 619', logo: '🔴',
+    from: 'DEL', fromCity: 'Delhi', to: 'BOM', toCity: 'Mumbai',
+    depart: '09:30', arrive: '11:50', duration: '2h 20m', stops: 0,
+    price: 5800, class: 'Economy', seats: 9, tag: 'Best Value', recommended: true,
+    amenities: ['Meal included', 'Extra legroom'],
+  },
+  {
+    id: 3, airline: 'Vistara', code: 'UK 955', logo: '🟣',
+    from: 'DEL', fromCity: 'Delhi', to: 'BOM', toCity: 'Mumbai',
+    depart: '14:15', arrive: '16:30', duration: '2h 15m', stops: 0,
+    price: 7200, class: 'Economy', seats: 2, tag: 'Premium',
+    amenities: ['Meal included', 'Priority boarding', 'Extra baggage'],
+  },
+  {
+    id: 4, airline: 'SpiceJet', code: 'SG 112', logo: '🟠',
+    from: 'DEL', fromCity: 'Delhi', to: 'BOM', toCity: 'Mumbai',
+    depart: '19:45', arrive: '22:10', duration: '2h 25m', stops: 0,
+    price: 3850, class: 'Economy', seats: 12, tag: 'Budget',
+    amenities: ['USB charging'],
+  },
+]
+
+function FlightCard({ flight, onSelect }) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`glass border rounded-2xl overflow-hidden transition-all duration-300 ${
+        flight.recommended ? 'border-gold-400/30' : 'border-border hover:border-border/80'
+      }`}
+    >
+      {flight.recommended && (
+        <div className="px-5 py-2 bg-gradient-to-r from-gold-400/10 to-transparent border-b border-gold-400/20 flex items-center gap-2">
+          <Star className="w-3.5 h-3.5 text-gold-400 fill-gold-400" />
+          <span className="text-xs text-gold-300 font-medium">Recommended by VoyageAI</span>
+        </div>
+      )}
+
+      <div className="p-5">
+        <div className="flex items-center gap-4 flex-wrap">
+          {/* Airline */}
+          <div className="flex items-center gap-2 w-28">
+            <span className="text-2xl">{flight.logo}</span>
+            <div>
+              <div className="text-white text-sm font-semibold">{flight.airline}</div>
+              <div className="text-muted text-xs font-mono">{flight.code}</div>
+            </div>
+          </div>
+
+          {/* Route */}
+          <div className="flex-1 flex items-center gap-3 min-w-48">
+            <div className="text-center">
+              <div className="text-white font-bold text-xl">{flight.depart}</div>
+              <div className="text-muted text-xs font-mono">{flight.from}</div>
+            </div>
+            <div className="flex-1 flex flex-col items-center">
+              <div className="text-muted text-xs mb-1 flex items-center gap-1">
+                <Clock className="w-3 h-3" /> {flight.duration}
+              </div>
+              <div className="w-full flex items-center gap-1">
+                <div className="flex-1 h-px bg-gradient-to-r from-border to-gold-400/30" />
+                <Plane className="w-3.5 h-3.5 text-gold-400" />
+                <div className="flex-1 h-px bg-gradient-to-r from-gold-400/30 to-border" />
+              </div>
+              <div className="text-muted text-xs mt-1">{flight.stops === 0 ? '✓ Direct' : `${flight.stops} stop`}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-white font-bold text-xl">{flight.arrive}</div>
+              <div className="text-muted text-xs font-mono">{flight.to}</div>
+            </div>
+          </div>
+
+          {/* Price + CTA */}
+          <div className="flex items-center gap-4 ml-auto">
+            <div className="text-right">
+              <div className="text-gold-400 font-bold text-2xl">₹{flight.price.toLocaleString()}</div>
+              <div className="text-muted text-xs">{flight.class} · {flight.seats} seats left</div>
+              {flight.tag && (
+                <span className="inline-block mt-1 px-2 py-0.5 bg-surface text-xs text-gold-400 border border-gold-400/20 rounded-full">
+                  {flight.tag}
+                </span>
+              )}
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => onSelect(flight)}
+              className="px-5 py-3 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold text-sm rounded-xl shadow-gold-sm hover:shadow-gold transition-all duration-200 flex items-center gap-2"
+            >
+              Select <ArrowRight className="w-4 h-4" />
+            </motion.button>
+          </div>
+        </div>
+
+        {/* Amenities + expand */}
+        <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between">
+          <div className="flex gap-4">
+            {flight.amenities.map(a => (
+              <span key={a} className="text-xs text-muted flex items-center gap-1">
+                <Zap className="w-3 h-3 text-sage-400" /> {a}
+              </span>
+            ))}
+          </div>
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="text-xs text-muted hover:text-white transition-colors flex items-center gap-1"
+          >
+            Details <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+          </button>
+        </div>
+
+        <AnimatePresence>
+          {expanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4 pt-4 border-t border-border/30 grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <div className="text-muted text-xs mb-1">Baggage</div>
+                  <div className="text-white">15kg cabin + 15kg check-in</div>
+                </div>
+                <div>
+                  <div className="text-muted text-xs mb-1">Cancellation</div>
+                  <div className="text-white">₹3,500 fee</div>
+                </div>
+                <div>
+                  <div className="text-muted text-xs mb-1">Date Change</div>
+                  <div className="text-white">₹2,000 + fare diff</div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  )
+}
+
+export default function SearchPage() {
+  const [tripType, setTripType] = useState('oneWay')
+  const [from, setFrom] = useState('Delhi (DEL)')
+  const [to, setTo] = useState('Mumbai (BOM)')
+  const [date, setDate] = useState('2025-03-15')
+  const [travelers, setTravelers] = useState(1)
+  const [cabinClass, setCabinClass] = useState('Economy')
+  const [searched, setSearched] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [selectedFlight, setSelectedFlight] = useState(null)
+  const [sortBy, setSortBy] = useState('price')
+
+  const handleSearch = () => {
+    setLoading(true)
+    setSearched(false)
+    setTimeout(() => {
+      setLoading(false)
+      setSearched(true)
+    }, 1600)
+  }
+
+  const swapCities = () => {
+    setFrom(to)
+    setTo(from)
+  }
+
+  const sortedFlights = [...MOCK_FLIGHTS].sort((a, b) => {
+    if (sortBy === 'price') return a.price - b.price
+    if (sortBy === 'duration') return a.duration.localeCompare(b.duration)
+    if (sortBy === 'depart') return a.depart.localeCompare(b.depart)
+    return 0
+  })
+
+  return (
+    <div className="min-h-screen pt-24 pb-16 px-4">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="font-display text-4xl font-bold text-white mb-2">Search Flights</h1>
+          <p className="text-muted">
+            Or try{' '}
+            <Link to="/chat" className="text-gold-400 hover:text-gold-300 underline underline-offset-2">
+              AI-powered search
+            </Link>{' '}
+            — just describe your trip in plain language.
+          </p>
+        </motion.div>
+
+        {/* Search form */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="glass gradient-border rounded-3xl p-6 mb-8"
+        >
+          {/* Trip type */}
+          <div className="flex gap-1 mb-6">
+            {['oneWay', 'roundTrip', 'multiCity'].map(type => (
+              <button
+                key={type}
+                onClick={() => setTripType(type)}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  tripType === type
+                    ? 'bg-gold-400/15 text-gold-400 border border-gold-400/25'
+                    : 'text-muted hover:text-white'
+                }`}
+              >
+                {type === 'oneWay' ? 'One Way' : type === 'roundTrip' ? 'Round Trip' : 'Multi-City'}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_1fr_1fr_auto] gap-3 items-end">
+            {/* From */}
+            <div>
+              <label className="text-xs text-muted mb-1.5 block font-medium uppercase tracking-wider">From</label>
+              <div className="relative">
+                <Plane className="absolute left-3 top-3 w-4 h-4 text-muted rotate-45" />
+                <input
+                  value={from}
+                  onChange={e => setFrom(e.target.value)}
+                  className="ai-input w-full pl-9 pr-3 py-3 rounded-xl text-white text-sm"
+                  placeholder="City or Airport"
+                />
+              </div>
+            </div>
+
+            {/* Swap */}
+            <button
+              onClick={swapCities}
+              className="p-3 glass border border-border hover:border-gold-400/30 rounded-xl text-muted hover:text-gold-400 transition-all self-end"
+            >
+              <ArrowLeftRight className="w-4 h-4" />
+            </button>
+
+            {/* To */}
+            <div>
+              <label className="text-xs text-muted mb-1.5 block font-medium uppercase tracking-wider">To</label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-3 w-4 h-4 text-muted" />
+                <input
+                  value={to}
+                  onChange={e => setTo(e.target.value)}
+                  className="ai-input w-full pl-9 pr-3 py-3 rounded-xl text-white text-sm"
+                  placeholder="City or Airport"
+                />
+              </div>
+            </div>
+
+            {/* Date */}
+            <div>
+              <label className="text-xs text-muted mb-1.5 block font-medium uppercase tracking-wider">Depart</label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-3 w-4 h-4 text-muted" />
+                <input
+                  type="date"
+                  value={date}
+                  onChange={e => setDate(e.target.value)}
+                  className="ai-input w-full pl-9 pr-3 py-3 rounded-xl text-white text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Travelers */}
+            <div>
+              <label className="text-xs text-muted mb-1.5 block font-medium uppercase tracking-wider">Travelers</label>
+              <div className="relative">
+                <Users className="absolute left-3 top-3 w-4 h-4 text-muted" />
+                <select
+                  value={travelers}
+                  onChange={e => setTravelers(e.target.value)}
+                  className="ai-input w-full pl-9 pr-3 py-3 rounded-xl text-white text-sm appearance-none"
+                >
+                  {[1,2,3,4,5,6].map(n => (
+                    <option key={n} value={n} className="bg-deep">{n} {n === 1 ? 'Traveler' : 'Travelers'}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Search button */}
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleSearch}
+              disabled={loading}
+              className="px-6 py-3 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold rounded-xl shadow-gold-sm hover:shadow-gold transition-all flex items-center gap-2 self-end"
+            >
+              {loading ? (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                >
+                  <Search className="w-4 h-4" />
+                </motion.div>
+              ) : (
+                <Search className="w-4 h-4" />
+              )}
+              Search
+            </motion.button>
+          </div>
+
+          {/* Class selector */}
+          <div className="mt-4 flex gap-2">
+            {['Economy', 'Premium Economy', 'Business', 'First Class'].map(cls => (
+              <button
+                key={cls}
+                onClick={() => setCabinClass(cls)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  cabinClass === cls
+                    ? 'bg-gold-400/15 text-gold-400 border border-gold-400/25'
+                    : 'text-muted hover:text-white border border-transparent'
+                }`}
+              >
+                {cls}
+              </button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Loading */}
+        <AnimatePresence>
+          {loading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-center py-12"
+            >
+              <div className="relative w-16 h-16 mx-auto mb-4">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                  className="absolute inset-0 rounded-full border-2 border-gold-400/20 border-t-gold-400"
+                />
+                <Plane className="absolute inset-0 m-auto w-6 h-6 text-gold-400" />
+              </div>
+              <p className="text-muted text-sm">Searching live flight inventory...</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Results */}
+        <AnimatePresence>
+          {searched && !loading && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              {/* Results header */}
+              <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+                <div>
+                  <h2 className="text-white font-semibold text-lg">
+                    {sortedFlights.length} flights found
+                  </h2>
+                  <p className="text-muted text-sm">{from} → {to} · {travelers} traveler · {cabinClass}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted">Sort:</span>
+                  {['price', 'duration', 'depart'].map(s => (
+                    <button
+                      key={s}
+                      onClick={() => setSortBy(s)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        sortBy === s
+                          ? 'bg-gold-400/15 text-gold-400 border border-gold-400/20'
+                          : 'text-muted hover:text-white border border-transparent'
+                      }`}
+                    >
+                      {s.charAt(0).toUpperCase() + s.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* AI tip */}
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="mb-5 flex items-start gap-3 p-4 bg-sky-500/10 border border-sky-500/20 rounded-2xl"
+              >
+                <Sparkles className="w-4 h-4 text-sky-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sky-200/80 text-sm">
+                  <span className="font-semibold text-sky-300">AI Tip:</span> Fares on this route are 12% below average this week. The 6E 204 morning flight has the best on-time performance (96%).
+                </p>
+              </motion.div>
+
+              {/* Flight cards */}
+              <div className="space-y-4">
+                {sortedFlights.map((flight, i) => (
+                  <motion.div
+                    key={flight.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.08 }}
+                  >
+                    <FlightCard
+                      flight={flight}
+                      onSelect={(f) => setSelectedFlight(f)}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Selected flight confirmation */}
+              <AnimatePresence>
+                {selectedFlight && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="mt-6 glass gradient-border rounded-2xl p-6"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-display text-xl font-bold text-white mb-1">
+                          ✈ {selectedFlight.airline} selected
+                        </h3>
+                        <p className="text-muted text-sm">
+                          {selectedFlight.depart} → {selectedFlight.arrive} · {selectedFlight.duration} · {selectedFlight.stops === 0 ? 'Direct' : `${selectedFlight.stops} stop`}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-gold-400 font-bold text-2xl">₹{selectedFlight.price.toLocaleString()}</div>
+                        <p className="text-muted text-xs">per person</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex items-center gap-3">
+                      <Link
+                        to="/book"
+                        state={{ flight: selectedFlight }}
+                        className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold rounded-xl shadow-gold hover:shadow-[0_0_40px_rgba(232,180,41,0.4)] transition-all"
+                      >
+                        <Shield className="w-4 h-4" />
+                        Continue to Booking
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                      <button
+                        onClick={() => setSelectedFlight(null)}
+                        className="px-4 py-3 glass border border-border hover:border-border/80 rounded-xl text-muted text-sm"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Empty state */}
+        {!searched && !loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-16"
+          >
+            <div className="w-20 h-20 glass border border-border rounded-3xl flex items-center justify-center mx-auto mb-4">
+              <Plane className="w-10 h-10 text-gold-400/40" />
+            </div>
+            <h3 className="font-display text-xl text-white mb-2">Where to next?</h3>
+            <p className="text-muted text-sm mb-6">Enter your route above or let AI plan it for you.</p>
+            <Link
+              to="/chat"
+              className="inline-flex items-center gap-2 px-5 py-2.5 glass border border-gold-400/20 text-gold-400 text-sm font-medium rounded-xl hover:bg-gold-400/5 transition-all"
+            >
+              <Sparkles className="w-4 h-4" /> Try AI Search instead
+            </Link>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  )
+}
