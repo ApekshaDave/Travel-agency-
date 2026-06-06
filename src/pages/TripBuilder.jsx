@@ -4,13 +4,12 @@ import { Link } from 'react-router-dom'
 import {
   Sparkles, Plane, Train, Bus, Building2, Trash2, Clock, ChevronRight,
   CheckCircle, DollarSign, Zap, Compass, Landmark, Utensils, Trees, ShoppingBag, MapPin,
-  Edit3, Coffee, Sun, Moon, Calendar as CalendarIcon, HelpCircle, Car, Users
+  Edit3, Coffee, Sun, Moon, Calendar as CalendarIcon, HelpCircle, Car, Users, Send
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { generateMultiModalTrip } from '../utils/multiModalApi'
-import { saveTrip } from '../utils/tripStore'
+import { saveTrip, getTripById, updateTripItinerary, syncTripsWithSupabase } from '../utils/tripStore'
 import { useAuth } from '../context/AuthContext'
-import { getTripById } from '../utils/tripStore'
 
 // ── Segment types ─────────────────────────────────────────────────────────────
 const SEGMENT_TYPES = [
@@ -241,21 +240,39 @@ export default function TripBuilder() {
 
   
   const [activeTrip, setActiveTrip] = useState(() => {
-  const params = new URLSearchParams(window.location.search)
-  const agentViewId = params.get('agentView')
-  if (agentViewId) {
-    const entry = getTripById(agentViewId)
-    if (entry) {
-      return {
+    const params = new URLSearchParams(window.location.search)
+
+    // Agent viewing a specific customer trip
+    const agentViewId = params.get('agentView')
+    if (agentViewId) {
+      const entry = getTripById(agentViewId)
+      if (entry) return {
         ...entry.trip,
         isAgentView: true,
         customerName: entry.customer.name,
         customerEmail: entry.customer.email,
       }
     }
-  }
-  return null
-})
+
+    // Customer viewing their own saved/agent-updated trip
+    const viewId = params.get('view')
+    if (viewId) {
+      const entry = getTripById(viewId)
+      if (entry) return {
+        ...entry.trip,
+        isCustomerView: true,
+        agentName: entry.agentName,
+      }
+    }
+
+    // Restore trip synced from AI chat (voyageai_active_trip)
+    try {
+      const cached = localStorage.getItem('voyageai_active_trip')
+      if (cached) return JSON.parse(cached)
+    } catch { /* ignore parse errors */ }
+
+    return null
+  })
 
 
   
@@ -1567,6 +1584,36 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                     >
                       <CheckCircle className="w-4 h-4" /> Save Package Details
                     </motion.button>
+
+                    {activeTrip?.isAgentView && (
+  <motion.button
+    whileHover={{ scale: 1.02 }}
+    whileTap={{ scale: 0.98 }}
+    onClick={() => {
+      // Get trip ID from URL
+      const params = new URLSearchParams(window.location.search)
+      const tripId = params.get('agentView')
+      if (tripId) {
+        updateTripItinerary(tripId, {
+          segments: activeTrip.segments,
+          itineraryDays: activeTrip.itineraryDays,
+          placesToVisit: activeTrip.placesToVisit,
+          restaurants: activeTrip.restaurants,
+          costComparison: activeTrip.costComparison,
+          highlights: activeTrip.highlights,
+          name: activeTrip.tripName || activeTrip.name,
+          desc: activeTrip.desc,
+          duration: activeTrip.duration,
+          totalCost: grandTripTotal,
+        }, user?.name)
+        toast.success(`Updated itinerary sent to ${activeTrip.customerName}!`)
+      }
+    }}
+    className="mt-2 w-full py-3 bg-sky-500/15 border border-sky-400/20 text-sky-300 font-bold rounded-xl hover:bg-sky-500/20 transition-all flex items-center justify-center gap-2 text-xs"
+  >
+    <Send className="w-4 h-4" /> Send Updated Itinerary to Customer
+  </motion.button>
+)}
 
                     <Link
                       to="/chat"

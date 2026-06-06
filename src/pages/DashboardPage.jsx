@@ -5,8 +5,10 @@ import {
   Plane, Calendar, Clock, CheckCircle, AlertCircle,
   Download, RefreshCw, MessageCircle, ChevronRight,
   MapPin, Star, TrendingUp, Sparkles, Package,
-  ArrowRight, Bell, MoreHorizontal, Shield
+  ArrowRight, Bell, MoreHorizontal, Shield, Map
 } from 'lucide-react'
+import { getCustomerTrips } from '../utils/tripStore'
+import { useAuth } from '../context/AuthContext'
 
 const TRIPS = [
   {
@@ -205,6 +207,10 @@ function TripCard({ trip }) {
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('all')
+  const { user } = useAuth()
+  const customerTrips = user ? getCustomerTrips(user.id) : []
+  const agentUpdatedTrips = customerTrips.filter(t => t.agentSentBack)
+  const pendingTrips = customerTrips.filter(t => !t.agentSentBack)
 
   const filtered = TRIPS.filter(t =>
     activeTab === 'all' ? true :
@@ -244,7 +250,7 @@ export default function DashboardPage() {
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
-            { label: 'Total Trips', value: TRIPS.length, icon: Plane, color: 'text-gold-400' },
+            { label: 'Total Trips', value: TRIPS.length + customerTrips.length, icon: Plane, color: 'text-gold-400' },
             { label: 'Miles Flown', value: '4,280', icon: TrendingUp, color: 'text-sky-400' },
             { label: 'Savings', value: '₹3,200', icon: Star, color: 'text-sage-400' },
           ].map(({ label, value, icon: Icon, color }, i) => (
@@ -263,45 +269,114 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid lg:grid-cols-[1fr_280px] gap-6">
-          {/* Trips list */}
-          <div>
-            {/* Tabs */}
-            <div className="flex gap-1 mb-5">
-              {['all', 'upcoming', 'completed'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all capitalize ${
-                    activeTab === tab
-                      ? 'bg-gold-400/15 text-gold-400 border border-gold-400/20'
-                      : 'text-muted hover:text-white'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
+          {/* Left column: Agent updated banners + trip tabs */}
+          <div className="space-y-6">
 
-            <div className="space-y-4">
-              {filtered.map((trip, i) => (
-                <motion.div
-                  key={trip.id}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.07 }}
-                >
-                  <TripCard trip={trip} />
-                </motion.div>
-              ))}
-              {filtered.length === 0 && (
-                <div className="text-center py-16">
-                  <Plane className="w-10 h-10 text-gold-400/30 mx-auto mb-3" />
-                  <p className="text-muted">No {activeTab} trips found.</p>
-                  <Link to="/search" className="text-gold-400 text-sm hover:underline mt-2 inline-block">
-                    Book a flight →
-                  </Link>
+            {/* Agent-updated itineraries banner */}
+            {agentUpdatedTrips.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <h2 className="font-display text-lg font-bold text-white mb-3 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-gold-400" />
+                  Agent Updated Your Itineraries
+                </h2>
+                <div className="space-y-3">
+                  {agentUpdatedTrips.map(entry => (
+                    <div key={entry.id} className="glass border border-sky-400/20 rounded-2xl p-4 bg-sky-400/5">
+                      <div className="flex items-start justify-between flex-wrap gap-3">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-white font-bold text-sm">{entry.trip.name}</span>
+                            <span className="px-2 py-0.5 bg-sky-400/15 border border-sky-400/20 text-sky-400 text-[10px] rounded-full font-bold">Updated by Agent</span>
+                          </div>
+                          <p className="text-muted text-xs">
+                            {entry.trip.duration} · ₹{entry.trip.totalCost?.toLocaleString()} · Updated by {entry.agentName}
+                          </p>
+                        </div>
+                        <Link
+                          to={`/trip-builder?view=${entry.id}`}
+                          className="px-3 py-1.5 bg-sky-400/15 border border-sky-400/20 text-sky-400 text-xs font-bold rounded-xl hover:bg-sky-400/20 transition-all flex items-center gap-1.5"
+                        >
+                          <Map className="w-3.5 h-3.5" /> View Trip
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
+              </motion.div>
+            )}
+
+            {/* My Trip Builder packages */}
+            {pendingTrips.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <h2 className="font-display text-lg font-bold text-white mb-3 flex items-center gap-2">
+                  <Map className="w-4 h-4 text-gold-400" />
+                  My Trip Builder Packages
+                </h2>
+                <div className="space-y-2">
+                  {pendingTrips.slice(0, 4).map(entry => (
+                    <div key={entry.id} className="glass border border-border rounded-2xl p-4 flex items-center justify-between gap-3 hover:border-gold-400/20 transition-all">
+                      <div className="min-w-0">
+                        <div className="text-white font-semibold text-sm truncate">{entry.trip.name}</div>
+                        <div className="text-muted text-xs mt-0.5">
+                          {entry.trip.duration} · ₹{entry.trip.totalCost?.toLocaleString()} ·
+                          <span className={`ml-1 font-medium ${
+                            entry.status === 'pending' ? 'text-amber-400' :
+                            entry.status === 'booked' ? 'text-sage-400' : 'text-muted'
+                          }`}>{entry.status}</span>
+                        </div>
+                      </div>
+                      <Link
+                        to={`/trip-builder?view=${entry.id}`}
+                        className="px-3 py-1.5 glass border border-gold-400/20 text-gold-400 text-xs font-bold rounded-xl hover:bg-gold-400/10 transition-all flex-shrink-0"
+                      >
+                        View
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Booked Flights */}
+            <div>
+              {/* Tabs */}
+              <div className="flex gap-1 mb-5">
+                {['all', 'upcoming', 'completed'].map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all capitalize ${
+                      activeTab === tab
+                        ? 'bg-gold-400/15 text-gold-400 border border-gold-400/20'
+                        : 'text-muted hover:text-white'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-4">
+                {filtered.map((trip, i) => (
+                  <motion.div
+                    key={trip.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.07 }}
+                  >
+                    <TripCard trip={trip} />
+                  </motion.div>
+                ))}
+                {filtered.length === 0 && (
+                  <div className="text-center py-16">
+                    <Plane className="w-10 h-10 text-gold-400/30 mx-auto mb-3" />
+                    <p className="text-muted">No {activeTab} trips found.</p>
+                    <Link to="/search" className="text-gold-400 text-sm hover:underline mt-2 inline-block">
+                      Book a flight →
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

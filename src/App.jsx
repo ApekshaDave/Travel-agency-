@@ -118,17 +118,24 @@ export default function App() {
                 <Route
                   path="/agent"
                   element={
-                    <ProtectedRoute requiredRole="agent" loginPath="/staff-login">
+                    <ProtectedRoute requiredRole="agent" loginPath="/login?tab=agency">
                       <AgentDashboard />
                     </ProtectedRoute>
                   }
                 />
-                <Route path="/agent/trips" element={<AgentTripsPage />} />
+                <Route
+                  path="/agent/trips"
+                  element={
+                    <ProtectedRoute requiredRole="agent" loginPath="/login?tab=agency">
+                      <AgentTripsPage />
+                    </ProtectedRoute>
+                  }
+                />
                 {/* Phase 3 */}
                 <Route
                   path="/finance"
                   element={
-                    <ProtectedRoute requiredRole="agent" loginPath="/staff-login">
+                    <ProtectedRoute requiredRole="agent" loginPath="/login?tab=agency">
                       <FinanceDashboard />
                     </ProtectedRoute>
                   }
@@ -136,7 +143,7 @@ export default function App() {
                 <Route
                   path="/finance/invoices"
                   element={
-                    <ProtectedRoute requiredRole="finance" loginPath="/staff-login">
+                    <ProtectedRoute requiredRole="agent" loginPath="/login?tab=agency">
                       <InvoiceManager />
                     </ProtectedRoute>
                   }
@@ -144,7 +151,7 @@ export default function App() {
                 <Route
                   path="/finance/billing"
                   element={
-                    <ProtectedRoute requiredRole="finance" loginPath="/staff-login">
+                    <ProtectedRoute requiredRole="agent" loginPath="/login?tab=agency">
                       <BillingManager />
                     </ProtectedRoute>
                   }
@@ -152,7 +159,7 @@ export default function App() {
                 <Route
                   path="/finance/refunds"
                   element={
-                    <ProtectedRoute requiredRole="finance" loginPath="/staff-login">
+                    <ProtectedRoute requiredRole="agent" loginPath="/login?tab=agency">
                       <RefundProcessing />
                     </ProtectedRoute>
                   }
@@ -160,7 +167,7 @@ export default function App() {
                 <Route
                   path="/finance/corporate"
                   element={
-                    <ProtectedRoute requiredRole="finance" loginPath="/staff-login">
+                    <ProtectedRoute requiredRole="agent" loginPath="/login?tab=agency">
                       <CorporateStatements />
                     </ProtectedRoute>
                   }
@@ -168,7 +175,7 @@ export default function App() {
                 <Route
                   path="/finance/notifications"
                   element={
-                    <ProtectedRoute requiredRole="agent" loginPath="/staff-login">
+                    <ProtectedRoute requiredRole="agent" loginPath="/login?tab=agency">
                       <AdminNotifications />
                     </ProtectedRoute>
                   }

@@ -22,7 +22,7 @@ export default function StaffNav() {
   const handleLogout = async () => {
     await logout()
     toast.success('Logged out of staff portal')
-    navigate('/staff-login')
+    navigate('/login?tab=agency')
   }
 
   return (

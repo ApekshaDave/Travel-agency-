@@ -5,8 +5,11 @@ import {
   Plane, Train, Bus, Building2, Map,
   LayoutDashboard, Menu, X,
   Sparkles, RefreshCw, 
-   ChevronDown, ArrowRight, LogIn
+  ChevronDown, ArrowRight, LogIn,
+  AlertTriangle, DollarSign, Bell, LogOut
 } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+import toast from 'react-hot-toast'
 
 const NAV_LINKS = [
   { to: '/search',       label: 'Flights',       icon: Plane },
@@ -21,10 +24,6 @@ const USER_LINKS = [
   { to: '/dashboard',    label: 'My Trips',      icon: LayoutDashboard },
   { to: '/post-booking', label: 'Manage Booking', icon: RefreshCw },
   { to: '/corporate',    label: 'Corporate',     icon: Building2 },
-]
-
-const STAFF_LINKS = [
-  { to: '/staff-login',          label: 'Staff Login',    icon: LogIn },
 ]
 
 function GenericDropdown({ label, links, active, isStaff }) {
@@ -84,12 +83,27 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
   const active = location.pathname
+  const { user, logout } = useAuth()
+
+  const isStaff = user && (user.role === 'agent' || user.role === 'admin' || user.role === 'finance')
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30)
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  const handleLogout = () => {
+    logout()
+    toast.success('Signed out successfully')
+    setMobileOpen(false)
+  }
+
+  const staffLinks = [
+    { to: '/agent', label: 'Agent Desk', icon: AlertTriangle },
+    { to: '/finance', label: 'Finance Office', icon: DollarSign },
+    { to: '/finance/notifications', label: 'Admin Alerts', icon: Bell }
+  ]
 
   return (
     <motion.nav
@@ -129,15 +143,38 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-2">
-            <GenericDropdown label="My Travel" links={USER_LINKS} active={active} />
-            <GenericDropdown label="Staff" links={STAFF_LINKS} active={active} isStaff />
+            {/* Show customer links only if not staff */}
+            {!isStaff && (
+              <GenericDropdown label="My Travel" links={USER_LINKS} active={active} />
+            )}
+
+            {/* Show staff links only if staff */}
+            {isStaff && (
+              <GenericDropdown label="Staff Desk" links={staffLinks} active={active} isStaff />
+            )}
+
             <div className="h-6 w-px bg-white/10 mx-2" />
-            <Link 
-              to="/login" 
-              className="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white text-xs font-bold rounded-xl border border-white/10 transition-all hover:border-gold-400/30"
-            >
-              Sign In
-            </Link>
+            
+            {user ? (
+              <div className="flex items-center gap-3">
+                <span className="text-white text-xs font-semibold">
+                  {user.name} <span className="text-[10px] text-muted italic">({user.role === 'user' ? 'Customer' : user.agencyName || 'Staff'})</span>
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-300 text-xs font-bold rounded-xl border border-red-500/20 transition-all flex items-center gap-1"
+                >
+                  <LogOut className="w-3.5 h-3.5" /> Sign Out
+                </button>
+              </div>
+            ) : (
+              <Link 
+                to="/login" 
+                className="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white text-xs font-bold rounded-xl border border-white/10 transition-all hover:border-gold-400/30"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
 
@@ -179,65 +216,75 @@ export default function Navbar() {
                 })}
               </div>
 
-              <div className="space-y-1">
-                <p className="text-[10px] uppercase tracking-widest text-muted mb-2 px-3 font-semibold">My Travel</p>
-                {USER_LINKS.map(l => {
-                  const isLinkActive = active === l.to || active.startsWith(l.to + '/')
-                  return (
-                    <Link
-                      key={l.to}
-                      to={l.to}
-                      onClick={() => setMobileOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2 text-sm rounded-xl transition-all ${
-                        isLinkActive
-                          ? 'text-gold-400 bg-gold-400/5'
-                          : 'text-muted hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <l.icon className="w-4 h-4 text-sky-400/70" />
-                      {l.label}
-                    </Link>
-                  )
-                })}
-              </div>
+              {/* Mobile My Travel (Only if guest or customer) */}
+              {!isStaff && (
+                <div className="space-y-1">
+                  <p className="text-[10px] uppercase tracking-widest text-muted mb-2 px-3 font-semibold">My Travel</p>
+                  {USER_LINKS.map(l => {
+                    const isLinkActive = active === l.to || active.startsWith(l.to + '/')
+                    return (
+                      <Link
+                        key={l.to}
+                        to={l.to}
+                        onClick={() => setMobileOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-2 text-sm rounded-xl transition-all ${
+                          isLinkActive
+                            ? 'text-gold-400 bg-gold-400/5'
+                            : 'text-muted hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <l.icon className="w-4 h-4 text-sky-400/70" />
+                        {l.label}
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
 
-              <div className="space-y-1">
-                <p className="text-[10px] uppercase tracking-widest text-red-400/70 mb-2 px-3 font-semibold">Staff Desk</p>
-                {STAFF_LINKS.map(l => {
-                  const isLinkActive = active === l.to || active.startsWith(l.to + '/')
-                  return (
-                    <Link
-                      key={l.to}
-                      to={l.to}
-                      onClick={() => setMobileOpen(false)}
-                      className={`flex items-center justify-between px-3 py-2 text-sm rounded-xl transition-all ${
-                        isLinkActive
-                          ? 'text-red-400 bg-red-500/5'
-                          : 'text-muted hover:text-red-400 hover:bg-red-500/5'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <l.icon className="w-4 h-4 text-red-400/70" />
-                        <span>{l.label}</span>
-                      </div>
-                      {l.badge && (
-                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500/20 text-red-400">
-                          {l.badge}
-                        </span>
-                      )}
-                    </Link>
-                  )
-                })}
-              </div>
+              {/* Mobile Staff Desk (Only if staff) */}
+              {isStaff && (
+                <div className="space-y-1">
+                  <p className="text-[10px] uppercase tracking-widest text-red-400/70 mb-2 px-3 font-semibold">Staff Desk</p>
+                  {staffLinks.map(l => {
+                    const isLinkActive = active === l.to || active.startsWith(l.to + '/')
+                    return (
+                      <Link
+                        key={l.to}
+                        to={l.to}
+                        onClick={() => setMobileOpen(false)}
+                        className={`flex items-center justify-between px-3 py-2 text-sm rounded-xl transition-all ${
+                          isLinkActive
+                            ? 'text-red-400 bg-red-500/5'
+                            : 'text-muted hover:text-red-400 hover:bg-red-500/5'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <l.icon className="w-4 h-4 text-red-400/70" />
+                          <span>{l.label}</span>
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
 
               <div className="pt-4 border-t border-white/5">
-                <Link 
-                  to="/login" 
-                  onClick={() => setMobileOpen(false)}
-                  className="w-full py-3 bg-gold-gradient text-void font-bold rounded-xl flex items-center justify-center gap-2 shadow-gold"
-                >
-                  Sign In <ArrowRight className="w-4 h-4" />
-                </Link>
+                {user ? (
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full py-3 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/20 font-bold rounded-xl flex items-center justify-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" /> Sign Out
+                  </button>
+                ) : (
+                  <Link 
+                    to="/login" 
+                    onClick={() => setMobileOpen(false)}
+                    className="w-full py-3 bg-gold-gradient text-void font-bold rounded-xl flex items-center justify-center gap-2 shadow-gold"
+                  >
+                    Sign In <ArrowRight className="w-4 h-4" />
+                  </Link>
+                )}
               </div>
             </div>
           </motion.div>
