@@ -1,11 +1,12 @@
 
 import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate  } from 'react-router-dom'
 import {
   CheckCircle, Plane, Package, RefreshCw, MessageCircle,
   Download, Clock, ChevronRight, Sparkles,
   QrCode, Smartphone, ArrowRight, RotateCcw, Headphones, Bell, Star, Zap
 } from 'lucide-react'
+
 
 const ACTIVE_BOOKING = {
   id: 'VAI-A7X2K1',
@@ -107,7 +108,7 @@ const TIMELINE = [
 
 export default function PostBookingHub() {
   
-
+  const navigate = useNavigate()
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
       <div className="max-w-5xl mx-auto">

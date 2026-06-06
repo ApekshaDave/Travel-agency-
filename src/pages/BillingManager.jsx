@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 
 import toast from 'react-hot-toast'
+import StaffNav from '../components/layout/StaffNav'
 
 // ── Automation rules ──────────────────────────────────────────────────────────
 const DEFAULT_RULES = [
@@ -288,7 +289,8 @@ export default function BillingManager() {
   const totalRuns = rules.reduce((s, r) => s + r.runCount, 0)
 
   return (
-    <div className="min-h-screen pt-20 pb-10 px-4">
+    <div className="min-h-screen pt-28 pb-10 px-4">
+      <StaffNav/>
       <div className="max-w-5xl mx-auto">
 
         {/* Header */}

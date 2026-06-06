@@ -4,10 +4,13 @@ import { Link } from 'react-router-dom'
 import {
   Sparkles, Plane, Train, Bus, Building2, Trash2, Clock, ChevronRight,
   CheckCircle, DollarSign, Zap, Compass, Landmark, Utensils, Trees, ShoppingBag, MapPin,
-  Edit3, Coffee, Sun, Moon, Calendar as CalendarIcon, HelpCircle, Car
+  Edit3, Coffee, Sun, Moon, Calendar as CalendarIcon, HelpCircle, Car, Users
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { generateMultiModalTrip } from '../utils/multiModalApi'
+import { saveTrip } from '../utils/tripStore'
+import { useAuth } from '../context/AuthContext'
+import { getTripById } from '../utils/tripStore'
 
 // ── Segment types ─────────────────────────────────────────────────────────────
 const SEGMENT_TYPES = [
@@ -227,15 +230,36 @@ function TripSegment({ segment, onRemove, onEdit, index, isAgent }) {
 }
 
 // ── Main TripBuilder ──────────────────────────────────────────────────────────
-import { useAuth } from '../context/AuthContext'
+
 
 export default function TripBuilder() {
   const { user } = useAuth()
   const [prompt, setPrompt] = useState('')
   const inputRef = useRef(null)
   const [generating, setGenerating] = useState(false)
-  const [activeTrip, setActiveTrip] = useState(null)
   const [error, setError] = useState(null)
+
+  
+  const [activeTrip, setActiveTrip] = useState(() => {
+  const params = new URLSearchParams(window.location.search)
+  const agentViewId = params.get('agentView')
+  if (agentViewId) {
+    const entry = getTripById(agentViewId)
+    if (entry) {
+      return {
+        ...entry.trip,
+        isAgentView: true,
+        customerName: entry.customer.name,
+        customerEmail: entry.customer.email,
+      }
+    }
+  }
+  return null
+})
+
+
+  
+  
 
 
   // Sync active trip to localStorage when it changes
@@ -671,7 +695,7 @@ export default function TripBuilder() {
               <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
               <span className="text-white">Trip Builder</span>
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1">Multi-Modal Trip Builder</h1>
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1">Trip Builder</h1>
             <p className="text-muted text-sm">Describe your destination — AI generates flights, trains, buses, roadways & hotels.</p>
           </div>
 
@@ -829,6 +853,26 @@ export default function TripBuilder() {
                   </button>
                 </div>
               )}
+
+              {activeTrip?.isAgentView && (
+  <div className="mb-6 p-4 bg-sky-400/10 border border-sky-400/20 rounded-2xl flex items-center justify-between">
+    <div className="flex items-center gap-3">
+      <Users className="w-4 h-4 text-sky-400" />
+      <div>
+        <p className="text-sky-300 font-semibold text-sm">Viewing Customer Trip</p>
+        <p className="text-sky-300/60 text-xs">
+          Built by {activeTrip.customerName} ({activeTrip.customerEmail})
+        </p>
+      </div>
+    </div>
+    <Link
+      to="/agent/trips"
+      className="px-3 py-1.5 glass border border-sky-400/20 text-sky-400 text-xs font-bold rounded-lg hover:bg-sky-400/10 transition-all"
+    >
+      ← Back to Requests
+    </Link>
+  </div>
+)}
 
               {/* Title Header */}
               <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -1516,7 +1560,9 @@ export default function TripBuilder() {
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => toast.success('Comprehensive trip package saved successfully!')}
+                      onClick={() => {const entry = saveTrip(activeTrip, user)
+toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
+}}
                       className="w-full py-3 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold rounded-xl shadow-gold-sm hover:shadow-gold transition-all flex items-center justify-center gap-2 text-xs"
                     >
                       <CheckCircle className="w-4 h-4" /> Save Package Details

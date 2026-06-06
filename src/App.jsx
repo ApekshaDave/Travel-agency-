@@ -43,6 +43,7 @@ import TrainSearch from './pages/TrainSearch'
 import BusSearch from './pages/BusSearch'
 import VisaChecker from './pages/VisaChecker'
 import TripBuilder from './pages/TripBuilder'
+import AgentTripsPage from './pages/AgentTripsPage'
 
 export default function App() {
   return (
@@ -122,7 +123,7 @@ export default function App() {
                     </ProtectedRoute>
                   }
                 />
-
+                <Route path="/agent/trips" element={<AgentTripsPage />} />
                 {/* Phase 3 */}
                 <Route
                   path="/finance"

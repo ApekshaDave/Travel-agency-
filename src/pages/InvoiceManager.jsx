@@ -10,6 +10,7 @@ import {
   formatINR, GST_RATES
 } from '../utils/billingEngine'
 import toast from 'react-hot-toast'
+import StaffNav from '../components/layout/StaffNav'
 
 // ── Mock invoice list ─────────────────────────────────────────────────────────
 const INVOICES = [
@@ -414,7 +415,8 @@ export default function InvoiceManager() {
   }
 
   return (
-    <div className="min-h-screen pt-20 pb-10 px-4">
+    <div className="min-h-screen pt-28 pb-10 px-4">
+      <StaffNav />
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}

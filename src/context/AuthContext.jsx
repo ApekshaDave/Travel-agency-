@@ -16,7 +16,7 @@ export function AuthProvider({ children }) {
     return null
   }
 })
-  const [loading] = useState(true)
+  const [loading] = useState(false)
 
 
 
@@ -27,15 +27,18 @@ export function AuthProvider({ children }) {
     // return data.user
 
     // Mock auth — accepts any valid email/password
-    const role = options.staff
+    const isStaffEmail =
+  email.includes('agent') ||
+  email.includes('admin') ||
+  email.includes('staff')
+
+const role = options.staff
+  ? (isStaffEmail
       ? (email.includes('admin') ? 'admin' : 'agent')
-      : email.includes('admin')
-      ? 'admin'
-      : email.includes('agent') || email.includes('staff')
-        ? 'agent'
-        : email.includes('finance')
-          ? 'finance'
-          : 'user'
+      : 'user')
+  : email.includes('finance')
+    ? 'finance'
+    : 'user'
 
     const mockUser = {
       id: `user_${Math.random().toString(36).slice(2, 8)}`,

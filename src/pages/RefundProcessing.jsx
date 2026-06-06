@@ -8,6 +8,7 @@ import { calculateRefund, formatINR } from '../utils/billingEngine'
 import toast from 'react-hot-toast'
 
 import { getAIRecommendation } from '../utils/multiModalApi'
+import StaffNav from '../components/layout/StaffNav'
 
 const PENDING_REFUNDS = [
   {
@@ -251,7 +252,8 @@ export default function RefundProcessing() {
   const processingCount = refunds.filter(r => r.status === 'processing' || r.status === 'approved').length
 
   return (
-    <div className="min-h-screen pt-20 pb-10 px-4">
+    <div className="min-h-screen pt-28 pb-10 px-4">
+      <StaffNav/>
       <div className="max-w-4xl mx-auto">
         {aiTip && (
   <div className="flex items-start gap-3 p-4 bg-gold-400/8 border border-gold-400/20 rounded-2xl">

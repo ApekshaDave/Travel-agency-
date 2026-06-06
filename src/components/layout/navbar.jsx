@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plane, Train, Bus, Building2, Map,
   LayoutDashboard, Menu, X,
-  Sparkles, AlertTriangle, RefreshCw, DollarSign,
-  Bell, ChevronDown, ArrowRight, ShieldCheck, LogIn
+  Sparkles, RefreshCw, 
+   ChevronDown, ArrowRight, LogIn
 } from 'lucide-react'
 
 const NAV_LINKS = [
@@ -24,11 +24,7 @@ const USER_LINKS = [
 ]
 
 const STAFF_LINKS = [
-  { to: '/staff',                label: 'Staff Home',     icon: ShieldCheck },
   { to: '/staff-login',          label: 'Staff Login',    icon: LogIn },
-  { to: '/agent',                label: 'Agent Desk',    icon: AlertTriangle, badge: 'Urgent' },
-  { to: '/finance',              label: 'Finance Office', icon: DollarSign },
-  { to: '/finance/notifications',label: 'Admin Alerts',  icon: Bell, badge: '3' },
 ]
 
 function GenericDropdown({ label, links, active, isStaff }) {
@@ -158,9 +154,9 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden glass border-b border-border overflow-hidden"
+            className="lg:hidden glass border-b border-border overflow-y-auto max-h-[85vh]"
           >
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 overflow-y-auto">
               <div className="space-y-1">
                 <p className="text-[10px] uppercase tracking-widest text-gold-400 mb-2 px-3 font-semibold">Plan Voyage</p>
                 {NAV_LINKS.map(l => {

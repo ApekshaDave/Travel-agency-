@@ -11,6 +11,7 @@ import {
 } from 'recharts'
 import { formatINR } from '../utils/billingEngine'
 import toast from 'react-hot-toast'
+import StaffNav from '../components/layout/StaffNav'
 
 // ── Mock corporate accounts ───────────────────────────────────────────────────
 const CORPORATE_ACCOUNTS = [
@@ -367,7 +368,8 @@ export default function CorporateStatements() {
   )
 
   return (
-    <div className="min-h-screen pt-20 pb-10 px-4">
+    <div className="min-h-screen pt-28 pb-10 px-4">
+      <StaffNav/>
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}

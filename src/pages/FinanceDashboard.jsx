@@ -7,6 +7,7 @@ import {
   Receipt, Package, Building2, CreditCard, Search
 } from 'lucide-react'
 import { MOCK_LEDGER, getLedgerSummary, formatINR } from '../utils/billingEngine'
+import StaffNav from '../components/layout/StaffNav'
 
 // ── Recharts for revenue chart ────────────────────────────────────────────────
 import {
@@ -144,7 +145,8 @@ export default function FinanceDashboard() {
   ]
 
   return (
-    <div className="min-h-screen pt-20 pb-10 px-4">
+    <div className="min-h-screen pt-28 pb-10 px-4">
+      <StaffNav />
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}

@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
 import { getAIRecommendation } from '../utils/multiModalApi'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion} from 'framer-motion'
 import {
-  AlertTriangle, CheckCircle, Clock, MessageCircle, Sparkles,
-  Eye, BarChart3, Zap, Bell,
-   ArrowRight, Phone, Mail,
-  Search, User, Plane, XCircle
+  AlertTriangle, CheckCircle, Clock, MessageCircle, Sparkles, Zap, ArrowRight, Phone, 
+  Mail,User, Plane, XCircle, ChevronRight
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import StaffNav from '../components/layout/StaffNav'
 
 // ── Mock escalated cases ─────────────────────────────────────────────────────
 const CASES = [
@@ -121,23 +120,10 @@ const CASES = [
   },
 ]
 
-const STATS = [
-  { label: 'Open Cases', value: 3, icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/20' },
-  { label: 'Pending Approval', value: 1, icon: Clock, color: 'text-sky-400', bg: 'bg-sky-400/10 border-sky-400/20' },
-  { label: 'Resolved Today', value: 8, icon: CheckCircle, color: 'text-sage-400', bg: 'bg-sage-400/10 border-sage-400/20' },
-  { label: 'Automation Rate', value: '87%', icon: Zap, color: 'text-gold-400', bg: 'bg-gold-400/10 border-gold-400/20' },
-]
-
 const PRIORITY_STYLES = {
   high: { badge: 'bg-red-500/15 text-red-400 border-red-500/20', dot: 'bg-red-400', label: 'High' },
   medium: { badge: 'bg-amber-500/15 text-amber-400 border-amber-500/20', dot: 'bg-amber-400', label: 'Medium' },
   low: { badge: 'bg-sage-400/15 text-sage-400 border-sage-400/20', dot: 'bg-sage-400', label: 'Low' },
-}
-
-const STATUS_STYLES = {
-  open: 'bg-red-500/10 text-red-400 border-red-500/20',
-  pending: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  resolved: 'bg-sage-400/10 text-sage-400 border-sage-400/20',
 }
 
 const TYPE_ICONS = {
@@ -368,15 +354,16 @@ function CaseDetail({ caseData, onClose, onResolve }) {
 export default function AgentDashboard() {
   const [cases, setCases] = useState(CASES)
   const [selectedCase, setSelectedCase] = useState(null)
-  const [filter, setFilter] = useState('all')
+  const [filter] = useState('all')
   const [search, setSearch] = useState('')
   const [view, setView] = useState('summary') // summary, queue, work
 
   const [aiTip, setAiTip] = useState('')
 
   useEffect(() => {
-    getAIRecommendation('Give a concise travel tip...')
-      .then(setAiTip).catch(() => {})
+  getAIRecommendation('Give a concise one-line tip for travel agents handling escalated cases today.')
+    .then(result => setAiTip(result))
+    .catch(() => {})
   }, [])
 
   const filtered = cases.filter(c => {
@@ -407,14 +394,9 @@ export default function AgentDashboard() {
 
 
   return (
-    <div className="min-h-screen pt-20 pb-8 px-4">
+    <div className="min-h-screen pt-28 pb-8 px-4">
+      <StaffNav />
       <div className="max-w-7xl mx-auto">
-        {aiTip && (
-  <div className="flex items-start gap-3 p-4 bg-gold-400/8 border border-gold-400/20 rounded-2xl">
-    <Sparkles className="w-4 h-4 text-gold-400 flex-shrink-0 mt-0.5" />
-    <p className="text-gold-200/80 text-sm">{aiTip}</p>
-  </div>
-)}
 
         {/* Header - Phased Navigation */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="py-6 flex items-end justify-between border-b border-border/40 mb-8">
@@ -448,13 +430,21 @@ export default function AgentDashboard() {
           </div>
         </motion.div>
 
+        {aiTip && (
+  <div className="flex items-start gap-3 p-4 mb-6 bg-gold-400/8 border border-gold-400/20 rounded-2xl">
+    <Sparkles className="w-4 h-4 text-gold-400 flex-shrink-0 mt-0.5" />
+    <p className="text-gold-200/80 text-sm">{aiTip}</p>
+  </div>
+)}
+
+        
         {/* Dynamic Views */}
         <div className="min-h-[600px]">
           {view === 'summary' && !selectedCase && (
             <div className="space-y-12">
                {/* Stats (Compact) */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {stats.map(({ label, value, icon: Icon, color, bg }, i) => (
+                {stats.map(({ label, value, icon: Icon, color, bg }) => (
                   <div key={label} className={`glass border rounded-2xl p-4 ${bg}`}>
                     <div className="flex items-center justify-between mb-2">
                       <Icon className={`w-4 h-4 ${color}`} />
@@ -495,7 +485,7 @@ export default function AgentDashboard() {
               {/* Sidebar List (only when in work mode) */}
               <div className={`${selectedCase ? 'block' : 'hidden'} space-y-3 max-h-[calc(100vh-180px)] overflow-y-auto pr-2 custom-scrollbar`}>
                  <div className="text-[10px] font-bold text-muted uppercase tracking-widest px-2 mb-2">Remaining Tasks</div>
-                 {cases.filter(c => c.status !== 'resolved').map((c, i) => (
+                 {cases.filter(c => c.status !== 'resolved').map((c) => (
                     <div 
                       key={c.id}
                       onClick={() => setSelectedCase(c)}

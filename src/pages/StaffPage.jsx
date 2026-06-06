@@ -9,6 +9,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import StaffNav from '../components/layout/StaffNav'
 
 const STAFF_LINKS = [
   {
@@ -42,7 +43,9 @@ export default function StaffPage() {
   const canUseStaff = user?.role === 'agent' || user?.role === 'admin'
 
   return (
-    <div className="min-h-screen pt-24 pb-16 px-4">
+    
+    <div className="min-h-screen pt-28 pb-16 px-4">
+      <StaffNav />
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 18 }}

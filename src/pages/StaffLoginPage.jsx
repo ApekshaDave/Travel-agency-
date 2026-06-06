@@ -10,7 +10,7 @@ export default function StaffLoginPage() {
   const [password, setPassword] = useState('agent123')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const { login } = useAuth()
+  const { login, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const from = location.state?.from?.pathname || '/staff'
@@ -30,15 +30,22 @@ export default function StaffLoginPage() {
     }
 
     setLoading(true)
-    try {
-      await login(email, password, { staff: true })
-      toast.success('Staff access granted')
-      navigate(from, { replace: true })
-    } catch (err) {
-      toast.error(err.message || 'Staff login failed')
-    } finally {
-      setLoading(false)
-    }
+try {
+  const loggedInUser = await login(email, password, { staff: true })
+  
+  if (loggedInUser.role !== 'agent' && loggedInUser.role !== 'admin') {
+    await logout()
+    setError('Access denied. Only travel agents and admins can use the Staff Portal.')
+    return
+  }
+  
+  toast.success('Staff access granted')
+  navigate(from, { replace: true })
+} catch (err) {
+  toast.error(err.message || 'Staff login failed')
+} finally {
+  setLoading(false)
+}
   }
 
   return (

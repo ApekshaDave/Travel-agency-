@@ -9,6 +9,7 @@ import {
 import { formatINR } from '../utils/billingEngine'
 import toast from 'react-hot-toast'
 import { useMemo } from 'react';
+import StaffNav from '../components/layout/StaffNav'
 
 // ── Notification data ─────────────────────────────────────────────────────────
 const ALL_NOTIFICATIONS = [
@@ -258,7 +259,8 @@ export default function AdminNotifications() {
   })
   
   return (
-    <div className="min-h-screen pt-20 pb-10 px-4">
+    <div className="min-h-screen pt-28 pb-10 px-4">
+      <StaffNav />
       <div className="max-w-4xl mx-auto">
 
         {/* Header */}
