@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import {
   Sparkles, Send, Mic, Plane, Users,
   ArrowRight, RefreshCw,
   AlertTriangle, CheckCircle, Clock
 } from 'lucide-react'
-import { callVoyageAI } from '../utils/multiModalApi'
+import { callVoyageAI, detectTripIntent, generateMultiModalTrip, updateTripWithPreferences } from '../utils/multiModalApi'
 import toast from 'react-hot-toast'
 import FlightCard from '../components/features/FlightCard'
 
@@ -77,6 +77,47 @@ function Message({ msg }) {
               <FlightCard key={i} flight={f} onSelect={() => {}} variant="chat" />
             ))}
           </div>
+        )}
+
+        {msg.finalizedTrip && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full glass border border-gold-400/20 rounded-2xl p-4 space-y-3 max-w-md"
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="px-2 py-0.5 text-[9px] font-mono font-bold bg-gold-400/10 text-gold-400 rounded border border-gold-400/20 uppercase tracking-wider">
+                  Trip Workspace Synced
+                </span>
+                <h3 className="font-display font-bold text-white text-base mt-1.5 flex items-center gap-1.5">
+                  <Plane className="w-4 h-4 text-gold-400" />
+                  {msg.finalizedTrip.name}
+                </h3>
+                <p className="text-muted text-xs mt-1">Duration: {msg.finalizedTrip.duration}</p>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-muted block">Estimated Cost</span>
+                <span className="text-gold-400 font-bold text-sm font-mono">
+                  {typeof msg.finalizedTrip.budget === 'number'
+                    ? `₹${msg.finalizedTrip.budget.toLocaleString()}`
+                    : msg.finalizedTrip.budget}
+                </span>
+              </div>
+            </div>
+            
+            <p className="text-muted/80 text-xs leading-relaxed">
+              All transport options (flights, trains, buses, roadways), hotel stays, top 10 local sights, and food choices are loaded.
+            </p>
+            
+            <Link
+              to="/trip-builder"
+              className="flex items-center justify-center gap-2 w-full py-2.5 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold text-xs rounded-xl shadow-gold-sm hover:shadow-gold transition-all"
+            >
+              Open in Trip Builder
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </motion.div>
         )}
 
         {msg.warnings && msg.warnings.map((w, i) => (
@@ -203,15 +244,77 @@ export default function ChatPage() {
     setApiHistory(newHistory)
 
     try {
-      const reply = await callVoyageAI(newHistory)
-      setMessages(prev => [...prev, { role: 'assistant', content: reply, ts: Date.now() }])
-      setApiHistory(prev => [...prev, { role: 'assistant', content: reply }])
+      // Check for trip workspace intent
+      const activeTripRaw = localStorage.getItem('voyageai_active_trip')
+      let activeTrip = null
+      if (activeTripRaw) {
+        try { activeTrip = JSON.parse(activeTripRaw) } catch {}
+      }
+
+      const intent = await detectTripIntent(userText, activeTrip)
+
+      if (intent.detected && intent.action !== 'none') {
+        let tripData = null
+        if (intent.action === 'new') {
+          // Display placeholder drafting message
+          const draftMsg = `✨ Classifying request... I'm drafting a new trip plan to ${intent.destination} (${intent.duration}) in the background with preferences: "${intent.preferences || 'none'}". Generating all options...`
+          setMessages(prev => [...prev, { role: 'assistant', content: draftMsg, ts: Date.now() }])
+          
+          tripData = await generateMultiModalTrip(`${intent.destination} for ${intent.duration} ${intent.preferences ? `, preferences: ${intent.preferences}` : ''}`)
+        } else if (intent.action === 'update' && activeTrip) {
+          // Display placeholder updating message
+          const updateMsg = `✨ Analyzing active trip... Applying change: "${intent.preferences || userText}" and regenerating pricing comparisons...`
+          setMessages(prev => [...prev, { role: 'assistant', content: updateMsg, ts: Date.now() }])
+          
+          tripData = await updateTripWithPreferences(activeTrip, userText)
+        }
+
+        if (tripData) {
+          localStorage.setItem('voyageai_active_trip', JSON.stringify(tripData))
+          
+          const confirmReply = `I've successfully updated your trip workspace! ✈️\n\nDestination: ${tripData.tripName || tripData.name || intent.destination}\nDuration: ${tripData.duration || intent.duration}\nEstimated budget: ₹${(tripData.totalBudget || 35000).toLocaleString()}\n\nI have synced these changes to your active Trip Builder workspace. Open it below to review flights, hotels, trains, buses, roadways, sights, and restaurants.`
+
+          setMessages(prev => [
+            ...prev.filter(m => !m.content.startsWith('✨ Classifying') && !m.content.startsWith('✨ Analyzing')),
+            {
+              role: 'assistant',
+              content: confirmReply,
+              finalizedTrip: {
+                name: tripData.tripName || tripData.name || intent.destination,
+                duration: tripData.duration || intent.duration,
+                budget: tripData.totalBudget || 35000,
+                dest: intent.destination
+              },
+              ts: Date.now()
+            }
+          ])
+          
+          setApiHistory(prev => [
+            ...prev,
+            { role: 'assistant', content: confirmReply }
+          ])
+        } else {
+          // Fallback to normal chat if generation fails
+          const reply = await callVoyageAI(newHistory)
+          setMessages(prev => [...prev, { role: 'assistant', content: reply, ts: Date.now() }])
+          setApiHistory(prev => [...prev, { role: 'assistant', content: reply }])
+        }
+      } else {
+        // Fallback to standard chat response
+        const reply = await callVoyageAI(newHistory)
+        setMessages(prev => [...prev, { role: 'assistant', content: reply, ts: Date.now() }])
+        setApiHistory(prev => [...prev, { role: 'assistant', content: reply }])
+      }
     } catch (err) {
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: `I'm having trouble connecting right now.\n\nError: ${err.message}\n\nMake sure VITE_GROQ_API_KEY is set in your .env file.`,
-        ts: Date.now(),
-      }])
+      console.error(err)
+      setMessages(prev => [
+        ...prev.filter(m => !m.content.startsWith('✨ Classifying') && !m.content.startsWith('✨ Analyzing')),
+        {
+          role: 'assistant',
+          content: `I'm having trouble connecting right now.\n\nError: ${err.message}\n\nMake sure VITE_GROQ_API_KEY is set in your .env file.`,
+          ts: Date.now(),
+        }
+      ])
     } finally {
       setIsTyping(false)
     }

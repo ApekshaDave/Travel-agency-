@@ -34,6 +34,8 @@ import BillingManager from './pages/BillingManager'
 import RefundProcessing from './pages/RefundProcessing'
 import CorporateStatements from './pages/CorporateStatements'
 import AdminNotifications from './pages/AdminNotifications'
+import StaffPage from './pages/StaffPage'
+import StaffLoginPage from './pages/StaffLoginPage'
 
 // Phase 4
 import HotelSearch from './pages/HotelSearch'
@@ -68,6 +70,8 @@ export default function App() {
                 <Route path="/corporate" element={<CorporatePage />} />
                 <Route path="/itinerary" element={<ItineraryPage />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/staff" element={<StaffPage />} />
+                <Route path="/staff-login" element={<StaffLoginPage />} />
 
                 {/* Phase 2 */}
                 <Route
@@ -113,7 +117,7 @@ export default function App() {
                 <Route
                   path="/agent"
                   element={
-                    <ProtectedRoute requiredRole="agent">
+                    <ProtectedRoute requiredRole="agent" loginPath="/staff-login">
                       <AgentDashboard />
                     </ProtectedRoute>
                   }
@@ -123,7 +127,7 @@ export default function App() {
                 <Route
                   path="/finance"
                   element={
-                    <ProtectedRoute requiredRole="finance">
+                    <ProtectedRoute requiredRole="agent" loginPath="/staff-login">
                       <FinanceDashboard />
                     </ProtectedRoute>
                   }
@@ -131,7 +135,7 @@ export default function App() {
                 <Route
                   path="/finance/invoices"
                   element={
-                    <ProtectedRoute requiredRole="finance">
+                    <ProtectedRoute requiredRole="finance" loginPath="/staff-login">
                       <InvoiceManager />
                     </ProtectedRoute>
                   }
@@ -139,7 +143,7 @@ export default function App() {
                 <Route
                   path="/finance/billing"
                   element={
-                    <ProtectedRoute requiredRole="finance">
+                    <ProtectedRoute requiredRole="finance" loginPath="/staff-login">
                       <BillingManager />
                     </ProtectedRoute>
                   }
@@ -147,7 +151,7 @@ export default function App() {
                 <Route
                   path="/finance/refunds"
                   element={
-                    <ProtectedRoute requiredRole="finance">
+                    <ProtectedRoute requiredRole="finance" loginPath="/staff-login">
                       <RefundProcessing />
                     </ProtectedRoute>
                   }
@@ -155,7 +159,7 @@ export default function App() {
                 <Route
                   path="/finance/corporate"
                   element={
-                    <ProtectedRoute requiredRole="finance">
+                    <ProtectedRoute requiredRole="finance" loginPath="/staff-login">
                       <CorporateStatements />
                     </ProtectedRoute>
                   }
@@ -163,7 +167,7 @@ export default function App() {
                 <Route
                   path="/finance/notifications"
                   element={
-                    <ProtectedRoute requiredRole="finance">
+                    <ProtectedRoute requiredRole="agent" loginPath="/staff-login">
                       <AdminNotifications />
                     </ProtectedRoute>
                   }

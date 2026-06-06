@@ -286,16 +286,59 @@ IMPORTANT: Output ONLY the raw JSON above. No markdown. No explanation. Replace 
 // ─── Chat (VoyageAI assistant) ────────────────────────────────────────────────
 
 /**
+ * Detects if the user wants to plan a new trip or update their current active trip.
+ */
+export async function detectTripIntent(userText, currentTrip = null) {
+  const system = `You are a trip intent classifier. Your job is to analyze the user's message and check if they want to plan a new trip or update their current trip.
+Current active trip: ${currentTrip ? JSON.stringify({ name: currentTrip.tripName || currentTrip.name, duration: currentTrip.duration }) : 'None'}
+
+Return ONLY a single valid JSON object (no markdown, no extra text) with the following fields:
+{
+  "detected": true, // or false if it is just a normal question/conversation
+  "action": "new", // "new", "update", or "none"
+  "destination": "City Name (e.g. Hyderabad)",
+  "duration": "Duration in days, e.g., 5 days (default to 5 days if unspecified)",
+  "preferences": "Any specific preferences mentioned (e.g., veg food, add Taj Mahal, budget-friendly)"
+}`
+
+  try {
+    const response = await askGroqJSON(`Analyze the user's request: "${userText}"`, system, { maxTokens: 250, temperature: 0.1 })
+    return response
+  } catch (e) {
+    console.error("detectTripIntent failed:", e)
+    return { detected: false, action: "none", destination: "", duration: "5 days", preferences: "" }
+  }
+}
+
+/**
+ * Takes an existing trip object and applies updates described in userText using LLM.
+ */
+export async function updateTripWithPreferences(currentTrip, userText) {
+  const system = `You are an expert trip editor. You will receive an existing trip JSON and a user's update request.
+Your job is to apply the request to the trip JSON and return the updated JSON.
+Keep the exact same JSON schema. Apply changes like changing duration, adding/removing/updating segments, itinerary days, restaurants, or attractions based on the user's request.
+Return ONLY the raw updated JSON object. No markdown.`
+
+  const prompt = `Current Trip:
+${JSON.stringify(currentTrip)}
+
+User Request: "${userText}"`
+
+  return askGroqJSON(prompt, system, { maxTokens: 4500, temperature: 0.3 })
+}
+
+/**
  * Multi-turn chat for ChatPage.jsx
  * messages = [{role, content}] conversation history
  */
 export async function callVoyageAI(messages) {
-  const system = `You are VoyageAI, an expert AI travel assistant for a premium travel agency.
-You help users discover destinations, search flights, plan itineraries, and manage bookings through natural conversation.
+  const system = `You are VoyageAI, an expert travel assistant for a premium travel agency.
+You help users with flights, hotels, transit visa concerns, itineraries, and booking next steps.
 
 When responding:
 - Be warm, concise, and expert
 - Always ask clarifying questions if needed (dates, budget, traveler count, class preference)
+- Help users draft itineraries, suggestions for sightseeing and dining, and let them know that their trip can be finalized and synchronized with the Trip Builder.
 - Surface visa warnings, transit requirements, or travel advisories proactively
 - Format flight options clearly with airline, price, duration, and stops
 - Use rupees (₹) as default currency unless user specifies
@@ -310,6 +353,7 @@ Always end with a clear next step or question.`
   const { callGroq } = await import('./groq.js')
   return callGroq(messages, system, { maxTokens: 1000, temperature: 0.75 })
 }
+
 
 // ─── Contextual AI snippets ───────────────────────────────────────────────────
 

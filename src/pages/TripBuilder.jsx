@@ -1,10 +1,10 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
   Sparkles, Plane, Train, Bus, Building2, Trash2, Clock, ChevronRight,
   CheckCircle, DollarSign, Zap, Compass, Landmark, Utensils, Trees, ShoppingBag, MapPin,
-  Edit3, Check, Info, AlertTriangle, ArrowRight, Coffee, Sun, Moon, Calendar as CalendarIcon, HelpCircle, Car
+  Edit3, Coffee, Sun, Moon, Calendar as CalendarIcon, HelpCircle, Car
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { generateMultiModalTrip } from '../utils/multiModalApi'
@@ -17,6 +17,8 @@ const SEGMENT_TYPES = [
   { id: 'roadways', label: 'Roadways', icon: Car, color: 'text-orange-400', bg: 'bg-orange-400/10 border-orange-400/20' },
   { id: 'hotel', label: 'Hotel', icon: Building2, color: 'text-sage-400', bg: 'bg-sage-400/10 border-sage-400/20' },
 ]
+
+const TRANSPORT_TYPES = ['flight', 'train', 'bus', 'roadways']
 
 // ── Sample itinerary presets ──────────────────────────────────────────────────
 const PRESET_TRIPS = [
@@ -85,7 +87,7 @@ const PRESET_TRIPS = [
         morning: { activity: "Arrive in Delhi", description: "Fly in from Mumbai and transfer to Connaught Place.", duration: "2h", cost: "Free", tip: "Use prepaid airport cabs." },
         afternoon: { activity: "Explore Red Fort", description: "Vast Mughal palace fort complex constructed of red sandstone.", duration: "2h", cost: "₹80", tip: "Hire an official guide at entrance." },
         evening: { activity: "India Gate Walk", description: "War memorial glowing at sunset, with street food vendors around.", duration: "1.5h", cost: "Free", tip: "Try local dry-fruit kulfi." },
-        meals: { breakfast: "In-flight meal", lunch: "Karim\'s Jama Masjid", dinner: "Sattvik CP" },
+        meals: { breakfast: "In-flight meal", lunch: "Karim's Jama Masjid", dinner: "Sattvik CP" },
         transport: "Auto Rickshaw / Taxi",
         estimatedDayBudget: "₹2,500"
       }
@@ -234,14 +236,44 @@ export default function TripBuilder() {
   const [generating, setGenerating] = useState(false)
   const [activeTrip, setActiveTrip] = useState(null)
   const [error, setError] = useState(null)
+
+
+  // Sync active trip to localStorage when it changes
+  useEffect(() => {
+    if (activeTrip) {
+      localStorage.setItem('voyageai_active_trip', JSON.stringify(activeTrip))
+    } else {
+      localStorage.removeItem('voyageai_active_trip')
+    }
+  }, [activeTrip])
+
+  // Cross-tab sync for active trip
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'voyageai_active_trip') {
+        if (e.newValue) {
+          try {
+            setActiveTrip(JSON.parse(e.newValue))
+          } catch(e) {console.error(e)}
+        } else {
+          setActiveTrip(null)
+        }
+      }
+    }
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
   
   // Navigation tabs
   const [activeTab, setActiveTab] = useState('itinerary')
   const [sandboxAgentMode, setSandboxAgentMode] = useState(false)
+
+  const canUseAgentOverride =
+  user?.role === 'agent' || user?.role === 'admin'
+
   const [editingItem, setEditingItem] = useState(null)
   const [editForm, setEditForm] = useState({})
-
-  const isAgent = user?.role === 'agent' || sandboxAgentMode
+  const isAgent = canUseAgentOverride && sandboxAgentMode
 
   // Helper to safely backfill restaurants list to exactly 10 options
   const backfillRestaurants = (list, isVeg) => {
@@ -414,7 +446,7 @@ export default function TripBuilder() {
           morning: { activity: "Airport Transfer", description: "Cab directly to your pre-booked palace resort.", duration: "1.5h", cost: "Free", tip: "Pre-book with travel agency." },
           afternoon: { activity: "Visit Old Fort Walls", description: "Walk ancient stone battlements and explore artifacts.", duration: "2h", cost: "₹50", tip: "Hire local guides for facts." },
           evening: { activity: "Bazaar Spice Tour", description: "Guided tour through colorful, pungent old markets.", duration: "2.5h", cost: "Free", tip: "Stay hydrated and watch pockets." },
-          meals: { breakfast: "Airport Cafe", lunch: "Karim\'s", dinner: "Sattvik CP" },
+          meals: { breakfast: "Airport Cafe", lunch: "Karim's", dinner: "Sattvik CP" },
           transport: "Auto rickshaw",
           estimatedDayBudget: "₹1,500"
         }
@@ -434,26 +466,35 @@ export default function TripBuilder() {
     }))
   }
 
+  const getTransportEndpoints = (segments) => {
+    const existingTransport = segments.find(s => TRANSPORT_TYPES.includes(s.type))
+    return {
+      from: existingTransport?.from || 'Origin',
+      to: existingTransport?.to || 'Destination',
+    }
+  }
+
+  const replaceSelectedTransport = (segments, newSegment) => [
+    newSegment,
+    ...segments.filter(s => !TRANSPORT_TYPES.includes(s.type)),
+  ]
+
   // Swap methods for Flight, Hotel, Train, Bus, Roadways options
   const selectFlightOption = (option) => {
     setActiveTrip(prev => {
       const copy = { ...prev }
+      const endpoints = getTransportEndpoints(prev.segments)
       const newSegment = {
         id: 'seg-flight',
         type: 'flight',
-        from: prev.segments.find(s => s.type === 'flight')?.from || 'Origin',
-        to: prev.segments.find(s => s.type === 'flight')?.to || 'Destination',
+        from: endpoints.from,
+        to: endpoints.to,
         date: 'Day 1 · ' + option.depart,
         detail: `${option.airline} ${option.flightNo} · ${option.duration} · ${option.stops === 0 ? 'Direct' : option.stops + ' Stops'}`,
         price: option.price,
         icon: '✈️'
       }
-      const hasFlight = prev.segments.some(s => s.type === 'flight')
-      if (hasFlight) {
-        copy.segments = prev.segments.map(s => s.type === 'flight' ? newSegment : s)
-      } else {
-        copy.segments = [newSegment, ...prev.segments]
-      }
+      copy.segments = replaceSelectedTransport(prev.segments, newSegment)
       return copy
     })
     toast.success(`${option.airline} flight selected!`)
@@ -487,22 +528,18 @@ export default function TripBuilder() {
   const selectTrainOption = (option) => {
     setActiveTrip(prev => {
       const copy = { ...prev }
+      const endpoints = getTransportEndpoints(prev.segments)
       const newSegment = {
         id: 'seg-train',
         type: 'train',
-        from: prev.segments.find(s => s.type === 'train')?.from || 'Origin',
-        to: prev.segments.find(s => s.type === 'train')?.to || 'Destination',
+        from: endpoints.from,
+        to: endpoints.to,
         date: 'Day 1 · ' + option.depart,
         detail: `${option.name} (${option.trainNo}) · ${option.duration}`,
         price: option.price,
         icon: '🚂'
       }
-      const hasTrain = prev.segments.some(s => s.type === 'train')
-      if (hasTrain) {
-        copy.segments = prev.segments.map(s => s.type === 'train' ? newSegment : s)
-      } else {
-        copy.segments = [...prev.segments, newSegment]
-      }
+      copy.segments = replaceSelectedTransport(prev.segments, newSegment)
       return copy
     })
     toast.success(`${option.name} train selected!`)
@@ -511,22 +548,18 @@ export default function TripBuilder() {
   const selectBusOption = (option) => {
     setActiveTrip(prev => {
       const copy = { ...prev }
+      const endpoints = getTransportEndpoints(prev.segments)
       const newSegment = {
         id: 'seg-bus',
         type: 'bus',
-        from: prev.segments.find(s => s.type === 'bus')?.from || 'Origin',
-        to: prev.segments.find(s => s.type === 'bus')?.to || 'Destination',
+        from: endpoints.from,
+        to: endpoints.to,
         date: 'Day 1 · ' + option.depart,
         detail: `${option.operator} · ${option.type} · ${option.duration}`,
         price: option.price,
         icon: '🚌'
       }
-      const hasBus = prev.segments.some(s => s.type === 'bus')
-      if (hasBus) {
-        copy.segments = prev.segments.map(s => s.type === 'bus' ? newSegment : s)
-      } else {
-        copy.segments = [...prev.segments, newSegment]
-      }
+      copy.segments = replaceSelectedTransport(prev.segments, newSegment)
       return copy
     })
     toast.success(`${option.operator} bus selected!`)
@@ -535,22 +568,18 @@ export default function TripBuilder() {
   const selectRoadwaysOption = (option) => {
     setActiveTrip(prev => {
       const copy = { ...prev }
+      const endpoints = getTransportEndpoints(prev.segments)
       const newSegment = {
         id: 'seg-roadways',
         type: 'roadways',
-        from: prev.segments.find(s => s.type === 'roadways')?.from || 'Origin',
-        to: prev.segments.find(s => s.type === 'roadways')?.to || 'Destination',
+        from: endpoints.from,
+        to: endpoints.to,
         date: 'Day 1',
         detail: `${option.vehicle} · via ${option.provider} · ${option.detail}`,
         price: option.price,
         icon: '🚗'
       }
-      const hasRoad = prev.segments.some(s => s.type === 'roadways')
-      if (hasRoad) {
-        copy.segments = prev.segments.map(s => s.type === 'roadways' ? newSegment : s)
-      } else {
-        copy.segments = [...prev.segments, newSegment]
-      }
+      copy.segments = replaceSelectedTransport(prev.segments, newSegment)
       return copy
     })
     toast.success(`${option.vehicle} roadways selected!`)
@@ -617,6 +646,9 @@ export default function TripBuilder() {
     ?.filter(s => s.type === 'flight' || s.type === 'train' || s.type === 'bus' || s.type === 'roadways')
     ?.reduce((sum, s) => sum + (s.price || 0), 0) || 0
 
+  const selectedTransportSegments = activeTrip?.segments
+    ?.filter(s => TRANSPORT_TYPES.includes(s.type)) || []
+
   // 3. Sightseeing & Entry Fee Cost (from top 10 attractions list)
   const sightsCost = activeTrip?.placesToVisit
     ?.reduce((sum, p) => sum + (Number(p.price) || 0), 0) || 0
@@ -644,6 +676,7 @@ export default function TripBuilder() {
           </div>
 
           {/* Sandbox Agent Switcher */}
+          {canUseAgentOverride && (
           <div className="glass border border-border/80 px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <span className="text-xs font-semibold text-white/80 hidden sm:block">Agent Override</span>
             <span className="text-xs font-semibold text-white/80 sm:hidden">Agent</span>
@@ -657,6 +690,7 @@ export default function TripBuilder() {
               <div className={`w-5 h-5 rounded-full bg-void shadow-sm transform transition-transform ${isAgent ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>
           </div>
+          )}
         </motion.div>
 
         {/* AI prompt input */}
@@ -666,7 +700,7 @@ export default function TripBuilder() {
           transition={{ delay: 0.08 }}
           className="glass gradient-border rounded-3xl p-6 mb-6"
         >
-          <label className="text-xs text-gold-400 uppercase tracking-wider mb-3 block flex items-center gap-1.5 font-bold">
+          <label className="text-xs text-gold-400 uppercase tracking-wider mb-3 flex items-center gap-1.5 font-bold">
             <Sparkles className="w-3.5 h-3.5" /> Enter Destination & Preferences
           </label>
           <div 
@@ -1414,6 +1448,26 @@ export default function TripBuilder() {
                       })}
 
                       {/* 3. Sightseeing — individual places with ticket prices */}
+                      {selectedTransportSegments.length > 0 && (
+                        <div className="border-b border-white/5 pb-2 pl-5 -mt-1 space-y-1">
+                          {selectedTransportSegments.map(seg => (
+                            <div key={seg.id} className="text-[9px] text-muted/70 truncate" title={seg.detail}>
+                              Selected: {seg.detail}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {selectedTransportSegments.length === 0 && (
+                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                          <div className="flex items-center gap-2">
+                            <Plane className="w-3.5 h-3.5 text-muted/60" />
+                            <span className="text-muted">Transportation</span>
+                          </div>
+                          <span className="text-muted/70 font-mono">Not selected</span>
+                        </div>
+                      )}
+
                       <div className="border-b border-white/5 pb-2">
                         <div className="flex items-center justify-between mb-1.5">
                           <div className="flex items-center gap-2">
@@ -1653,7 +1707,7 @@ export default function TripBuilder() {
                     const slotData = editForm[slotKey] || {}
                     return (
                       <div key={slotKey} className="p-3 bg-white/2 rounded-xl border border-white/5 space-y-2">
-                        <span className="text-[10px] text-gold-400 font-bold uppercase block capitalize">{slotKey} Schedule</span>
+                        <span className="text-[10px] text-gold-400 font-bold uppercase block ">{slotKey} Schedule</span>
                         <input 
                           type="text"
                           placeholder="Activity Title"

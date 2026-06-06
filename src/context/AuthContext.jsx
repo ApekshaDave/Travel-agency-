@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState} from 'react'
 
 // TODO: Replace mock with real Supabase auth:
 // import { supabase } from '../utils/supabaseClient'
@@ -6,37 +7,41 @@ import { createContext, useContext, useState, useEffect } from 'react'
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    // On mount, restore session from localStorage (mock)
+  const [user, setUser] = useState(() => {
+  try {
     const stored = localStorage.getItem('voyageai_user')
-    if (stored) {
-      try { setUser(JSON.parse(stored)) } catch {}
-    }
-    setLoading(false)
+    return stored ? JSON.parse(stored) : null
+  } catch (err) {
+    console.error(err)
+    return null
+  }
+})
+  const [loading] = useState(true)
 
-    // TODO: Replace with Supabase session listener:
-    // const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-    //   setUser(session?.user ?? null)
-    //   setLoading(false)
-    // })
-    // return () => subscription.unsubscribe()
-  }, [])
 
-  const login = async (email, password) => {
+
+  const login = async (email, password, options = {}) => {
     // TODO: Replace with real Supabase auth:
     // const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     // if (error) throw error
     // return data.user
 
     // Mock auth — accepts any valid email/password
+    const role = options.staff
+      ? (email.includes('admin') ? 'admin' : 'agent')
+      : email.includes('admin')
+      ? 'admin'
+      : email.includes('agent') || email.includes('staff')
+        ? 'agent'
+        : email.includes('finance')
+          ? 'finance'
+          : 'user'
+
     const mockUser = {
       id: `user_${Math.random().toString(36).slice(2, 8)}`,
       email,
       name: email.split('@')[0],
-      role: email.includes('agent') ? 'agent' : email.includes('finance') ? 'finance' : 'user',
+      role,
     }
     localStorage.setItem('voyageai_user', JSON.stringify(mockUser))
     setUser(mockUser)

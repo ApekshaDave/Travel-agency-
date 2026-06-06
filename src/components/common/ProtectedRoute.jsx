@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext'
 import { motion } from 'framer-motion'
 import { Sparkles } from 'lucide-react'
 
-export default function ProtectedRoute({ children, requiredRole }) {
+export default function ProtectedRoute({ children, requiredRole, loginPath = '/login' }) {
   const { isAuthenticated, user, loading } = useAuth()
   const location = useLocation()
 
@@ -22,11 +22,11 @@ export default function ProtectedRoute({ children, requiredRole }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />
+    return <Navigate to={loginPath} state={{ from: location }} replace />
   }
 
-  if (requiredRole && user?.role !== requiredRole) {
-    return <Navigate to="/dashboard" replace />
+  if (requiredRole && user?.role !== requiredRole && user?.role !== 'admin') {
+    return <Navigate to={loginPath} state={{ from: location }} replace />
   }
 
   return children

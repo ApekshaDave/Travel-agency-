@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
   Search, Plane, ArrowLeftRight,
-  Clock, Zap, Star, ChevronDown, ArrowRight, Sparkles, Shield
+  ArrowRight, Sparkles, Shield
 } from 'lucide-react'
 import { searchFlights } from '../utils/multiModalApi'
 import { useBookingStore } from '../store/bookingStore'
@@ -40,6 +40,12 @@ const MOCK_FLIGHTS = [
     amenities: ['USB charging'],
   },
 ]
+
+const normalizePrice = (value, fallback = 0) => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  const parsed = Number(String(value ?? '').replace(/[^\d.]/g, ''))
+  return Number.isFinite(parsed) ? parsed : fallback
+}
 
 export default function SearchPage() {
   const [tripType, setTripType] = useState('oneWay')
@@ -87,6 +93,7 @@ export default function SearchPage() {
           ...f,
           id: f.id || `ai-${index}-${Date.now()}`,
           code: f.flightNo || f.code || 'AI 101',
+          price: normalizePrice(f.price, MOCK_FLIGHTS[index % MOCK_FLIGHTS.length]?.price || 0),
           seats: f.seatsLeft || f.seats || 5,
           fromCity: f.fromCity || from.split(' ')[0] || from,
           toCity: f.toCity || to.split(' ')[0] || to,
@@ -181,7 +188,7 @@ export default function SearchPage() {
                 </div>
                 <div>
                   <label className="text-xs text-muted mb-1.5 block font-medium uppercase tracking-wider">Travelers</label>
-                   <select value={travelers} onChange={e => setTravelers(parseInt(e.target.value))} className="ai-input w-full px-4 py-3 rounded-xl text-white text-sm appearance-none">
+                   <select value={travelers} onChange={e => setTravelers(Number(e.target.value))} className="ai-input w-full px-4 py-3 rounded-xl text-white text-sm appearance-none">
                       {[1,2,3,4].map(n => <option key={n} value={n}>{n} traveler</option>)}
                    </select>
                 </div>

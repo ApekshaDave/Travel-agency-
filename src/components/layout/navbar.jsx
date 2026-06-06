@@ -3,9 +3,9 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plane, Train, Bus, Building2, Map,
-  MessageCircle, LayoutDashboard, Menu, X,
+  LayoutDashboard, Menu, X,
   Sparkles, AlertTriangle, RefreshCw, DollarSign,
-  Bell, ChevronDown, Globe2, ArrowRight
+  Bell, ChevronDown, ArrowRight, ShieldCheck, LogIn
 } from 'lucide-react'
 
 const NAV_LINKS = [
@@ -24,6 +24,8 @@ const USER_LINKS = [
 ]
 
 const STAFF_LINKS = [
+  { to: '/staff',                label: 'Staff Home',     icon: ShieldCheck },
+  { to: '/staff-login',          label: 'Staff Login',    icon: LogIn },
   { to: '/agent',                label: 'Agent Desk',    icon: AlertTriangle, badge: 'Urgent' },
   { to: '/finance',              label: 'Finance Office', icon: DollarSign },
   { to: '/finance/notifications',label: 'Admin Alerts',  icon: Bell, badge: '3' },

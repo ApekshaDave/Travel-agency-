@@ -394,6 +394,18 @@ export default function AgentDashboard() {
     }
   }
 
+  const openCasesCount = cases.filter(c => c.status === 'open').length
+  const pendingCasesCount = cases.filter(c => c.status === 'pending').length
+  const resolvedCasesCount = 7 + cases.filter(c => c.status === 'resolved').length
+
+  const stats = [
+    { label: 'Open Cases', value: openCasesCount, icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/20' },
+    { label: 'Pending Approval', value: pendingCasesCount, icon: Clock, color: 'text-sky-400', bg: 'bg-sky-400/10 border-sky-400/20' },
+    { label: 'Resolved Today', value: resolvedCasesCount, icon: CheckCircle, color: 'text-sage-400', bg: 'bg-sage-400/10 border-sage-400/20' },
+    { label: 'Automation Rate', value: '87%', icon: Zap, color: 'text-gold-400', bg: 'bg-gold-400/10 border-gold-400/20' },
+  ]
+
+
   return (
     <div className="min-h-screen pt-20 pb-8 px-4">
       <div className="max-w-7xl mx-auto">
@@ -442,7 +454,7 @@ export default function AgentDashboard() {
             <div className="space-y-12">
                {/* Stats (Compact) */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {STATS.map(({ label, value, icon: Icon, color, bg }, i) => (
+                {stats.map(({ label, value, icon: Icon, color, bg }, i) => (
                   <div key={label} className={`glass border rounded-2xl p-4 ${bg}`}>
                     <div className="flex items-center justify-between mb-2">
                       <Icon className={`w-4 h-4 ${color}`} />
