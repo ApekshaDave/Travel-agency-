@@ -223,8 +223,8 @@ export default function HomePage() {
 
       {/* ─── STATS ─────────────────────────────────────────────── */}
       <section className="py-16 border-y border-border/40">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             {STATS.map(({ value, label, icon: Icon }, i) => (
               <motion.div
                 key={label}
@@ -235,10 +235,10 @@ export default function HomePage() {
                 className="text-center"
               >
                 <div className="flex items-center justify-center mb-2">
-                  <Icon className="w-5 h-5 text-gold-400/60 mr-2" />
-                  <span className="font-display font-bold text-4xl text-white">{value}</span>
+                  <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-gold-400/60 mr-1.5 sm:mr-2" />
+                  <span className="font-display font-bold text-2xl sm:text-3xl md:text-4xl text-white">{value}</span>
                 </div>
-                <p className="text-muted text-sm">{label}</p>
+                <p className="text-muted text-xs sm:text-sm">{label}</p>
               </motion.div>
             ))}
           </div>
@@ -272,7 +272,7 @@ export default function HomePage() {
           <p className="text-muted">No more jumping between tabs. We guide you from imagination to boarding.</p>
         </div>
 
-        <div className="grid md:grid-cols-4 gap-8 relative max-w-6xl w-full">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 relative max-w-6xl w-full">
            <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent hidden md:block" />
            {[
              { step: '01', label: 'Imagine', desc: 'Chat with AI to shape your journey.', icon: MessageSquare, color: 'text-gold-400' },
@@ -350,7 +350,7 @@ export default function HomePage() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: i * 0.15 }}
-                  className={`relative flex items-center gap-8 mb-20 ${i % 2 !== 0 ? 'md:flex-row-reverse md:text-right text-left' : ''}`}
+                  className={`relative flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-8 mb-14 sm:mb-20 ${i % 2 !== 0 ? 'md:flex-row-reverse md:text-right text-left' : ''}`}
                 >
                   <div className={`flex-shrink-0 w-32 h-32 glass rounded-[2.5rem] flex flex-col items-center justify-center border-2 border-dashed ${colors.border}`}>
                     <div className={`w-14 h-14 rounded-2xl ${colors.bg} flex items-center justify-center mb-1`}>
@@ -444,7 +444,7 @@ export default function HomePage() {
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="relative glass gradient-border rounded-3xl p-12 text-center overflow-hidden"
+            className="relative glass gradient-border rounded-3xl p-6 sm:p-10 lg:p-12 text-center overflow-hidden"
           >
             {/* Glow */}
             <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-60 h-60 bg-gold-400/10 rounded-full blur-3xl" />

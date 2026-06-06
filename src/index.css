@@ -191,3 +191,67 @@ body {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(232, 180, 41, 0.2);
 }
+
+/* ─── Global Responsive Utilities ───────────────────────────────────────────── */
+
+/* Hide scrollbar while keeping scroll functionality */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Responsive container — used on every page */
+.page-container {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+@media (min-width: 640px) {
+  .page-container { padding-left: 1.5rem; padding-right: 1.5rem; }
+}
+@media (min-width: 1024px) {
+  .page-container { padding-left: 2rem; padding-right: 2rem; }
+}
+
+/* Responsive cards grid */
+.cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+@media (min-width: 480px) {
+  .cards-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1024px) {
+  .cards-grid { grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+}
+@media (min-width: 1280px) {
+  .cards-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Prevent horizontal overflow on mobile */
+@media (max-width: 640px) {
+  .glass {
+    border-radius: 1rem;
+  }
+}
+
+/* Smooth responsive font scaling */
+@media (max-width: 480px) {
+  .font-display {
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Responsive table overflow wrapper */
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}

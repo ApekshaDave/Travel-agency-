@@ -153,45 +153,134 @@ Return this exact JSON:
  * Replaces the inline Anthropic call that was in TripBuilder.jsx
  */
 export async function generateMultiModalTrip(prompt) {
-  const system = `You are VoyageAI's multi-modal trip planner.
-Generate practical Indian travel itineraries combining flights, trains, buses and hotels.
-Respond ONLY with a single valid JSON object — no markdown, no extra text.`
+  const system = `You are VoyageAI's multi-modal trip planner for India.
+Generate practical, destination-specific travel itineraries combining flights, trains, buses, roadways (cars/cabs), stays, dining, and sightseeing.
+CRITICAL RULES:
+1. Respond ONLY with a single valid raw JSON object — no markdown fences, no extra text before or after.
+2. All restaurant and attraction names MUST be real, well-known places in the specified destination city.
+3. Keep ALL string values extremely short (1 sentence max) to stay within token limits.
+4. "placesToVisit" MUST have exactly 10 items — all real attractions in the destination.
+5. "restaurants.veg" MUST have exactly 10 real vegetarian restaurants in the destination.
+6. "restaurants.nonVeg" MUST have exactly 10 real non-vegetarian restaurants in the destination.
+7. "itineraryDays" must have one entry per day of the trip (e.g., 5 days = 5 entries).`
 
   const userPrompt = `Generate a multi-modal Indian travel itinerary for: "${prompt}"
 
-Return this exact JSON:
+Return this exact JSON shape (all fields required, keep descriptions very short):
 {
   "tripName": "Name of the trip",
-  "desc": "Short description",
+  "desc": "Short route description",
   "duration": "X days",
-  "totalBudget": 45000,
+  "totalBudget": 35000,
+  
+  "costComparison": {
+    "flightCost": "₹5,500",
+    "trainCost": "₹1,400",
+    "busCost": "₹850",
+    "roadwaysCost": "₹2,500",
+    "analysis": "One sentence comparing transport modes for this route.",
+    "aiSuggestion": "One sentence best recommendation for this user."
+  },
+
   "segments": [
     {
-      "id": "1",
-      "type": "flight|train|bus|hotel",
+      "id": "seg-1",
+      "type": "flight|train|bus|roadways|hotel",
       "from": "City A",
-      "to": "City B (empty string for hotel)",
+      "to": "City B or empty string",
       "date": "20 Mar",
-      "detail": "Operator name · time or stay details",
+      "detail": "Operator or stay details",
       "price": 4500,
-      "icon": "✈️ or 🚂 or 🚌 or 🏨"
+      "icon": "✈️|🚂|🚌|🚗|🏨"
     }
   ],
-  "highlights": ["Top highlight 1", "Top highlight 2", "Top highlight 3"],
-  "tips": ["Practical tip 1", "Practical tip 2"],
-  "placesToVisit": [
-    {
-      "name": "Attraction Name",
-      "description": "Short description of what visitors can see or enjoy here",
-      "funFact": "A fun or surprising local trivia/insight",
-      "recommendedTime": "e.g. Sunset, Early Morning",
-      "visitDuration": "e.g. 2 hours",
-      "category": "History|Food|Nature|Adventure|Shopping"
-    }
-  ]
-}`
 
-  return askGroqJSON(userPrompt, system, { maxTokens: 3000, temperature: 0.6 })
+  "flightOptions": [
+    { "id": "f-1", "airline": "IndiGo", "flightNo": "6E-241", "price": 4999, "depart": "06:15", "arrive": "08:30", "duration": "2h 15m", "stops": 0, "logo": "✈️" },
+    { "id": "f-2", "airline": "Air India", "flightNo": "AI-402", "price": 5800, "depart": "14:00", "arrive": "16:10", "duration": "2h 10m", "stops": 0, "logo": "✈️" }
+  ],
+
+  "hotelOptions": [
+    { "id": "h-1", "name": "Real Hotel Name", "pricePerNight": 3500, "rating": 4.5, "stars": 4, "area": "Area in destination city", "image": "Short description" },
+    { "id": "h-2", "name": "Another Real Hotel", "pricePerNight": 2200, "rating": 4.1, "stars": 3, "area": "Near Station", "image": "Budget option near sights" }
+  ],
+
+  "trainOptions": [
+    { "id": "t-1", "name": "Train Name", "trainNo": "12002", "price": 1200, "depart": "06:00", "arrive": "14:20", "duration": "8h 20m" },
+    { "id": "t-2", "name": "Express Train", "trainNo": "12909", "price": 850, "depart": "16:30", "arrive": "02:15", "duration": "9h 45m" }
+  ],
+
+  "busOptions": [
+    { "id": "b-1", "operator": "VRL Travels", "type": "AC Sleeper (2+1)", "price": 950, "depart": "21:00", "arrive": "08:30", "duration": "11h 30m" },
+    { "id": "b-2", "operator": "SRS Travels", "type": "Volvo Semi-Sleeper", "price": 750, "depart": "22:00", "arrive": "09:45", "duration": "11h 45m" }
+  ],
+
+  "roadwaysOptions": [
+    { "id": "r-1", "vehicle": "Dzire Sedan (AC)", "provider": "Ola Outstation", "price": 2800, "detail": "Private cab with toll and driver allowance" },
+    { "id": "r-2", "vehicle": "Ertiga SUV (AC)", "provider": "MakeMyTrip Cabs", "price": 4200, "detail": "Spacious family car with driver" }
+  ],
+
+  "placesToVisit": [
+    { "name": "Real Attraction 1 in Destination", "description": "One sentence what to enjoy here.", "funFact": "One interesting local fact.", "recommendedTime": "Morning", "visitDuration": "2 hours", "category": "History", "price": 50 },
+    { "name": "Real Attraction 2", "description": "Short description.", "funFact": "Fact.", "recommendedTime": "Sunset", "visitDuration": "1 hour", "category": "Nature", "price": 0 },
+    { "name": "Real Attraction 3", "description": "Short description.", "funFact": "Fact.", "recommendedTime": "Afternoon", "visitDuration": "2 hours", "category": "Adventure", "price": 200 },
+    { "name": "Real Attraction 4", "description": "Short description.", "funFact": "Fact.", "recommendedTime": "Morning", "visitDuration": "1.5 hours", "category": "Shopping", "price": 0 },
+    { "name": "Real Attraction 5", "description": "Short description.", "funFact": "Fact.", "recommendedTime": "Evening", "visitDuration": "1 hour", "category": "Food", "price": 0 },
+    { "name": "Real Attraction 6", "description": "Short description.", "funFact": "Fact.", "recommendedTime": "Morning", "visitDuration": "2 hours", "category": "History", "price": 30 },
+    { "name": "Real Attraction 7", "description": "Short description.", "funFact": "Fact.", "recommendedTime": "Afternoon", "visitDuration": "1 hour", "category": "Nature", "price": 100 },
+    { "name": "Real Attraction 8", "description": "Short description.", "funFact": "Fact.", "recommendedTime": "Morning", "visitDuration": "3 hours", "category": "Adventure", "price": 350 },
+    { "name": "Real Attraction 9", "description": "Short description.", "funFact": "Fact.", "recommendedTime": "Late Afternoon", "visitDuration": "2 hours", "category": "History", "price": 80 },
+    { "name": "Real Attraction 10", "description": "Short description.", "funFact": "Fact.", "recommendedTime": "Night", "visitDuration": "1.5 hours", "category": "Food", "price": 0 }
+  ],
+
+  "restaurants": {
+    "veg": [
+      { "name": "Real Veg Restaurant 1", "cuisine": "Cuisine Type", "specialty": "Signature Dish", "costForTwo": "₹400", "description": "One sentence description." },
+      { "name": "Real Veg Restaurant 2", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹500", "description": "Short description." },
+      { "name": "Real Veg Restaurant 3", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹600", "description": "Short description." },
+      { "name": "Real Veg Restaurant 4", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹350", "description": "Short description." },
+      { "name": "Real Veg Restaurant 5", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹450", "description": "Short description." },
+      { "name": "Real Veg Restaurant 6", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹700", "description": "Short description." },
+      { "name": "Real Veg Restaurant 7", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹550", "description": "Short description." },
+      { "name": "Real Veg Restaurant 8", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹400", "description": "Short description." },
+      { "name": "Real Veg Restaurant 9", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹800", "description": "Short description." },
+      { "name": "Real Veg Restaurant 10", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹300", "description": "Short description." }
+    ],
+    "nonVeg": [
+      { "name": "Real NonVeg Restaurant 1", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹800", "description": "One sentence description." },
+      { "name": "Real NonVeg Restaurant 2", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹1000", "description": "Short description." },
+      { "name": "Real NonVeg Restaurant 3", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹900", "description": "Short description." },
+      { "name": "Real NonVeg Restaurant 4", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹700", "description": "Short description." },
+      { "name": "Real NonVeg Restaurant 5", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹1200", "description": "Short description." },
+      { "name": "Real NonVeg Restaurant 6", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹850", "description": "Short description." },
+      { "name": "Real NonVeg Restaurant 7", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹950", "description": "Short description." },
+      { "name": "Real NonVeg Restaurant 8", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹600", "description": "Short description." },
+      { "name": "Real NonVeg Restaurant 9", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹1100", "description": "Short description." },
+      { "name": "Real NonVeg Restaurant 10", "cuisine": "Cuisine", "specialty": "Dish", "costForTwo": "₹750", "description": "Short description." }
+    ]
+  },
+
+  "itineraryDays": [
+    {
+      "day": 1,
+      "title": "Arrival & Leisure",
+      "theme": "Exploration",
+      "morning": { "activity": "Arrive & Check-in", "description": "Settle in at hotel.", "duration": "2h", "cost": "Free", "tip": "Keep ID cards handy." },
+      "afternoon": { "activity": "Local Walk", "description": "Explore streets.", "duration": "2h", "cost": "Free", "tip": "Wear comfortable shoes." },
+      "evening": { "activity": "Sunset Viewpoint", "description": "Catch sunset views.", "duration": "1h", "cost": "₹50", "tip": "Carry a camera." },
+      "meals": { "breakfast": "Hotel breakfast", "lunch": "Local cafe", "dinner": "Traditional dinner" },
+      "transport": "Cab / Auto Rickshaw",
+      "estimatedDayBudget": "₹1500"
+    }
+  ],
+
+  "highlights": ["Top highlight 1", "Top highlight 2", "Top highlight 3"],
+  "tips": ["Practical tip 1", "Practical tip 2"]
+}
+
+IMPORTANT: Output ONLY the raw JSON above. No markdown. No explanation. Replace all placeholder names with REAL places from the destination. Fill all 10 placesToVisit, all 10 veg restaurants, all 10 nonVeg restaurants. Add one itineraryDays entry per day of the trip.`
+
+  return askGroqJSON(userPrompt, system, { maxTokens: 4500, temperature: 0.55 })
 }
 
 // ─── Chat (VoyageAI assistant) ────────────────────────────────────────────────
