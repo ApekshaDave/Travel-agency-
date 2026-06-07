@@ -26,25 +26,25 @@ export default function AuthCallback() {
     try {
       // 1. Establish session in localStorage
       localStorage.setItem('voyageai_jwt_token', token)
-      
+
       const loggedUser = {
         email,
         name: decodeURIComponent(name || 'Traveler'),
         role,
         phone: phone ? decodeURIComponent(phone) : ''
       }
-      
+
       localStorage.setItem('voyageai_user', JSON.stringify(loggedUser))
-      
+
       // 2. Set user state in AuthContext
       setUser(loggedUser)
 
       // 3. Notify success
-      toast.success(`Welcome back, ${loggedUser.name}!`)
+      toast.success(`Welcome to your journey, ${loggedUser.name}!`)
 
       // 4. Redirect based on role
       const isStaff = role === 'agent' || role === 'admin' || role === 'finance'
-      navigate(isStaff ? '/staff' : '/dashboard', { replace: true })
+      navigate(isStaff ? '/agent' : '/dashboard', { replace: true })
     } catch (err) {
       console.error('Session establishment error:', err)
       toast.error('Failed to log in. Please try again.')

@@ -17,7 +17,6 @@ const SUGGESTIONS = [
   { label: '✈ Book a flight', prompt: 'I want to book a flight. Help me search.' },
   { label: '🏖 Beach trip ideas', prompt: 'Suggest some beach destinations for a 5-day trip in December within ₹40,000' },
   { label: '🗓 Plan an itinerary', prompt: 'Help me plan a 7-day trip to Japan' },
-  { label: '📋 Visa requirements', prompt: 'What visa do I need as an Indian citizen to visit Thailand?' },
   { label: '💼 Corporate booking', prompt: 'I need to book a business trip to Mumbai next Monday, economy class' },
   { label: '🔄 Change my flight', prompt: 'I need to change my existing flight booking' },
 ]
@@ -64,8 +63,8 @@ function Message({ msg }) {
       <div className={`max-w-[80%] space-y-3 ${isUser ? 'items-end' : 'items-start'} flex flex-col`}>
         {msg.content && (
           <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${isUser
-            ? 'bg-sky-500/15 border border-sky-500/20 text-white ml-auto'
-            : 'glass border border-border text-white/90'
+            ? 'bg-sky-500/15 border border-sky-500/20 text-slate-900 ml-auto'
+            : 'glass border border-border text-slate-800'
             } ${isUser ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}>
             <pre className="font-body whitespace-pre-wrap">{msg.content}</pre>
           </div>
@@ -416,7 +415,7 @@ export default function ChatPage() {
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Ask me anything — flights, destinations, visas, itineraries..."
-              className="flex-1 bg-transparent text-white text-sm placeholder-muted resize-none outline-none min-h-[44px] max-h-32 leading-relaxed py-1 relative z-10"
+              className="flex-1 bg-transparent text-slate-900 text-sm placeholder-muted resize-none outline-none min-h-[44px] max-h-32 leading-relaxed py-1 relative z-10"
               rows={1}
             />
             <div className="flex items-center gap-2">

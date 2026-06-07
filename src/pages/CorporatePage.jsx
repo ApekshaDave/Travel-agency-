@@ -97,17 +97,17 @@ export default function CorporatePage() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-16"
+          className="text-center mb-16 relative z-10"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 glass border border-sky-400/20 rounded-full mb-6">
             <Building2 className="w-3.5 h-3.5 text-sky-400" />
-            <span className="text-xs font-mono text-sky-300 tracking-wider uppercase">Corporate Travel</span>
+            <span className="text-xs font-mono text-blue-600 tracking-wider uppercase font-bold">Corporate Travel</span>
           </div>
-          <h1 className="font-display text-5xl md:text-6xl font-bold text-white mb-5">
+          <h1 className="font-display text-5xl md:text-6xl font-bold text-slate-900 mb-5">
             Business travel,<br />
-            <span className="text-shimmer italic">finally intelligent.</span>
+            <span className="text-blue-600 italic">finally intelligent.</span>
           </h1>
-          <p className="text-muted text-xl max-w-2xl mx-auto mb-8 leading-relaxed">
+          <p className="text-slate-600 text-xl max-w-2xl mx-auto mb-8 leading-relaxed">
             Give your employees an AI booking assistant that knows your policies, enforces fare caps,
             and routes exceptions to approvers — automatically.
           </p>
@@ -115,7 +115,7 @@ export default function CorporatePage() {
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Link
                 to="/chat"
-                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold text-base rounded-2xl shadow-gold hover:shadow-[0_0_40px_rgba(232,180,41,0.5)] transition-all"
+                className="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 text-white font-bold text-base rounded-2xl shadow-blue-500/20 shadow-lg hover:bg-blue-700 transition-all"
               >
                 <Sparkles className="w-5 h-5" />
                 Book a Demo
@@ -124,9 +124,9 @@ export default function CorporatePage() {
             </motion.div>
             <button
               onClick={() => setDemoMode(!demoMode)}
-              className="inline-flex items-center gap-2 px-6 py-4 glass border border-border hover:border-sky-400/30 text-white font-medium rounded-2xl transition-all"
+              className="inline-flex items-center gap-2 px-6 py-4 glass border border-slate-200 hover:bg-slate-50 text-slate-800 font-bold rounded-2xl transition-all"
             >
-              <BarChart3 className="w-4 h-4 text-sky-400" />
+              <BarChart3 className="w-4 h-4 text-blue-600" />
               {demoMode ? 'Hide' : 'See'} Admin Dashboard
             </button>
           </div>
@@ -139,9 +139,9 @@ export default function CorporatePage() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-16"
           >
-            <div className="glass gradient-border rounded-3xl p-6">
+            <div className="glass border border-slate-200 rounded-3xl p-6 shadow-xl">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="font-display text-2xl font-bold text-white">
+                <h2 className="font-display text-2xl font-bold text-slate-900">
                   TechCorp India — Travel Dashboard
                 </h2>
                 <span className="px-3 py-1 bg-sage-400/15 text-sage-400 border border-sage-400/20 text-xs rounded-full font-medium">
@@ -162,12 +162,12 @@ export default function CorporatePage() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: i * 0.07 }}
-                    className="glass border border-border rounded-xl p-4"
+                    className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm"
                   >
                     <Icon className={`w-4 h-4 ${color} mb-2`} />
-                    <div className="font-bold text-2xl text-white">{value}</div>
-                    <div className="text-muted text-xs mt-0.5">{label}</div>
-                    <div className={`text-xs mt-1 ${color}`}>{sub}</div>
+                    <div className="font-bold text-2xl text-slate-900">{value}</div>
+                    <div className="text-slate-500 text-xs mt-0.5">{label}</div>
+                    <div className={`text-xs mt-1 font-bold ${color}`}>{sub}</div>
                   </motion.div>
                 ))}
               </div>
@@ -210,11 +210,10 @@ export default function CorporatePage() {
                             <span className="text-amber-300 text-xs">{trip.policy}</span>
                           </div>
                         )}
-                        <div className={`px-2.5 py-1 rounded-lg text-xs font-medium border ${
-                          trip.status === 'approved' ? 'bg-sage-400/10 text-sage-400 border-sage-400/20' :
-                          trip.status === 'pending' ? 'bg-sky-400/10 text-sky-400 border-sky-400/20' :
-                          'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                        }`}>
+                        <div className={`px-2.5 py-1 rounded-lg text-xs font-medium border ${trip.status === 'approved' ? 'bg-sage-400/10 text-sage-400 border-sage-400/20' :
+                            trip.status === 'pending' ? 'bg-sky-400/10 text-sky-400 border-sky-400/20' :
+                              'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                          }`}>
                           {trip.status.charAt(0).toUpperCase() + trip.status.slice(1)}
                         </div>
                       </div>
@@ -255,9 +254,8 @@ export default function CorporatePage() {
                 <div key={label} className="flex items-center gap-3">
                   <span className="text-base">{icon}</span>
                   <span className="text-white/80 text-sm flex-1">{label}</span>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                    status ? 'bg-sage-400/20 border border-sage-400/30' : 'bg-surface border border-border'
-                  }`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center ${status ? 'bg-sage-400/20 border border-sage-400/30' : 'bg-surface border border-border'
+                    }`}>
                     {status && <CheckCircle className="w-3 h-3 text-sage-400" />}
                   </div>
                 </div>

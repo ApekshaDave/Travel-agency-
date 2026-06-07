@@ -5,7 +5,6 @@ import {
   Search, Plane, ArrowLeftRight,
   ArrowRight, Sparkles, Shield
 } from 'lucide-react'
-import { searchFlights } from '../utils/multiModalApi'
 import { useBookingStore } from '../store/bookingStore'
 import toast from 'react-hot-toast'
 import FlightCard from '../components/features/FlightCard'
@@ -77,35 +76,9 @@ export default function SearchPage() {
         cabinClass
       })
 
-      const cleanFrom = from.includes('(') ? from.split('(')[1]?.replace(')', '') : from
-      const cleanTo = to.includes('(') ? to.split('(')[1]?.replace(')', '') : to
-
-      const res = await searchFlights({
-        from: cleanFrom,
-        to: cleanTo,
-        date,
-        passengers: travelers,
-        travelClass: cabinClass
-      })
-
-      if (res && res.flights && res.flights.length > 0) {
-        const mapped = res.flights.map((f, index) => ({
-          ...f,
-          id: f.id || `ai-${index}-${Date.now()}`,
-          code: f.flightNo || f.code || 'AI 101',
-          price: normalizePrice(f.price, MOCK_FLIGHTS[index % MOCK_FLIGHTS.length]?.price || 0),
-          seats: f.seatsLeft || f.seats || 5,
-          fromCity: f.fromCity || from.split(' ')[0] || from,
-          toCity: f.toCity || to.split(' ')[0] || to,
-          from: f.from || cleanFrom,
-          to: f.to || cleanTo,
-          tag: f.tag || (f.recommended ? 'Recommended' : ''),
-          amenities: f.amenities || ['USB charging']
-        }))
-        setFlightsList(mapped)
-      } else {
-        setFlightsList(MOCK_FLIGHTS)
-      }
+      // Hardcoded search results for now
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setFlightsList(MOCK_FLIGHTS)
       setSearched(true)
     } catch (err) {
       console.error('AI Flight Search failed:', err)
@@ -143,8 +116,8 @@ export default function SearchPage() {
               {view === 'input' ? 'Plan Your Flight' : 'Select Departure'}
             </h1>
             {view === 'results' && (
-              <button 
-                onClick={() => setView('input')} 
+              <button
+                onClick={() => setView('input')}
                 className="text-gold-400 text-sm font-medium hover:underline"
               >
                 Change Search
@@ -152,7 +125,7 @@ export default function SearchPage() {
             )}
           </div>
           {view === 'input' && (
-             <p className="text-muted">Enter your details or try <Link to="/chat" className="text-gold-400 underline">AI Planning</Link></p>
+            <p className="text-muted">Enter your details or try <Link to="/chat" className="text-gold-400 underline">AI Planning</Link></p>
           )}
         </motion.div>
 
@@ -166,9 +139,9 @@ export default function SearchPage() {
               exit={{ opacity: 0, height: 0 }}
               className="glass gradient-border rounded-3xl p-6 mb-8 overflow-hidden"
             >
-               <div className="flex gap-1 mb-6">
+              <div className="flex gap-1 mb-6">
                 {['oneWay', 'roundTrip', 'multiCity'].map(type => (
-                  <button key={type} onClick={() => setTripType(type)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${tripType === type ? 'bg-gold-400/15 text-gold-400 border border-gold-400/25' : 'text-muted hover:text-white'}`}>{type === 'oneWay'? 'One Way': type === 'roundTrip'? 'Round Trip': 'Multi City'}</button>
+                  <button key={type} onClick={() => setTripType(type)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${tripType === type ? 'bg-gold-400/15 text-gold-400 border border-gold-400/25' : 'text-muted hover:text-white'}`}>{type === 'oneWay' ? 'One Way' : type === 'roundTrip' ? 'Round Trip' : 'Multi City'}</button>
                 ))}
               </div>
 
@@ -188,9 +161,9 @@ export default function SearchPage() {
                 </div>
                 <div>
                   <label className="text-xs text-muted mb-1.5 block font-medium uppercase tracking-wider">Travelers</label>
-                   <select value={travelers} onChange={e => setTravelers(Number(e.target.value))} className="ai-input w-full px-4 py-3 rounded-xl text-white text-sm appearance-none">
-                      {[1,2,3,4].map(n => <option key={n} value={n}>{n} traveler</option>)}
-                   </select>
+                  <select value={travelers} onChange={e => setTravelers(Number(e.target.value))} className="ai-input w-full px-4 py-3 rounded-xl text-white text-sm appearance-none">
+                    {[1, 2, 3, 4].map(n => <option key={n} value={n}>{n} traveler</option>)}
+                  </select>
                 </div>
                 <button onClick={handleSearch} className="px-8 py-3 bg-gold-gradient text-void font-bold rounded-xl shadow-gold hover:scale-105 transition-all self-end flex items-center gap-2">
                   <Search className="w-4 h-4" /> Find Flights
@@ -206,9 +179,9 @@ export default function SearchPage() {
             >
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-3">
-                  <div className="text-lg font-bold text-white">{from.split('(')[1]?.replace(')','')}</div>
+                  <div className="text-lg font-bold text-white">{from.split('(')[1]?.replace(')', '')}</div>
                   <ArrowRight className="w-4 h-4 text-muted" />
-                  <div className="text-lg font-bold text-white">{to.split('(')[1]?.replace(')','')}</div>
+                  <div className="text-lg font-bold text-white">{to.split('(')[1]?.replace(')', '')}</div>
                 </div>
                 <div className="h-8 w-px bg-border mx-2" />
                 <div className="space-y-px">
@@ -216,8 +189,8 @@ export default function SearchPage() {
                   <div className="text-[10px] text-muted uppercase tracking-widest">{travelers} Traveler · {cabinClass}</div>
                 </div>
               </div>
-              <button 
-                onClick={() => setView('input')} 
+              <button
+                onClick={() => setView('input')}
                 className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-medium border border-border/30 transition-all"
               >
                 Modify
@@ -269,11 +242,10 @@ export default function SearchPage() {
                     <button
                       key={s}
                       onClick={() => setSortBy(s)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                        sortBy === s
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${sortBy === s
                           ? 'bg-gold-400/15 text-gold-400 border border-gold-400/20'
                           : 'text-muted hover:text-white border border-transparent'
-                      }`}
+                        }`}
                     >
                       {s.charAt(0).toUpperCase() + s.slice(1)}
                     </button>

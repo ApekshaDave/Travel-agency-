@@ -108,6 +108,24 @@ export default function PassengerDetailsPage() {
                         </button>
                     </div>
 
+                    {groupSize === 'small' && (
+                        <div className="mb-6">
+                            <label className="text-xs text-slate-500 uppercase tracking-wider mb-1.5 block">Number of Passengers (2-5)</label>
+                            <input
+                                type="number"
+                                min="2"
+                                max="5"
+                                value={numPassengers}
+                                onChange={(e) => {
+                                    const val = Math.min(5, Math.max(2, parseInt(e.target.value) || 2));
+                                    setNumPassengers(val);
+                                    setPassengers(Array.from({ length: val }, () => ({ name: '', email: '', phone: '', aadhar: '' })));
+                                }}
+                                className="ai-input w-full px-4 py-3 rounded-xl text-slate-900 text-sm"
+                            />
+                        </div>
+                    )}
+
                     {groupSize === 'big' && (
                         <div className="mb-6">
                             <label className="text-xs text-slate-500 uppercase tracking-wider mb-1.5 block">Number of Passengers</label>

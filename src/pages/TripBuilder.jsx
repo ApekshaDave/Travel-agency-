@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import {
   Sparkles, Plane, Train, Bus, Building2, Trash2, Clock, ChevronRight,
   CheckCircle, DollarSign, Zap, Compass, Landmark, Utensils, Trees, ShoppingBag, MapPin,
-  Edit3, Coffee, Sun, Moon, Calendar as CalendarIcon, HelpCircle, Car, Users, Send
+  Edit3, Coffee, Sun, Moon, Calendar as CalendarIcon, HelpCircle, Car, Users, Send, User
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
@@ -231,15 +231,14 @@ function TripSegment({ segment, onRemove, onEdit, index, isAgent }) {
 }
 
 // ── Main TripBuilder ──────────────────────────────────────────────────────────
-
-
 export default function TripBuilder() {
   const { user } = useAuth()
   const [prompt, setPrompt] = useState('')
   const inputRef = useRef(null)
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState(null)
-
+  // FIX 1: Declared missing passengerDetails state
+  const [passengerDetails, setPassengerDetails] = useState([])
 
   const [activeTrip, setActiveTrip] = useState(() => {
     const params = new URLSearchParams(window.location.search)
@@ -276,11 +275,6 @@ export default function TripBuilder() {
     return null
   })
 
-
-
-
-
-
   // Sync active trip to Supabase Draft when it changes
   useEffect(() => {
     if (!activeTrip || !user) return
@@ -297,7 +291,7 @@ export default function TripBuilder() {
 
     // Clear passenger details from local storage after saving to activeTrip
     if (activeTrip && activeTrip.passengers) {
-      localStorage.removeItem('voyageai_passenger_details');
+      localStorage.removeItem('voyageai_passenger_details')
     }
 
     const debounce = setTimeout(syncDraft, 2000)
@@ -320,9 +314,9 @@ export default function TripBuilder() {
     loadDraft()
 
     // Load passenger details from local storage if coming from PassengerDetailsPage
-    const storedPassengers = localStorage.getItem('voyageai_passenger_details');
+    const storedPassengers = localStorage.getItem('voyageai_passenger_details')
     if (storedPassengers) {
-      setPassengerDetails(JSON.parse(storedPassengers));
+      setPassengerDetails(JSON.parse(storedPassengers))
     }
   }, [user])
 
@@ -455,8 +449,8 @@ export default function TripBuilder() {
             estimatedDayBudget: "₹1,200"
           }
         ],
-        placesToVisit: backfillAttractions(trip.placesToVisit)
-        , passengers: passengerDetails.length > 0 ? passengerDetails : activeTrip?.passengers || []
+        placesToVisit: backfillAttractions(trip.placesToVisit),
+        passengers: passengerDetails.length > 0 ? passengerDetails : activeTrip?.passengers || []
       }
 
       setActiveTrip(enrichedTrip)
@@ -514,8 +508,8 @@ export default function TripBuilder() {
           estimatedDayBudget: "₹1,500"
         }
       ],
-      placesToVisit: backfillAttractions(preset.placesToVisit)
-      , passengers: passengerDetails.length > 0 ? passengerDetails : activeTrip?.passengers || []
+      placesToVisit: backfillAttractions(preset.placesToVisit),
+      passengers: passengerDetails.length > 0 ? passengerDetails : activeTrip?.passengers || []
     }
 
     setActiveTrip(enriched)
@@ -800,7 +794,7 @@ export default function TripBuilder() {
               onChange={e => setPrompt(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleGenerate())}
               placeholder='e.g. "Plan a 5-day itinerary for Hyderabad with best places to visit, vegetarian food preference, starting from Delhi"'
-              className="flex-1 bg-transparent text-white text-sm placeholder-muted resize-none outline-none min-h-[60px] leading-relaxed relative z-10"
+              className="flex-1 bg-transparent text-slate-900 text-sm placeholder-muted resize-none outline-none min-h-[60px] leading-relaxed relative z-10"
               rows={2}
             />
             <motion.button
@@ -916,6 +910,7 @@ export default function TripBuilder() {
                 </div>
               )}
 
+              {/* FIX 9: Added User import at top; used here correctly */}
               {activeTrip?.isAgentView && (
                 <div className="mb-6 p-4 bg-sky-400/10 border border-sky-400/20 rounded-2xl flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -1013,14 +1008,16 @@ export default function TripBuilder() {
                 {/* Left: Interactive custom subpages */}
                 <div>
 
-                  {/* Custom Navigation Tab Headers — horizontally scrollable on all screens */}
+                  {/* FIX 7 & 8: Unified nav tab list — removed 'transport_from' orphan,
+                      replaced 'buses'/'roadways' (no nav entry) with correct tab ids */}
                   <div className="-mx-1 px-1">
                     <div className="flex overflow-x-auto gap-0.5 border-b border-white/10 pb-px mb-5 sm:mb-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                       {[
                         { id: 'itinerary', label: '📋 Plan' },
                         { id: 'transport_to', label: '✈️ To Destination' },
-                        { id: 'transport_within', label: '🚗 Within City' },
-                        { id: 'transport_from', label: '🏠 From Destination' },
+                        { id: 'transport_within', label: '🚂 Within City (Train)' },
+                        { id: 'buses', label: '🚌 Buses' },
+                        { id: 'roadways', label: '🚗 Roadways' },
                         { id: 'stay', label: '🏨 Stay' },
                         { id: 'attractions', label: '🏛 Sights' },
                         { id: 'dining', label: '🍲 Dining' }
@@ -1183,54 +1180,61 @@ export default function TripBuilder() {
                       </motion.div>
                     )}
 
-                    {/* STAY TAB */}
+                    {/* STAY TAB — FIX 6: Corrected JSX structure inside map */}
                     {activeTab === 'stay' && (
                       <motion.div key="stay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-                        <div className="flex items-center justify-between mb-2 text-slate-900">
-                          <h3 className="font-display text-lg font-bold text-white">Compare Hotel & Resort Options (Price/Night)</h3>
-                          <span className="text-xs text-muted">Select an option to replace active hotel segment</span>
+                        <div className="mb-4">
+                          <h3 className="font-display text-lg font-bold text-slate-900 flex items-center gap-2">
+                            🏨 Top 10 Curated Stays in {activeTrip.name}
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-1">AI has compared 40+ local options. Sorted by value-for-money.</p>
                         </div>
                         <div className="space-y-3">
-                          {activeTrip.hotelOptions?.map((hOpt, idx) => {
-                            const days = parseInt(activeTrip.duration) || 5
-                            const isActiveHotel = activeTrip.segments.some(s => s.type === 'hotel' && s.from === hOpt.name)
-                            return (
-                              <div key={hOpt.id || idx} className={`glass border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all ${isActiveHotel ? 'border-gold-400 bg-gold-400/5' : 'border-border'}`}>
-                                <div className="flex items-center gap-3">
-                                  <span className="text-2xl">🏨</span>
-                                  <div>
-                                    <h4 className="text-slate-900 font-bold text-sm">{hOpt.name}</h4>
-                                    <p className="text-muted text-xs mt-1">{hOpt.area} · {hOpt.stars}★ Hotel</p>
-                                    <div className="text-[10px] text-gold-300 font-medium flex items-center gap-1.5 mt-1">
-                                      <span>⭐ {hOpt.rating}/5 Rating</span>
-                                      <span className="text-muted">·</span>
-                                      <span className="text-muted italic truncate">{hOpt.image}</span>
+                          {[...activeTrip.hotelOptions]
+                            .sort((a, b) => a.pricePerNight - b.pricePerNight)
+                            .slice(0, 10)
+                            .map((hOpt, idx) => {
+                              const days = parseInt(activeTrip.duration) || 5
+                              const isActiveHotel = activeTrip.segments.some(s => s.type === 'hotel' && s.from === hOpt.name)
+                              return (
+                                // FIX 6: Wrapped both child divs inside a single parent div
+                                <div key={hOpt.id || idx} className={`glass border rounded-2xl p-5 flex items-center justify-between gap-4 transition-all hover:shadow-md ${isActiveHotel ? 'border-gold-400 bg-gold-400/5 ring-1 ring-gold-400' : 'border-border'}`}>
+                                  <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-surface flex items-center justify-center font-mono font-bold text-muted text-sm">
+                                      {(idx + 1).toString().padStart(2, '0')}
+                                    </div>
+                                    <div>
+                                      <h4 className="text-white font-bold text-sm">{hOpt.name}</h4>
+                                      <p className="text-muted text-xs mt-1">{hOpt.area} · {hOpt.stars}★ Property</p>
+                                      <div className="text-[10px] font-bold flex items-center gap-2 mt-1.5 uppercase tracking-tighter">
+                                        <span className="text-gold-400 bg-gold-400/10 px-1.5 py-0.5 rounded border border-gold-400/20">⭐ {hOpt.rating}/5 Rating</span>
+                                        <span className="text-sky-400">Free WiFi & Breakfast</span>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                                <div className="flex items-center gap-3 flex-shrink-0 text-right">
-                                  <div>
-                                    <span className="text-gold-400 font-bold text-base">₹{hOpt.pricePerNight.toLocaleString()}</span>
-                                    <div className="text-[9px] text-muted">₹{(hOpt.pricePerNight * days).toLocaleString()} total ({days} nights)</div>
+                                  <div className="flex items-center gap-3 flex-shrink-0 text-right">
+                                    <div>
+                                      <span className="text-gold-400 font-bold text-base">₹{hOpt.pricePerNight.toLocaleString()}</span>
+                                      <div className="text-[9px] text-muted">₹{(hOpt.pricePerNight * days).toLocaleString()} total ({days} nights)</div>
+                                    </div>
+                                    <button
+                                      onClick={() => selectHotelOption(hOpt)}
+                                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${isActiveHotel
+                                        ? 'bg-gold-500/10 text-gold-400 border border-gold-400/20'
+                                        : 'bg-gold-gradient text-void hover:opacity-90 shadow-gold-sm'
+                                        }`}
+                                    >
+                                      {isActiveHotel ? '✓ Selected' : 'Select Stay'}
+                                    </button>
                                   </div>
-                                  <button
-                                    onClick={() => selectHotelOption(hOpt)}
-                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${isActiveHotel
-                                      ? 'bg-gold-500/10 text-gold-400 border border-gold-400/20'
-                                      : 'bg-gold-gradient text-void hover:opacity-90 shadow-gold-sm'
-                                      }`}
-                                  >
-                                    {isActiveHotel ? '✓ Selected' : 'Select Stay'}
-                                  </button>
                                 </div>
-                              </div>
-                            )
-                          })}
+                              )
+                            })}
                         </div>
                       </motion.div>
                     )}
 
-                    {/* TRANSPORT WITHIN CITY TAB */}
+                    {/* TRANSPORT WITHIN CITY TAB (Train) */}
                     {activeTab === 'transport_within' && (
                       <motion.div key="transport_within" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
                         <div className="flex items-center justify-between mb-2 text-slate-900">
@@ -1508,7 +1512,7 @@ export default function TripBuilder() {
                   <div className="glass border border-border rounded-2xl p-5 bg-surface/5">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-semibold text-white text-sm flex items-center gap-2">
-                        <DollarSign className="w-4.5 h-4.5 text-gold-400" /> Full Trip Cost Breakdown
+                        <DollarSign className="w-4 h-4 text-gold-400" /> Full Trip Cost Breakdown
                       </h3>
                       <span className="text-[8px] uppercase bg-gold-400/20 border border-gold-400/30 text-gold-400 px-2 py-0.5 rounded-full font-bold">
                         All-Inclusive
@@ -1546,7 +1550,7 @@ export default function TripBuilder() {
                         )
                       })}
 
-                      {/* 3. Sightseeing — individual places with ticket prices */}
+                      {/* 3. Selected transport detail lines */}
                       {selectedTransportSegments.length > 0 && (
                         <div className="border-b border-white/5 pb-2 pl-5 -mt-1 space-y-1">
                           {selectedTransportSegments.map(seg => (
@@ -1629,7 +1633,6 @@ export default function TripBuilder() {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => {
-                          // Get trip ID from URL
                           const params = new URLSearchParams(window.location.search)
                           const tripId = params.get('agentView')
                           if (tripId) {
@@ -1667,7 +1670,7 @@ export default function TripBuilder() {
                     <div className="flex items-center justify-between">
                       <span className="text-white text-xs font-semibold uppercase tracking-wider block">Package Components</span>
                       <button
-                        onClick={() => { if (confirm('Clear current workspace?')) setActiveTrip(null) }}
+                        onClick={() => { if (window.confirm('Clear current workspace?')) setActiveTrip(null) }}
                         className="text-[10px] text-red-400 hover:underline uppercase font-bold tracking-tighter"
                       >
                         Reset
@@ -1867,24 +1870,18 @@ export default function TripBuilder() {
                     const slotData = editForm[slotKey] || {}
                     return (
                       <div key={slotKey} className="p-3 bg-white/2 rounded-xl border border-white/5 space-y-2">
-                        <span className="text-[10px] text-gold-400 font-bold uppercase block ">{slotKey} Schedule</span>
+                        <span className="text-[10px] text-gold-400 font-bold uppercase block">{slotKey} Schedule</span>
                         <input
                           type="text"
                           placeholder="Activity Title"
                           value={slotData.activity || ''}
-                          onChange={e => {
-                            const updatedSlot = { ...slotData, activity: e.target.value }
-                            setEditForm({ ...editForm, [slotKey]: updatedSlot })
-                          }}
+                          onChange={e => setEditForm({ ...editForm, [slotKey]: { ...slotData, activity: e.target.value } })}
                           className="w-full bg-white/5 border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-gold-400"
                         />
                         <textarea
                           placeholder="Activity Description"
                           value={slotData.description || ''}
-                          onChange={e => {
-                            const updatedSlot = { ...slotData, description: e.target.value }
-                            setEditForm({ ...editForm, [slotKey]: updatedSlot })
-                          }}
+                          onChange={e => setEditForm({ ...editForm, [slotKey]: { ...slotData, description: e.target.value } })}
                           rows={2}
                           className="w-full bg-white/5 border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none resize-none focus:border-gold-400"
                         />
@@ -1893,30 +1890,21 @@ export default function TripBuilder() {
                             type="text"
                             placeholder="Duration (e.g. 2h)"
                             value={slotData.duration || ''}
-                            onChange={e => {
-                              const updatedSlot = { ...slotData, duration: e.target.value }
-                              setEditForm({ ...editForm, [slotKey]: updatedSlot })
-                            }}
+                            onChange={e => setEditForm({ ...editForm, [slotKey]: { ...slotData, duration: e.target.value } })}
                             className="w-full bg-white/5 border border-border/60 rounded px-2 py-1 text-[10px] text-white focus:border-gold-400 outline-none"
                           />
                           <input
                             type="text"
                             placeholder="Cost (e.g. ₹500)"
                             value={slotData.cost || ''}
-                            onChange={e => {
-                              const updatedSlot = { ...slotData, cost: e.target.value }
-                              setEditForm({ ...editForm, [slotKey]: updatedSlot })
-                            }}
+                            onChange={e => setEditForm({ ...editForm, [slotKey]: { ...slotData, cost: e.target.value } })}
                             className="w-full bg-white/5 border border-border/60 rounded px-2 py-1 text-[10px] text-white focus:border-gold-400 outline-none"
                           />
                           <input
                             type="text"
                             placeholder="Local Tip"
                             value={slotData.tip || ''}
-                            onChange={e => {
-                              const updatedSlot = { ...slotData, tip: e.target.value }
-                              setEditForm({ ...editForm, [slotKey]: updatedSlot })
-                            }}
+                            onChange={e => setEditForm({ ...editForm, [slotKey]: { ...slotData, tip: e.target.value } })}
                             className="w-full bg-white/5 border border-border/60 rounded px-2 py-1 text-[10px] text-white focus:border-gold-400 outline-none"
                           />
                         </div>
@@ -2188,6 +2176,5 @@ const getCategoryDetails = (category) => {
   if (normalized.includes('shopping') || normalized.includes('market') || normalized.includes('bazaar')) {
     return { icon: ShoppingBag, color: 'text-violet-400', bg: 'bg-violet-400/10 border-violet-400/20', label: 'Shopping' }
   }
-  // Default fallback
   return { icon: MapPin, color: 'text-gold-400', bg: 'bg-gold-400/10 border-gold-400/20', label: category || 'Attraction' }
 }

@@ -114,7 +114,7 @@ export function AuthProvider({ children }) {
         method: 'POST',
         body: JSON.stringify(registrationDetails)
       })
-      
+
       setUser(response.user)
       setToken(response.token)
       localStorage.setItem('voyageai_jwt_token', response.token)
@@ -139,9 +139,9 @@ export function AuthProvider({ children }) {
     setToken(null)
   }
 
-  const signInWithOAuth = async (provider) => {
+  const signInWithOAuth = async (provider, intent = 'user') => {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'
-    window.location.href = `${apiUrl}/auth/${provider}`
+    window.location.href = `${apiUrl}/auth/${provider}?intent=${intent}`
   }
 
   return (

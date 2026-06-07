@@ -51,7 +51,6 @@ const HOW_STEPS = [
 
 const QUICK_LINKS = [
   { label: 'Trip Builder', icon: Sparkles, path: '/trip-builder', color: 'bg-pink-50 text-pink-600' },
-  { label: 'Visa Checker', icon: Globe2, path: '/visa', color: 'bg-blue-50 text-blue-600' },
   { label: 'AI Chat', icon: MessageSquare, path: '/chat', color: 'bg-orange-50 text-orange-600' },
 ]
 

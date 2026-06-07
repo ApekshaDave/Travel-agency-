@@ -43,7 +43,6 @@ import StaffLoginPage from './pages/StaffLoginPage'
 import HotelSearch from './pages/HotelSearch'
 import TrainSearch from './pages/TrainSearch'
 import BusSearch from './pages/BusSearch'
-import VisaChecker from './pages/VisaChecker'
 import TripBuilder from './pages/TripBuilder'
 import PassengerDetailsPage from './pages/PassengerDetailsPage'
 import AgentTripsPage from './pages/AgentTripsPage'
@@ -190,7 +189,6 @@ export default function App() {
                 <Route path="/hotels" element={<HotelSearch />} />
                 <Route path="/trains" element={<TrainSearch />} />
                 <Route path="/buses" element={<BusSearch />} />
-                <Route path="/visa" element={<VisaChecker />} />
                 <Route path="/trip-builder" element={<TripBuilder />} />
                 <Route path="/passenger-details" element={<PassengerDetailsPage />} />
 

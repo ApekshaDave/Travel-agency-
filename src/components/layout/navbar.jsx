@@ -12,7 +12,6 @@ import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 const NAV_LINKS = [
   { to: '/trip-builder', label: 'Trip Builder', icon: Map },
-  { to: '/visa', label: 'Visa Checker', icon: Globe2 },
   { to: '/chat', label: 'AI Chat', icon: Sparkles },
 ]
 
