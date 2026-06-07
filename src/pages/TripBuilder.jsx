@@ -7,10 +7,11 @@ import {
   Edit3, Coffee, Sun, Moon, Calendar as CalendarIcon, HelpCircle, Car, Users, Send
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useAuth } from '../context/AuthContext'
 import { generateMultiModalTrip } from '../utils/multiModalApi'
 import { supabase } from '../utils/supabaseClient'
 import { saveTrip, getTripById, updateTripItinerary, syncTripsWithSupabase } from '../utils/tripStore'
-import { useAuth } from '../context/AuthContext'
+
 
 // ── Segment types ─────────────────────────────────────────────────────────────
 const SEGMENT_TYPES = [
@@ -294,6 +295,11 @@ export default function TripBuilder() {
       }, { onConflict: 'user_id, status' })
     }
 
+    // Clear passenger details from local storage after saving to activeTrip
+    if (activeTrip && activeTrip.passengers) {
+      localStorage.removeItem('voyageai_passenger_details');
+    }
+
     const debounce = setTimeout(syncDraft, 2000)
     return () => clearTimeout(debounce)
   }, [activeTrip, user])
@@ -312,6 +318,12 @@ export default function TripBuilder() {
       if (data) setActiveTrip(data.itinerary_data)
     }
     loadDraft()
+
+    // Load passenger details from local storage if coming from PassengerDetailsPage
+    const storedPassengers = localStorage.getItem('voyageai_passenger_details');
+    if (storedPassengers) {
+      setPassengerDetails(JSON.parse(storedPassengers));
+    }
   }, [user])
 
   // Navigation tabs
@@ -444,6 +456,7 @@ export default function TripBuilder() {
           }
         ],
         placesToVisit: backfillAttractions(trip.placesToVisit)
+        , passengers: passengerDetails.length > 0 ? passengerDetails : activeTrip?.passengers || []
       }
 
       setActiveTrip(enrichedTrip)
@@ -502,6 +515,7 @@ export default function TripBuilder() {
         }
       ],
       placesToVisit: backfillAttractions(preset.placesToVisit)
+      , passengers: passengerDetails.length > 0 ? passengerDetails : activeTrip?.passengers || []
     }
 
     setActiveTrip(enriched)
@@ -737,9 +751,15 @@ export default function TripBuilder() {
               <Link to="/" className="hover:text-gold-400 transition-colors">Home</Link>
               <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
               <span className="text-white">Trip Builder</span>
+              {activeTrip?.passengers?.length > 0 && (
+                <>
+                  <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+                  <span className="text-white">{activeTrip.passengers.length} Passengers</span>
+                </>
+              )}
             </div>
             <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1">Trip Builder</h1>
-            <p className="text-muted text-sm">Describe your destination — AI generates flights, trains, buses, roadways & hotels.</p>
+            <p className="text-muted text-sm">Describe your destination and preferences — AI generates a complete itinerary.</p>
           </div>
 
           {/* Sandbox Agent Switcher */}
@@ -779,7 +799,7 @@ export default function TripBuilder() {
               value={prompt}
               onChange={e => setPrompt(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleGenerate())}
-              placeholder='e.g. "Create me a 5 days itinerary for Hyderabad with all the best places to visit, vegetarian food preference, Delhi starting point"'
+              placeholder='e.g. "Plan a 5-day itinerary for Hyderabad with best places to visit, vegetarian food preference, starting from Delhi"'
               className="flex-1 bg-transparent text-white text-sm placeholder-muted resize-none outline-none min-h-[60px] leading-relaxed relative z-10"
               rows={2}
             />
@@ -803,7 +823,7 @@ export default function TripBuilder() {
               {generating ? 'Building...' : 'Build Trip'}
             </motion.button>
           </div>
-          <p className="text-muted/50 text-xs mt-3">Powered by VoyageAI Intelligence LPU · Consolidates flights, hotels, trains, buses & roadways</p>
+          <p className="text-muted/50 text-xs mt-3">Powered by VoyageAI Intelligence LPU · Consolidates transport, stays, dining & activities</p>
         </motion.div>
 
         {/* Error */}
@@ -820,7 +840,7 @@ export default function TripBuilder() {
         {/* Presets */}
         {!activeTrip && !generating && (
           <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}>
-            <h2 className="font-display text-xl font-bold text-white mb-4">Or start from a preset</h2>
+            <h2 className="font-display text-xl font-bold text-white mb-4">Or choose a preset trip</h2>
             <div className="grid sm:grid-cols-2 gap-4 mb-8">
               {PRESET_TRIPS.map(preset => (
                 <motion.button
@@ -899,7 +919,7 @@ export default function TripBuilder() {
               {activeTrip?.isAgentView && (
                 <div className="mb-6 p-4 bg-sky-400/10 border border-sky-400/20 rounded-2xl flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Users className="w-4 h-4 text-sky-400" />
+                    <User className="w-4 h-4 text-sky-400" />
                     <div>
                       <p className="text-sky-300 font-semibold text-sm">Viewing Customer Trip</p>
                       <p className="text-sky-300/60 text-xs">
@@ -942,7 +962,7 @@ export default function TripBuilder() {
               {/* Cost Comparison Analyzer Banner */}
               {activeTrip.costComparison && (
                 <div className="mb-8 glass border border-white/5 rounded-3xl p-5 relative overflow-hidden bg-surface/5">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-4 text-slate-900">
                     <h3 className="font-display text-base font-bold text-white flex items-center gap-2">
                       <HelpCircle className="w-4 h-4 text-gold-400" /> AI Transportation Expense Analyzer & Recommendation
                     </h3>
@@ -971,7 +991,7 @@ export default function TripBuilder() {
                             <span className="text-xs text-muted font-medium">{mode.type}</span>
                             <ModeIcon className={`w-4 h-4 ${mode.color}`} />
                           </div>
-                          <div className="text-lg font-bold text-white mb-2">{mode.cost}</div>
+                          <div className="text-lg font-bold text-slate-900 mb-2">{mode.cost}</div>
                           <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
                             <div className="h-full bg-gold-400 rounded-full" style={{ width: `${mode.progress}%` }} />
                           </div>
@@ -981,7 +1001,7 @@ export default function TripBuilder() {
                   </div>
 
                   <div className="p-4 rounded-2xl border border-gold-400/20 bg-gold-400/5 text-xs text-gold-200 leading-relaxed">
-                    <p className="mb-2"><strong>Route Analysis:</strong> {activeTrip.costComparison.analysis}</p>
+                    <p className="mb-2 text-slate-700"><strong>Route Analysis:</strong> {activeTrip.costComparison.analysis}</p>
                     <p className="font-semibold flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-gold-400" /> Suggestion: {activeTrip.costComparison.aiSuggestion}</p>
                   </div>
                 </div>
@@ -998,11 +1018,10 @@ export default function TripBuilder() {
                     <div className="flex overflow-x-auto gap-0.5 border-b border-white/10 pb-px mb-5 sm:mb-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                       {[
                         { id: 'itinerary', label: '📋 Plan' },
-                        { id: 'flights', label: '✈️ Flights' },
-                        { id: 'hotels', label: '🏨 Stays' },
-                        { id: 'trains', label: '🚂 Trains' },
-                        { id: 'buses', label: '🚌 Buses' },
-                        { id: 'roadways', label: '🚗 Roadways' },
+                        { id: 'transport_to', label: '✈️ To Destination' },
+                        { id: 'transport_within', label: '🚗 Within City' },
+                        { id: 'transport_from', label: '🏠 From Destination' },
+                        { id: 'stay', label: '🏨 Stay' },
                         { id: 'attractions', label: '🏛 Sights' },
                         { id: 'dining', label: '🍲 Dining' }
                       ].map(tab => (
@@ -1029,7 +1048,7 @@ export default function TripBuilder() {
 
                         {/* Day-by-Day Detailed Schedule */}
                         <div className="space-y-4">
-                          <h3 className="font-display text-lg font-bold text-white flex items-center gap-2">
+                          <h3 className="font-display text-lg font-bold text-slate-900 flex items-center gap-2">
                             <CalendarIcon className="w-4 h-4 text-gold-400" /> Detailed Daily Schedule
                           </h3>
 
@@ -1042,7 +1061,7 @@ export default function TripBuilder() {
                                     <span className="font-bold text-sm leading-none">{day.day}</span>
                                     <span className="text-[9px] uppercase font-bold tracking-tighter">Day</span>
                                   </div>
-                                  <div>
+                                  <div className="text-slate-900">
                                     <h4 className="text-white font-bold text-base">{day.title}</h4>
                                     <span className="text-[10px] text-muted font-bold tracking-widest uppercase">{day.theme} · Budget: {day.estimatedDayBudget}</span>
                                   </div>
@@ -1075,7 +1094,7 @@ export default function TripBuilder() {
                                           <IconComponent className={`w-3.5 h-3.5 ${time.color}`} />
                                         </div>
                                       </div>
-                                      <div>
+                                      <div className="text-slate-900">
                                         <div className="text-[10px] uppercase font-bold tracking-wider text-white/40">{time.label}</div>
                                         <h5 className="font-bold text-sm text-white mt-0.5">{details.activity}</h5>
                                         <p className="text-muted text-xs leading-relaxed mt-1">{details.description}</p>
@@ -1096,7 +1115,7 @@ export default function TripBuilder() {
                                   <div className="font-semibold text-white/80 mb-2 flex items-center gap-1.5">
                                     <Utensils className="w-3.5 h-3.5 text-sage-400" /> Restaurant Recommendations
                                   </div>
-                                  <div className="grid grid-cols-3 gap-2">
+                                  <div className="grid grid-cols-3 gap-2 text-slate-900">
                                     {[['Breakfast', day.meals.breakfast], ['Lunch', day.meals.lunch], ['Dinner', day.meals.dinner]].map(([meal, desc]) => (
                                       <div key={meal}>
                                         <span className="text-muted font-medium text-[10px] uppercase">{meal}</span>
@@ -1122,10 +1141,10 @@ export default function TripBuilder() {
                       </motion.div>
                     )}
 
-                    {/* FLIGHTS TAB */}
-                    {activeTab === 'flights' && (
-                      <motion.div key="flights" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-                        <div className="flex items-center justify-between mb-2">
+                    {/* TRANSPORT TO DESTINATION TAB */}
+                    {activeTab === 'transport_to' && (
+                      <motion.div key="transport_to" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+                        <div className="flex items-center justify-between mb-2 text-slate-900">
                           <h3 className="font-display text-lg font-bold text-white">Compare Flight Options (Price/Individual)</h3>
                           <span className="text-xs text-muted">Select an option to replace active flight segment</span>
                         </div>
@@ -1137,7 +1156,7 @@ export default function TripBuilder() {
                                 <div className="flex items-center gap-3">
                                   <span className="text-2xl">{fOpt.logo || '✈️'}</span>
                                   <div>
-                                    <h4 className="text-white font-bold text-sm">{fOpt.airline} <span className="text-muted text-xs font-normal">({fOpt.flightNo})</span></h4>
+                                    <h4 className="text-slate-900 font-bold text-sm">{fOpt.airline} <span className="text-slate-600 text-xs font-normal">({fOpt.flightNo})</span></h4>
                                     <div className="text-muted text-xs flex items-center gap-3 mt-1 font-mono">
                                       <span>🛫 {fOpt.depart} – {fOpt.arrive}</span>
                                       <span>⏱ {fOpt.duration}</span>
@@ -1164,10 +1183,10 @@ export default function TripBuilder() {
                       </motion.div>
                     )}
 
-                    {/* HOTELS/STAYS TAB */}
-                    {activeTab === 'hotels' && (
-                      <motion.div key="hotels" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-                        <div className="flex items-center justify-between mb-2">
+                    {/* STAY TAB */}
+                    {activeTab === 'stay' && (
+                      <motion.div key="stay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+                        <div className="flex items-center justify-between mb-2 text-slate-900">
                           <h3 className="font-display text-lg font-bold text-white">Compare Hotel & Resort Options (Price/Night)</h3>
                           <span className="text-xs text-muted">Select an option to replace active hotel segment</span>
                         </div>
@@ -1180,7 +1199,7 @@ export default function TripBuilder() {
                                 <div className="flex items-center gap-3">
                                   <span className="text-2xl">🏨</span>
                                   <div>
-                                    <h4 className="text-white font-bold text-sm">{hOpt.name}</h4>
+                                    <h4 className="text-slate-900 font-bold text-sm">{hOpt.name}</h4>
                                     <p className="text-muted text-xs mt-1">{hOpt.area} · {hOpt.stars}★ Hotel</p>
                                     <div className="text-[10px] text-gold-300 font-medium flex items-center gap-1.5 mt-1">
                                       <span>⭐ {hOpt.rating}/5 Rating</span>
@@ -1211,10 +1230,10 @@ export default function TripBuilder() {
                       </motion.div>
                     )}
 
-                    {/* TRAINS TAB */}
-                    {activeTab === 'trains' && (
-                      <motion.div key="trains" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-                        <div className="flex items-center justify-between mb-2">
+                    {/* TRANSPORT WITHIN CITY TAB */}
+                    {activeTab === 'transport_within' && (
+                      <motion.div key="transport_within" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+                        <div className="flex items-center justify-between mb-2 text-slate-900">
                           <h3 className="font-display text-lg font-bold text-white">Compare Train Options (Price/Individual)</h3>
                           <span className="text-xs text-muted">Select an option to replace active train segment</span>
                         </div>
@@ -1369,7 +1388,7 @@ export default function TripBuilder() {
                                 </div>
 
                                 <div>
-                                  <h4 className="text-white font-bold text-sm mb-1.5 group-hover:text-gold-300 transition-colors">{place.name}</h4>
+                                  <h4 className="text-slate-900 font-bold text-sm mb-1.5 group-hover:text-brand-primary transition-colors">{place.name}</h4>
                                   <p className="text-muted text-xs leading-relaxed mb-4">{place.description}</p>
                                 </div>
 
@@ -1394,7 +1413,7 @@ export default function TripBuilder() {
                     {/* DINING FINDER TAB (VEG / NON-VEG DIET SPLIT) */}
                     {activeTab === 'dining' && (
                       <motion.div key="dining" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-                        <div className="mb-2 flex items-center justify-between">
+                        <div className="mb-2 flex items-center justify-between text-slate-900">
                           <div>
                             <h3 className="font-display text-lg font-bold text-white">Top 10 Food Joints & Restaurants</h3>
                             <p className="text-xs text-muted font-medium">Exactly 10 vegetarian and 10 non-vegetarian/mixed dining hotspots.</p>

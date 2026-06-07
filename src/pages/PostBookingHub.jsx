@@ -200,15 +200,15 @@ export default function PostBookingHub() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <div className="flex items-center gap-2 text-muted text-xs sm:text-sm mb-3">
-            <Link to="/dashboard" className="hover:text-gold-400 transition-colors">My Dashboard</Link>
+          <div className="flex items-center gap-2 text-slate-500 text-xs sm:text-sm mb-3">
+            <Link to="/dashboard" className="hover:text-brand-primary transition-colors">My Dashboard</Link>
             <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-white">Manage Trip</span>
+            <span className="text-slate-900">Manage Trip</span>
             <ChevronRight className="w-3.5 h-3.5" />
             <span className="text-gold-400 font-mono text-xs">{ACTIVE_TRIP.id}</span>
           </div>
-          <h1 className="font-display text-3xl sm:text-4xl font-bold text-white mb-1">Manage Your Trip</h1>
-          <p className="text-muted">Review itinerary, modify segments, and manage digital check-ins.</p>
+          <h1 className="font-display text-3xl sm:text-4xl font-bold text-slate-900 mb-1">Manage Your Trip</h1>
+          <p className="text-slate-600">Review itinerary, modify segments, and manage digital check-ins.</p>
         </motion.div>
 
         {/* AI Prompt Bar */}

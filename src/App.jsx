@@ -45,13 +45,14 @@ import TrainSearch from './pages/TrainSearch'
 import BusSearch from './pages/BusSearch'
 import VisaChecker from './pages/VisaChecker'
 import TripBuilder from './pages/TripBuilder'
+import PassengerDetailsPage from './pages/PassengerDetailsPage'
 import AgentTripsPage from './pages/AgentTripsPage'
 
 export default function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="grain min-h-screen bg-void font-body">
+        <div className="grain min-h-screen bg-surface-light font-body">
           <Navbar />
           <AnimatePresence mode="wait">
             <ErrorBoundary showDetail={true}>
@@ -191,6 +192,7 @@ export default function App() {
                 <Route path="/buses" element={<BusSearch />} />
                 <Route path="/visa" element={<VisaChecker />} />
                 <Route path="/trip-builder" element={<TripBuilder />} />
+                <Route path="/passenger-details" element={<PassengerDetailsPage />} />
 
                 {/* 404 Catch-All */}
                 <Route path="*" element={<NotFoundPage />} />

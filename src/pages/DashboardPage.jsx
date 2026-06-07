@@ -79,19 +79,17 @@ function TripCard({ trip }) {
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`glass border rounded-2xl overflow-hidden transition-all duration-300 ${
-        isUpcoming ? 'border-border hover:border-gold-400/20' : 'border-border/40 opacity-70 hover:opacity-90'
-      }`}
+      className={`glass border rounded-2xl overflow-hidden transition-all duration-300 ${isUpcoming ? 'border-border hover:border-gold-400/20' : 'border-border/40 opacity-70 hover:opacity-90'
+        }`}
     >
       <div className="p-5">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           {/* Status + ID */}
           <div className="flex items-center gap-3">
-            <div className={`px-2.5 py-1 rounded-lg text-xs font-medium border ${
-              isUpcoming
+            <div className={`px-2.5 py-1 rounded-lg text-xs font-medium border ${isUpcoming
                 ? 'bg-gold-400/10 text-gold-400 border-gold-400/20'
                 : 'bg-surface text-muted border-border'
-            }`}>
+              }`}>
               {isUpcoming ? '✈ Upcoming' : '✓ Completed'}
             </div>
             <span className="font-mono text-xs text-muted">{trip.id}</span>
@@ -233,8 +231,8 @@ export default function DashboardPage() {
 
   const filtered = TRIPS.filter(t =>
     activeTab === 'all' ? true :
-    activeTab === 'upcoming' ? t.status === 'upcoming' :
-    t.status === 'completed'
+      activeTab === 'upcoming' ? t.status === 'upcoming' :
+        t.status === 'completed'
   )
 
   return (
@@ -247,8 +245,8 @@ export default function DashboardPage() {
           className="flex items-start justify-between flex-wrap gap-4 mb-8"
         >
           <div>
-            <h1 className="font-display text-4xl font-bold text-white mb-1">My Trips</h1>
-            <p className="text-muted">Manage bookings, check-in, and get AI assistance</p>
+            <h1 className="font-display text-4xl font-bold text-slate-900 mb-1">My Trips</h1>
+            <p className="text-slate-600">Manage bookings, check-in, and get AI assistance</p>
           </div>
           <div className="flex gap-3">
             <Link
@@ -338,10 +336,9 @@ export default function DashboardPage() {
                         <div className="text-white font-semibold text-sm truncate">{entry.trip.name}</div>
                         <div className="text-muted text-xs mt-0.5">
                           {entry.trip.duration} · ₹{entry.trip.totalCost?.toLocaleString()} ·
-                          <span className={`ml-1 font-medium ${
-                            entry.status === 'pending' ? 'text-amber-400' :
-                            entry.status === 'booked' ? 'text-sage-400' : 'text-muted'
-                          }`}>{entry.status}</span>
+                          <span className={`ml-1 font-medium ${entry.status === 'pending' ? 'text-amber-400' :
+                              entry.status === 'booked' ? 'text-sage-400' : 'text-muted'
+                            }`}>{entry.status}</span>
                         </div>
                       </div>
                       <Link
@@ -364,11 +361,10 @@ export default function DashboardPage() {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all capitalize ${
-                      activeTab === tab
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all capitalize ${activeTab === tab
                         ? 'bg-gold-400/15 text-gold-400 border border-gold-400/20'
                         : 'text-muted hover:text-white'
-                    }`}
+                      }`}
                   >
                     {tab}
                   </button>
@@ -451,10 +447,9 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 {NOTIFICATIONS.map(({ id, type, icon: Icon, text, time }) => (
                   <div key={id} className="flex gap-3">
-                    <Icon className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
-                      type === 'success' ? 'text-sage-400' :
-                      type === 'warning' ? 'text-amber-400' : 'text-sky-400'
-                    }`} />
+                    <Icon className={`w-4 h-4 flex-shrink-0 mt-0.5 ${type === 'success' ? 'text-sage-400' :
+                        type === 'warning' ? 'text-amber-400' : 'text-sky-400'
+                      }`} />
                     <div className="flex-1">
                       <p className="text-white/80 text-xs leading-relaxed">{text}</p>
                       <p className="text-muted text-xs mt-1">{time}</p>

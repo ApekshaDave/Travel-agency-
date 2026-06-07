@@ -3,7 +3,7 @@ import { getAIRecommendation } from '../utils/multiModalApi'
 import { motion } from 'framer-motion'
 import {
   AlertTriangle, CheckCircle, Clock, MessageCircle, Sparkles, Zap, ArrowRight, Phone, Send,
-  Mail, User, Plane, XCircle, ChevronRight
+  Mail, User, Plane, XCircle, ChevronRight, DollarSign
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase } from '../utils/supabaseClient'
@@ -201,6 +201,14 @@ function CaseCard({ c, i, selectedCase, setSelectedCase, handleResolve }) {
 }
 
 // ── Case Detail Panel ────────────────────────────────────────────────────────
+const BRANCHES = [
+  { id: 'all', label: 'All Issues', icon: MessageCircle, color: 'text-white' },
+  { id: 'trip', label: 'Trip Operations', icon: Plane, color: 'text-brand-primary' },
+  { id: 'payment', label: 'Payments', icon: DollarSign, color: 'text-emerald-500' },
+  { id: 'technical', label: 'Technical', icon: Zap, color: 'text-violet-400' },
+  { id: 'cancellation', label: 'Cancellations', icon: XCircle, color: 'text-rose-500' },
+]
+
 function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent, onAgentApprove }) {
   const [note, setNote] = useState('')
   const [isResolving, setIsResolving] = useState(false)
@@ -233,13 +241,13 @@ function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent, onAgentA
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-5 space-y-5">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {/* Customer info */}
-        <div className="glass border border-border rounded-xl p-4">
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
           <p className="text-muted text-xs uppercase tracking-wider mb-3">Customer</p>
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-sky-500/20 border border-sky-500/20 flex items-center justify-center">
-              <span className="text-sky-400 font-bold">{caseData.customer[0]}</span>
+            <div className="w-11 h-11 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-lg">
+              {caseData.customer[0]}
             </div>
             <div>
               <div className="text-white font-semibold">{caseData.customer}</div>
@@ -260,7 +268,7 @@ function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent, onAgentA
         </div>
 
         {/* Booking info */}
-        <div className="glass border border-border rounded-xl p-4">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
           <p className="text-muted text-xs uppercase tracking-wider mb-3">Booking Details</p>
           <div className="grid grid-cols-2 gap-2 text-sm">
             {[
@@ -270,17 +278,17 @@ function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent, onAgentA
               ['Status', caseData.status],
             ].map(([k, v]) => (
               <div key={k}>
-                <div className="text-muted text-xs">{k}</div>
-                <div className="text-white font-medium capitalize">{v}</div>
+                <div className="text-slate-400 text-[10px] uppercase font-bold">{k}</div>
+                <div className="text-slate-800 font-semibold capitalize">{v}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* AI Summary */}
-        <div className="p-4 bg-gold-400/8 border border-gold-400/20 rounded-xl">
+        <div className="p-5 bg-brand-primary/5 border border-brand-primary/10 rounded-2xl">
           <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-4 h-4 text-gold-400" />
+            <Sparkles className="w-5 h-5 text-brand-primary" />
             <span className="text-gold-300 text-sm font-semibold">AI Case Summary</span>
           </div>
           <p className="text-gold-200/70 text-xs leading-relaxed mb-3">{caseData.aiSummary}</p>
@@ -399,7 +407,8 @@ function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent, onAgentA
 export default function AgentDashboard() {
   const [cases, setCases] = useState([])
   const [selectedCase, setSelectedCase] = useState(null)
-  const [filter] = useState('all')
+  const [filter, setFilter] = useState('all')
+  const [branch, setBranch] = useState('all')
   const [search, setSearch] = useState('')
   const [view, setView] = useState('summary') // summary, queue, work
   const [loading, setLoading] = useState(true)
@@ -442,6 +451,12 @@ export default function AgentDashboard() {
 
   const filtered = cases.filter(c => {
     if (filter !== 'all' && c.status !== filter) return false
+    if (branch !== 'all') {
+      if (branch === 'trip' && !['Visa Risk', 'Trip Request'].includes(c.typeLabel)) return false
+      if (branch === 'payment' && !['Payment Failed', 'Finance Issue'].includes(c.typeLabel)) return false
+      if (branch === 'technical' && !['Technical Error', 'Technical Issue'].includes(c.typeLabel)) return false
+      if (branch === 'cancellation' && !['Cancellation Request', 'Refund Request'].includes(c.typeLabel)) return false
+    }
     if (search && !c.customer.toLowerCase().includes(search.toLowerCase()) &&
       !c.route.toLowerCase().includes(search.toLowerCase()) &&
       !c.id.toLowerCase().includes(search.toLowerCase())) return false
@@ -488,7 +503,7 @@ export default function AgentDashboard() {
     { label: 'Open Cases', value: openCasesCount, icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/20' },
     { label: 'Pending Approval', value: pendingCasesCount, icon: Clock, color: 'text-sky-400', bg: 'bg-sky-400/10 border-sky-400/20' },
     { label: 'Resolved Today', value: resolvedCasesCount, icon: CheckCircle, color: 'text-sage-400', bg: 'bg-sage-400/10 border-sage-400/20' },
-    { label: 'Automation Rate', value: '87%', icon: Zap, color: 'text-gold-400', bg: 'bg-gold-400/10 border-gold-400/20' },
+    { label: 'Efficiency', value: '94%', icon: Zap, color: 'text-brand-primary', bg: 'bg-brand-primary/5' },
   ]
 
 
@@ -537,110 +552,131 @@ export default function AgentDashboard() {
 
 
         {/* Dynamic Views */}
-        <div className="min-h-[600px]">
-          {view === 'summary' && !selectedCase && (
-            <div className="space-y-12">
-              {/* Stats (Compact) */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {stats.map(({ label, value, icon: Icon, color, bg }) => (
-                  <div key={label} className={`glass border rounded-2xl p-4 ${bg}`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <Icon className={`w-4 h-4 ${color}`} />
-                      <span className="text-[10px] uppercase font-bold text-white/40 tracking-widest">{label}</span>
-                    </div>
-                    <div className="font-bold text-2xl text-white">{value}</div>
-                  </div>
-                ))}
-              </div>
+        <div className="min-h-[600px] flex flex-col md:flex-row gap-8">
 
-              {/* Urgent Phased Triage */}
-              <div>
-                <h2 className="text-white font-bold text-xl mb-6 flex items-center gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
-                  Needs Your Immediate Focus
-                </h2>
-                <div className="grid md:grid-cols-2 gap-4">
-                  {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').slice(0, 4).map((c, i) => (
-                    <CaseCard
-                      key={c.id} c={c} i={i}
-                      handleResolve={handleResolve}
-                      selectedCase={selectedCase}
-                      setSelectedCase={(caseItem) => { setSelectedCase(caseItem); setView('work') }}
-                    />
+          {/* Branch Sidebar */}
+          {(view === 'queue' || view === 'work') && !selectedCase && (
+            <div className="w-full md:w-64 flex-shrink-0 space-y-2">
+              <p className="text-[10px] font-bold text-muted uppercase tracking-widest px-4 mb-4">Support Branches</p>
+              {BRANCHES.map((b) => (
+                <button
+                  key={b.id}
+                  onClick={() => setBranch(b.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${branch === b.id ? 'bg-white/10 text-white shadow-xl' : 'text-muted hover:bg-white/5'
+                    }`}
+                >
+                  <b.icon className={`w-4 h-4 ${b.color}`} />
+                  <span className="text-sm font-semibold">{b.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="flex-1">
+            {view === 'summary' && !selectedCase && (
+              <div className="space-y-12">
+                {/* Stats (Compact) */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {stats.map(({ label, value, icon: Icon, color, bg }) => (
+                    <div key={label} className={`glass border rounded-2xl p-4 ${bg}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <Icon className={`w-4 h-4 ${color}`} />
+                        <span className="text-[10px] uppercase font-bold text-white/40 tracking-widest">{label}</span>
+                      </div>
+                      <div className="font-bold text-2xl text-white">{value}</div>
+                    </div>
                   ))}
                 </div>
-                {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').length > 4 && (
-                  <button onClick={() => setView('queue')} className="mt-6 w-full py-4 glass border border-border rounded-2xl text-muted hover:text-white transition-all text-sm font-medium">
-                    View all {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').length} high-priority cases
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
 
-          {(view === 'queue' || view === 'work') && (
-            <div className={`grid gap-6 ${selectedCase ? 'lg:grid-cols-[320px_1fr]' : 'grid-cols-1'}`}>
-
-              {/* Sidebar List (only when in work mode) */}
-              <div className={`${selectedCase ? 'block' : 'hidden'} space-y-3 max-h-[calc(100vh-180px)] overflow-y-auto pr-2 custom-scrollbar`}>
-                <div className="text-[10px] font-bold text-muted uppercase tracking-widest px-2 mb-2">Remaining Tasks</div>
-                {cases.filter(c => c.status !== 'resolved').map((c) => (
-                  <div
-                    key={c.id}
-                    onClick={() => setSelectedCase(c)}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer ${selectedCase?.id === c.id
-                      ? 'bg-gold-400/10 border-gold-400/30'
-                      : 'border-border hover:border-white/10 text-muted'
-                      }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] font-mono">{c.id}</span>
-                      <div className={`w-1.5 h-1.5 rounded-full ${PRIORITY_STYLES[c.priority].dot}`} />
-                    </div>
-                    <div className="text-xs font-bold text-white truncate">{c.customer}</div>
-                    <div className="text-[10px] opacity-60 truncate">{c.typeLabel}</div>
+                {/* Urgent Phased Triage */}
+                <div>
+                  <h2 className="text-white font-bold text-xl mb-6 flex items-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                    Needs Your Immediate Focus
+                  </h2>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').slice(0, 4).map((c, i) => (
+                      <CaseCard
+                        key={c.id} c={c} i={i}
+                        handleResolve={handleResolve}
+                        selectedCase={selectedCase}
+                        setSelectedCase={(caseItem) => { setSelectedCase(caseItem); setView('work') }}
+                      />
+                    ))}
                   </div>
-                ))}
+                  {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').length > 4 && (
+                    <button onClick={() => setView('queue')} className="mt-6 w-full py-4 glass border border-border rounded-2xl text-muted hover:text-white transition-all text-sm font-medium">
+                      View all {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').length} high-priority cases
+                    </button>
+                  )}
+                </div>
               </div>
+            )}
 
-              {/* Main Workspace */}
-              <div className="min-w-0">
-                {selectedCase ? (
-                  <CaseDetail
-                    caseData={selectedCase}
-                    onClose={() => { setSelectedCase(null); setView('summary') }}
-                    onResolve={handleResolve}
-                    onInstructionsSent={handleInstructionsSent}
-                  />
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-                      <h2 className="text-white font-bold text-xl uppercase tracking-tighter">Full Queue</h2>
-                      <div className="flex items-center gap-2">
-                        <Search className="w-4 h-4 text-muted" />
-                        <input
-                          placeholder="Search tickets..."
-                          className="bg-surface border border-border text-xs px-4 py-2 rounded-xl outline-none focus:border-gold-400/30 transition-all w-64"
-                          value={search}
-                          onChange={e => setSearch(e.target.value)}
-                        />
+            {(view === 'queue' || view === 'work') && (
+              <div className={`grid gap-6 ${selectedCase ? 'lg:grid-cols-[320px_1fr]' : 'grid-cols-1'}`}>
+
+                {/* Sidebar List (only when in work mode) */}
+                <div className={`${selectedCase ? 'block' : 'hidden'} space-y-3 max-h-[calc(100vh-180px)] overflow-y-auto pr-2 custom-scrollbar`}>
+                  <div className="text-[10px] font-bold text-muted uppercase tracking-widest px-2 mb-2">Remaining Tasks</div>
+                  {cases.filter(c => c.status !== 'resolved').map((c) => (
+                    <div
+                      key={c.id}
+                      onClick={() => setSelectedCase(c)}
+                      className={`p-3 rounded-xl border transition-all cursor-pointer ${selectedCase?.id === c.id
+                        ? 'bg-gold-400/10 border-gold-400/30'
+                        : 'border-border hover:border-white/10 text-muted'
+                        }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-mono">{c.id}</span>
+                        <div className={`w-1.5 h-1.5 rounded-full ${PRIORITY_STYLES[c.priority].dot}`} />
+                      </div>
+                      <div className="text-xs font-bold text-white truncate">{c.customer}</div>
+                      <div className="text-[10px] opacity-60 truncate">{c.typeLabel}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Main Workspace */}
+                <div className="min-w-0">
+                  {selectedCase ? (
+                    <CaseDetail
+                      caseData={selectedCase}
+                      onClose={() => { setSelectedCase(null); setView('summary') }}
+                      onResolve={handleResolve}
+                      onInstructionsSent={handleInstructionsSent}
+                    />
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+                        <h2 className="text-white font-bold text-xl uppercase tracking-tighter">Full Queue</h2>
+                        <div className="flex items-center gap-2">
+                          <Search className="w-4 h-4 text-muted" />
+                          <input
+                            placeholder="Search tickets..."
+                            className="bg-surface border border-border text-xs px-4 py-2 rounded-xl outline-none focus:border-gold-400/30 transition-all w-64"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        {filtered.map((c, i) => (
+                          <CaseCard
+                            key={c.id} c={c} i={i}
+                            handleResolve={handleResolve}
+                            selectedCase={selectedCase}
+                            setSelectedCase={(caseItem) => { setSelectedCase(caseItem); setView('work') }}
+                          />
+                        ))}
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      {filtered.map((c, i) => (
-                        <CaseCard
-                          key={c.id} c={c} i={i}
-                          handleResolve={handleResolve}
-                          selectedCase={selectedCase}
-                          setSelectedCase={(caseItem) => { setSelectedCase(caseItem); setView('work') }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

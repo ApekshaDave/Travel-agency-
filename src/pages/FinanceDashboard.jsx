@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { MOCK_LEDGER, getLedgerSummary, formatINR } from '../utils/billingEngine'
 import StaffNav from '../components/layout/StaffNav'
+import { supabase } from '../utils/supabaseClient'
 
 // ── Recharts for revenue chart ────────────────────────────────────────────────
 import {

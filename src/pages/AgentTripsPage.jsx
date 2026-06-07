@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
+import { // Removed unused imports
   Plane, Users, Calendar, DollarSign, Sparkles, Clock,
   CheckCircle, AlertTriangle, Trash2, ChevronDown, ChevronUp,
   RefreshCw, FileText, Map, UserCheck, EyeOff, Undo2, Car,
@@ -12,30 +12,32 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
-
+// Removed unused VEHICLE_TYPES
 const VEHICLE_TYPES = [
-  { value: 'Sedan',           label: 'Sedan',           capacity: 4 },
-  { value: 'SUV',             label: 'SUV / MUV',       capacity: 6 },
+  { value: 'Sedan', label: 'Sedan', capacity: 4 },
+  { value: 'SUV', label: 'SUV / MUV', capacity: 6 },
   { value: 'Tempo Traveller', label: 'Tempo Traveller', capacity: 12 },
-  { value: 'Mini Bus',        label: 'Mini Bus',        capacity: 20 },
-  { value: 'Luxury SUV',      label: 'Luxury SUV',      capacity: 5 },
+  { value: 'Mini Bus', label: 'Mini Bus', capacity: 20 },
+  { value: 'Luxury SUV', label: 'Luxury SUV', capacity: 5 },
 ]
 
 const STATUS_CONFIG = {
-  pending:  { color: 'text-sand-400',   bg: 'badge-pending',   label: 'Pending Review',  dot: 'bg-sand-400' },
-  accepted: { color: 'text-ocean-400',  bg: 'badge-accepted',  label: 'Accepted',         dot: 'bg-ocean-400' },
-  reviewed: { color: 'text-sky-400',    bg: 'badge-reviewed',  label: 'Reviewed',         dot: 'bg-sky-400' },
-  booked:   { color: 'text-forest-400', bg: 'badge-booked',    label: 'Booked',           dot: 'bg-forest-400' },
-  cancelled:{ color: 'text-coral-400',  bg: 'badge-cancelled', label: 'Cancelled',        dot: 'bg-coral-400' },
+  pending: { color: 'text-sand-400', bg: 'badge-pending', label: 'Pending Review', dot: 'bg-sand-400' },
+  accepted: { color: 'text-ocean-400', bg: 'badge-accepted', label: 'Accepted', dot: 'bg-ocean-400' },
+  reviewed: { color: 'text-sky-400', bg: 'badge-reviewed', label: 'Reviewed', dot: 'bg-sky-400' },
+  booked: { color: 'text-forest-400', bg: 'badge-booked', label: 'Booked', dot: 'bg-forest-400' },
+  cancelled: { color: 'text-coral-400', bg: 'badge-cancelled', label: 'Cancelled', dot: 'bg-coral-400' },
 }
+// Added new status for agent review
+STATUS_CONFIG.pending_agent_review = { color: 'text-gold-400', bg: 'bg-gold-400/10', label: 'Pending Review', dot: 'bg-gold-400' };
 const SEGMENT_ICONS = { flight: '✈️', train: '🚂', bus: '🚌', roadways: '🚗', hotel: '🏨' }
 
 // ─── Driver Assignment Panel ─────────────────────────────────────────────────
 function DriverPanel({ tripData, passengers, onSave }) {
-  const [driverName, setDriverName]     = useState(tripData?.driverName || '')
-  const [driverPhone, setDriverPhone]   = useState(tripData?.driverPhone || '')
-  const [vehicleType, setVehicleType]   = useState(tripData?.vehicleType || 'SUV')
-  const [saving, setSaving]             = useState(false)
+  const [driverName, setDriverName] = useState(tripData?.driverName || '')
+  const [driverPhone, setDriverPhone] = useState(tripData?.driverPhone || '')
+  const [vehicleType, setVehicleType] = useState(tripData?.vehicleType || 'SUV')
+  const [saving, setSaving] = useState(false)
 
   const vehicle = VEHICLE_TYPES.find(v => v.value === vehicleType) || VEHICLE_TYPES[1]
   const vehiclesNeeded = Math.ceil((passengers || 1) / vehicle.capacity)
@@ -121,19 +123,20 @@ function DriverPanel({ tripData, passengers, onSave }) {
 
 // ─── Trip Card ───────────────────────────────────────────────────────────────
 function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEmail }) {
-  const [expanded, setExpanded]     = useState(false)
-  const [notes, setNotes]           = useState(entry.agent_notes || '')
-  const [status, setStatus]         = useState(entry.status || 'pending')
-  const [accepting, setAccepting]   = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [notes, setNotes] = useState(entry.agent_notes || '')
+  const [status, setStatus] = useState(entry.status || 'pending')
+  const [accepting, setAccepting] = useState(false)
+  const [showPassengerDetails, setShowPassengerDetails] = useState(false);
 
-  const trip      = entry.trip_data || {}
-  const cfg       = STATUS_CONFIG[status] || STATUS_CONFIG.pending
+  const trip = entry.trip_data || {}
+  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending
   const isAccepted = entry.status === 'accepted'
-  const isMine     = entry.assigned_agent_email === currentUserEmail
-  const hasRoad    = trip.segments?.some(s => s.type === 'roadways')
+  const isMine = entry.assigned_agent_email === currentUserEmail
+  const hasRoad = trip.segments?.some(s => s.type === 'roadways')
 
   const handleAccept = async () => {
-    setAccepting(true)
+    setAccepting(true);
     await onAccept(entry.id)
     setAccepting(false)
   }
@@ -149,14 +152,14 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
       layout
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.97 }}
+      exit={{ opacity: 0, scale: 0.97 }} // Changed exit animation to match new design
       className="travel-card overflow-hidden"
       style={{
-        borderColor: isAccepted && isMine
+        borderColor: entry.status === 'pending_agent_review' ? 'rgba(247, 201, 72, 0.2)' : isAccepted && isMine
           ? 'rgba(0, 201, 177, 0.3)'
           : status === 'pending'
-          ? 'rgba(247, 201, 72, 0.2)'
-          : 'rgba(255,255,255,0.08)'
+            ? 'rgba(247, 201, 72, 0.2)'
+            : 'rgba(255,255,255,0.08)'
       }}
     >
       {/* Accepted by me — ocean top bar */}
@@ -168,20 +171,20 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
         <div className="flex items-start justify-between gap-4 flex-wrap">
           {/* Customer info */}
           <div className="flex items-start gap-4">
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm text-white"
-                 style={{ background: 'linear-gradient(135deg, #FF6B6B, #F7C948)' }}>
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-slate-900"
+              style={{ background: 'linear-gradient(135deg, #FF6B6B, #F7C948)' }}>
               {(entry.customer_name || 'U').charAt(0).toUpperCase()}
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-white font-bold text-sm">{entry.customer_name || 'Unknown'}</h3>
                 <span className="text-muted text-xs">{entry.customer_email}</span>
-              </div>
+              </div> {/* Changed text-white to text-slate-900 */}
               <div className="flex items-center gap-3 mt-1 flex-wrap">
                 <span className="text-sand-400 font-bold text-base">{trip.name || 'Unnamed Trip'}</span>
                 {trip.isAI && (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1"
-                        style={{ background: 'rgba(247,201,72,0.12)', border: '1px solid rgba(247,201,72,0.25)', color: '#F7C948' }}>
+                    style={{ background: 'rgba(247,201,72,0.12)', border: '1px solid rgba(247,201,72,0.25)', color: '#F7C948' }}>
                     <Sparkles className="w-2.5 h-2.5" /> AI
                   </span>
                 )}
@@ -189,7 +192,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
               <div className="flex items-center gap-3 mt-1 text-xs text-muted flex-wrap">
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {trip.duration}</span>
                 <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {trip.passengers} pax</span>
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 text-slate-900"> {/* Changed text-sand-400 to text-slate-900 */}
                   <DollarSign className="w-3 h-3 text-sand-400" />
                   <span className="text-sand-400 font-bold">₹{trip.totalCost?.toLocaleString()}</span>
                 </span>
@@ -204,7 +207,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
           {/* Right: status + actions */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${cfg.bg} ${cfg.color} flex items-center gap-1.5`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+              <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot} ${entry.status === 'pending_agent_review' ? 'animate-pulse' : ''}`} />
               {cfg.label}
             </span>
             <button
@@ -219,10 +222,10 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
 
         {/* Segment pills */}
         <div className="flex gap-2 mt-3 flex-wrap">
-          {(trip.segments || []).map((seg, i) => (
-            <span key={i} className="px-2 py-1 glass border rounded-lg text-xs text-muted flex items-center gap-1"
-                  style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-              {SEGMENT_ICONS[seg.type] || '📍'} {seg.from}{seg.to ? ` → ${seg.to}` : ''} · ₹{seg.price?.toLocaleString()}
+          {(trip.segments || []).slice(0, 5).map((seg, i) => ( // Limit to 5 segments for brevity
+            <span key={i} className="px-2 py-1 glass border rounded-lg text-xs text-slate-600 flex items-center gap-1"
+              style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+              {SEGMENT_ICONS[seg.type] || '📍'} {seg.from}{seg.to ? ` → ${seg.to}` : ''}
             </span>
           ))}
         </div>
@@ -230,7 +233,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
         {/* Quick Accept/Ignore bar for pending trips */}
         {status === 'pending' && (
           <div className="flex gap-2 mt-4">
-            <motion.button
+            <motion.button // Changed to accept pending_agent_review
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
               onClick={handleAccept}
               disabled={accepting}
@@ -240,7 +243,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
                 ? <RefreshCw className="w-4 h-4 animate-spin" />
                 : <UserCheck className="w-4 h-4" />}
               {accepting ? 'Accepting…' : 'Accept Trip'}
-            </motion.button>
+            </motion.button> {/* Changed btn-ocean to bg-brand-gradient */}
             <motion.button
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
               onClick={() => onIgnore(entry.id, entry.customer_name)}
@@ -255,7 +258,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
         {/* Already accepted by this agent */}
         {isAccepted && isMine && (
           <div className="mt-3 px-3 py-2 rounded-xl text-sm flex items-center gap-2"
-               style={{ background: 'rgba(0,201,177,0.08)', border: '1px solid rgba(0,201,177,0.2)' }}>
+            style={{ background: 'rgba(0,201,177,0.08)', border: '1px solid rgba(0,201,177,0.2)' }}>
             <UserCheck className="w-4 h-4 text-ocean-400" />
             <span className="text-ocean-400 font-semibold">You are the assigned travel partner for this trip</span>
           </div>
@@ -263,7 +266,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
         {/* Accepted by another agent */}
         {isAccepted && !isMine && (
           <div className="mt-3 px-3 py-2 rounded-xl text-sm flex items-center gap-2"
-               style={{ background: 'rgba(69,183,209,0.08)', border: '1px solid rgba(69,183,209,0.2)' }}>
+            style={{ background: 'rgba(69,183,209,0.08)', border: '1px solid rgba(69,183,209,0.2)' }}>
             <AlertCircle className="w-4 h-4 text-sky-400" />
             <span className="text-sky-400 text-xs">Assigned to <strong>{entry.assigned_agent_name}</strong></span>
           </div>
@@ -277,14 +280,14 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden border-t"
+            className="overflow-hidden border-t text-slate-900"
             style={{ borderColor: 'rgba(255,255,255,0.06)' }}
           >
             <div className="p-5 space-y-5">
               {/* AI suggestion */}
               {trip.costComparison && (
                 <div className="p-4 rounded-xl"
-                     style={{ background: 'rgba(247,201,72,0.06)', border: '1px solid rgba(247,201,72,0.2)' }}>
+                  style={{ background: 'rgba(247,201,72,0.06)', border: '1px solid rgba(247,201,72,0.2)' }}>
                   <p className="text-sand-400 text-xs font-bold mb-1 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" /> AI Route Suggestion
                   </p>
@@ -301,7 +304,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
                   <div className="flex gap-2 flex-wrap">
                     {trip.placesToVisit.slice(0, 6).map((p, i) => (
                       <span key={i} className="px-2.5 py-1 glass rounded-lg text-xs text-muted"
-                            style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+                        style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
                         {p.name}
                       </span>
                     ))}
@@ -339,7 +342,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold block mb-1">Trip Ref ID</label>
                     <div className="px-3 py-2 glass rounded-xl text-sm text-muted font-mono"
-                         style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+                      style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
                       {entry.id.slice(-8).toUpperCase()}
                     </div>
                   </div>
@@ -389,10 +392,10 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AgentTripsPage() {
   const { user, token } = useAuth()
-  const [trips, setTrips]             = useState([])
-  const [loading, setLoading]         = useState(true)
-  const [filter, setFilter]           = useState('all')
-  const [undoStack, setUndoStack]     = useState([]) // { id, name, timeoutId }
+  const [trips, setTrips] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState('all')
+  const [undoStack, setUndoStack] = useState([]) // { id, name, timeoutId }
 
   const authHeaders = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
 
@@ -483,11 +486,11 @@ export default function AgentTripsPage() {
   }
 
   const statusCounts = {
-    all:       trips.length,
-    pending:   trips.filter(t => t.status === 'pending').length,
-    accepted:  trips.filter(t => t.status === 'accepted').length,
-    reviewed:  trips.filter(t => t.status === 'reviewed').length,
-    booked:    trips.filter(t => t.status === 'booked').length,
+    all: trips.length,
+    pending: trips.filter(t => t.status === 'pending').length,
+    accepted: trips.filter(t => t.status === 'accepted').length,
+    reviewed: trips.filter(t => t.status === 'reviewed').length,
+    booked: trips.filter(t => t.status === 'booked').length,
     cancelled: trips.filter(t => t.status === 'cancelled').length,
   }
 
@@ -512,8 +515,8 @@ export default function AgentTripsPage() {
               <p className="text-muted">Review & accept trip requests — accepted trips assign you as Travel Partner</p>
             </div>
             <button onClick={loadTrips}
-                    className="p-2.5 glass border rounded-xl text-muted hover:text-white transition-all"
-                    style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+              className="p-2.5 glass border rounded-xl text-muted hover:text-white transition-all"
+              style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
           </div>
@@ -540,15 +543,15 @@ export default function AgentTripsPage() {
         {/* Stats row */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
           {[
-            { key: 'pending',  label: 'Pending',   icon: AlertTriangle, color: 'text-sand-400' },
-            { key: 'accepted', label: 'Accepted',  icon: UserCheck,     color: 'text-ocean-400' },
-            { key: 'reviewed', label: 'Reviewed',  icon: FileText,      color: 'text-sky-400' },
-            { key: 'booked',   label: 'Booked',    icon: CheckCircle,   color: 'text-forest-400' },
-            { key: 'cancelled',label: 'Cancelled', icon: Trash2,        color: 'text-coral-400' },
+            { key: 'pending', label: 'Pending', icon: AlertTriangle, color: 'text-sand-400' },
+            { key: 'accepted', label: 'Accepted', icon: UserCheck, color: 'text-ocean-400' },
+            { key: 'reviewed', label: 'Reviewed', icon: FileText, color: 'text-sky-400' },
+            { key: 'booked', label: 'Booked', icon: CheckCircle, color: 'text-forest-400' },
+            { key: 'cancelled', label: 'Cancelled', icon: Trash2, color: 'text-coral-400' },
           ].map(({ key, label, icon: Icon, color }) => (
             <div key={key} className="travel-card p-4 text-center cursor-pointer"
-                 onClick={() => setFilter(key)}
-                 style={{ borderColor: filter === key ? 'rgba(0,201,177,0.3)' : undefined }}>
+              onClick={() => setFilter(key)}
+              style={{ borderColor: filter === key ? 'rgba(0,201,177,0.3)' : undefined }}>
               <Icon className={`w-4 h-4 ${color} mx-auto mb-2`} />
               <div className={`text-2xl font-bold ${color}`}>{statusCounts[key]}</div>
               <div className="text-muted text-xs">{label}</div>
@@ -560,15 +563,14 @@ export default function AgentTripsPage() {
         <div className="flex gap-2 mb-6 flex-wrap">
           {['all', 'pending', 'accepted', 'reviewed', 'booked', 'cancelled'].map(f => (
             <button key={f} onClick={() => setFilter(f)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
-                      filter === f
-                        ? 'text-ocean-400'
-                        : 'text-muted hover:text-white'
-                    }`}
-                    style={{
-                      background: filter === f ? 'rgba(0,201,177,0.12)' : 'rgba(22,32,50,0.7)',
-                      borderColor: filter === f ? 'rgba(0,201,177,0.3)' : 'rgba(255,255,255,0.08)'
-                    }}>
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${filter === f
+                  ? 'text-ocean-400'
+                  : 'text-muted hover:text-white'
+                }`}
+              style={{
+                background: filter === f ? 'rgba(0,201,177,0.12)' : 'rgba(22,32,50,0.7)',
+                borderColor: filter === f ? 'rgba(0,201,177,0.3)' : 'rgba(255,255,255,0.08)'
+              }}>
               {f.charAt(0).toUpperCase() + f.slice(1)} ({statusCounts[f] ?? trips.length})
             </button>
           ))}
@@ -578,7 +580,7 @@ export default function AgentTripsPage() {
         {loading ? (
           <div className="text-center py-20">
             <div className="w-12 h-12 border-2 border-ocean-400 border-t-transparent rounded-full mx-auto mb-4"
-                 style={{ animation: 'spin 1s linear infinite' }} />
+              style={{ animation: 'spin 1s linear infinite' }} />
             <p className="text-muted">Loading trips…</p>
           </div>
         ) : filtered.length === 0 ? (
@@ -636,7 +638,7 @@ export default function AgentTripsPage() {
               {/* Progress bar */}
               <div className="mt-3 h-1 bg-white/5 rounded-full overflow-hidden">
                 <div className="undo-progress h-full rounded-full"
-                     style={{ background: 'linear-gradient(90deg, #FF6B6B, #F7C948)' }} />
+                  style={{ background: 'linear-gradient(90deg, #FF6B6B, #F7C948)' }} />
               </div>
             </motion.div>
           ))}
