@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import {
-  Mail, Lock, ArrowRight, Globe,
+  Mail, Lock, ArrowRight, Globe, Phone,
   Sparkles, ShieldCheck, Plane, CheckCircle2,
   Building2, Users, HelpCircle, Info, ChevronDown, UserCheck, PlusCircle, User
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { FaGithub } from "react-icons/fa"
+import { supabase } from './supabaseClient'
 import { useAuth } from '../context/AuthContext'
 
 export default function LoginPage() {
@@ -20,43 +21,49 @@ export default function LoginPage() {
     const params = new URLSearchParams(window.location.search)
     return params.get('tab') === 'agency' ? 'agency' : 'customer'
   })
-  
+
   // Normal sign-in/up fields
   const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  
+
   // Agency fields
   const [isAgencyRegistered, setIsAgencyRegistered] = useState(false)
   const [agencyName, setAgencyName] = useState('')
   const [agencyRegId, setAgencyRegId] = useState('')
   const [selectedAgency, setSelectedAgency] = useState('Star Voyages')
   const [position, setPosition] = useState('Agent')
-  
+
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
-  
+
   // Info hover state for General Info
   const [showInfoDropdown, setShowInfoDropdown] = useState(false)
-  
+
   // Saved profiles
   const [savedAccounts, setSavedAccounts] = useState([])
   const [registeredAgencies, setRegisteredAgencies] = useState([])
-  
+
   const navigate = useNavigate()
   const location = useLocation()
   const { login, signup } = useAuth()
 
   const from = location.state?.from?.pathname || '/dashboard'
 
-  // Load storage dependencies
+  // Load data from Supabase instead of LocalStorage
   useEffect(() => {
+    const fetchAgencies = async () => {
+      const { data } = await supabase.from('agencies').select('*').order('name')
+      if (data) setRegisteredAgencies(data)
+    }
+
+    // Saved profiles feature remains local-only as a "Remember Me" convenience, 
+    // but core registration now hits the DB.
     const saved = JSON.parse(localStorage.getItem('voyageai_saved_accounts') || '[]')
     setSavedAccounts(saved)
-    
-    const agencies = JSON.parse(localStorage.getItem('voyageai_registered_agencies') || '[]')
-    setRegisteredAgencies(agencies)
-  }, [isLogin])
+    fetchAgencies()
+  }, [])
 
   const validate = () => {
     let isValid = true
@@ -67,6 +74,10 @@ export default function LoginPage() {
       if (registerTab === 'customer') {
         if (!name.trim()) {
           newErrors.name = 'Full name is required'
+          isValid = false
+        }
+        if (!phone.trim()) {
+          newErrors.phone = 'Phone number is required'
           isValid = false
         }
       } else {
@@ -108,6 +119,46 @@ export default function LoginPage() {
     return isValid
   }
 
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setErrors({ email: 'Email is required to reset password' })
+      toast.error('Please enter your email address first.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/login`
+      })
+      if (error) throw error
+      toast.success('Password reset link sent to your email!')
+    } catch (err) {
+      toast.error(err.message || 'Failed to send reset link')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResendConfirmation = async (targetEmail) => {
+    setLoading(true)
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: targetEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`
+        }
+      })
+      if (error) throw error
+      toast.success('Confirmation email sent! Please check your inbox.')
+    } catch (err) {
+      toast.error(err.message || 'Failed to resend confirmation')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) return
@@ -119,33 +170,41 @@ export default function LoginPage() {
         const isStaffLogin = loginTab === 'agency'
         const user = await login(email, password, { staff: isStaffLogin })
         toast.success(`Welcome back, ${user.name}!`)
-        navigate(isStaffLogin ? '/staff' : from, { replace: true })
+
+        // Ensure customers land on dashboard even if they were redirected from a staff-only page
+        const redirectPath = !isStaffLogin && (from.includes('/staff') || from.includes('/agent') || from.includes('/finance'))
+          ? '/dashboard'
+          : (isStaffLogin ? '/staff' : from)
+
+        navigate(redirectPath, { replace: true })
       } else {
         // Registering
         if (registerTab === 'customer') {
-          await signup(email, password, name)
+          await signup(email, password, name, {
+            phone,
+            emailRedirectTo: `${window.location.origin}/dashboard`
+          })
           toast.success('Customer account created successfully!')
           navigate(from, { replace: true })
         } else {
           // Agency staff sign up
           let targetAgency = selectedAgency
-          
+
           if (!isAgencyRegistered) {
             // Register new agency
-            const currentAgencies = JSON.parse(localStorage.getItem('voyageai_registered_agencies') || '[]')
-            if (currentAgencies.some(a => a.name.toLowerCase() === agencyName.toLowerCase())) {
-              throw new Error('This agency name is already registered')
-            }
-            const newAgency = { name: agencyName, regId: agencyRegId }
-            currentAgencies.push(newAgency)
-            localStorage.setItem('voyageai_registered_agencies', JSON.stringify(currentAgencies))
+            const { error: agencyErr } = await supabase
+              .from('agencies')
+              .insert([{ name: agencyName, reg_id: agencyRegId }])
+
+            if (agencyErr) throw new Error('Agency registration failed: ' + agencyErr.message)
             targetAgency = agencyName
           }
 
           await signup(email, password, name, {
             staff: true,
             agencyName: targetAgency,
-            position: position
+            position: position,
+            emailRedirectTo: `${window.location.origin}/staff`
           })
 
           toast.success(`Registered successfully! Welcome to ${targetAgency}.`)
@@ -153,7 +212,27 @@ export default function LoginPage() {
         }
       }
     } catch (err) {
-      toast.error(err.message || 'Authentication failed')
+      const errorMsg = err.message?.toLowerCase() || ''
+      if (isLogin && errorMsg.includes('email not confirmed')) {
+        toast.error(
+          (t) => (
+            <span>
+              Email not confirmed.
+              <button
+                className="ml-2 text-gold-400 font-bold underline"
+                onClick={() => { handleResendConfirmation(email); toast.dismiss(t.id); }}
+              >
+                Resend?
+              </button>
+            </span>
+          ),
+          { duration: 6000 }
+        )
+      } else if (isLogin && (errorMsg.includes('invalid login credentials') || errorMsg.includes('user not found'))) {
+        toast.error('You are not registered. Please register yourself.')
+      } else {
+        toast.error(err.message || 'Authentication failed')
+      }
     } finally {
       setLoading(false)
     }
@@ -166,9 +245,44 @@ export default function LoginPage() {
       const isStaff = account.role === 'agent' || account.role === 'admin'
       await login(account.email, 'password', { staff: isStaff })
       toast.success(`Welcome back, ${account.name}!`)
-      navigate(isStaff ? '/staff' : from, { replace: true })
+
+      // Safety check: Don't redirect customers to staff-only pages even if that's where they came from
+      const redirectPath = !isStaff && (from.includes('/staff') || from.includes('/agent') || from.includes('/finance'))
+        ? '/dashboard'
+        : (isStaff ? '/staff' : from)
+
+      navigate(redirectPath, { replace: true })
     } catch (err) {
-      toast.error('Quick Sign-In failed')
+      const errorMsg = err.message?.toLowerCase() || ''
+      if (errorMsg.includes('email not confirmed')) {
+        toast.error(
+          (t) => (
+            <span>
+              Email not confirmed.
+              <button
+                className="ml-2 text-gold-400 font-bold underline"
+                onClick={() => { handleResendConfirmation(account.email); toast.dismiss(t.id); }}
+              >
+                Resend?
+              </button>
+            </span>
+          ),
+          { duration: 6000 }
+        )
+      } else if (errorMsg.includes('user not found')) {
+        toast.error('Account not found in Supabase. Please Register this email first!')
+      } else if (errorMsg.includes('invalid login credentials')) {
+        // Password mismatch - switch to manual mode and set the correct tab
+        setEmail(account.email)
+        setIsLogin(true)
+        const targetTab = (account.role === 'agent' || account.role === 'admin' || account.role === 'finance')
+          ? 'agency'
+          : 'customer'
+        setLoginTab(targetTab)
+        toast.error('Saved profile password mismatch. Please enter your registered password below.')
+      } else {
+        toast.error(err.message || 'Quick Sign-In failed')
+      }
     } finally {
       setLoading(false)
     }
@@ -250,7 +364,7 @@ export default function LoginPage() {
         {/* Right Side: Tabbed Login & Signup Forms */}
         <div className="flex-1 p-6 sm:p-10 md:p-12 lg:p-14">
           <div className="max-w-md mx-auto">
-            
+
             {/* Login / Register Toggle Header */}
             <div className="flex justify-center md:justify-start gap-6 mb-8 border-b border-white/5 pb-2">
               <button
@@ -344,16 +458,16 @@ export default function LoginPage() {
 
             {/* FORM BODY */}
             <form onSubmit={handleSubmit} className="space-y-5">
-              
+
               {/* Form Title & Context */}
               <div className="flex items-center justify-between">
                 <h4 className="text-white text-sm font-bold flex items-center gap-1.5">
-                  {isLogin 
-                    ? (loginTab === 'customer' ? 'Customer Sign In' : 'Travel Agency Sign In') 
+                  {isLogin
+                    ? (loginTab === 'customer' ? 'Customer Sign In' : 'Travel Agency Sign In')
                     : (registerTab === 'customer' ? 'Customer Account Registration' : 'Agency Staff Registry')
                   }
                 </h4>
-                
+
                 {/* General Info popup for Customer Sign-up */}
                 {!isLogin && registerTab === 'customer' && (
                   <div className="relative">
@@ -452,6 +566,27 @@ export default function LoginPage() {
                 </div>
               )}
 
+              {/* PHONE FIELD (Only for customer registration) */}
+              {!isLogin && registerTab === 'customer' && (
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase tracking-widest text-muted font-bold ml-1">Phone Number</label>
+                  <div className="relative group">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-gold-400 transition-colors" />
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => {
+                        setPhone(e.target.value)
+                        if (errors.phone) setErrors(prev => ({ ...prev, phone: '' }))
+                      }}
+                      placeholder="+91 98765 43210"
+                      className="ai-input w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm"
+                    />
+                  </div>
+                  {errors.phone && <p className="text-red-400 text-xs mt-1 ml-1 font-medium">{errors.phone}</p>}
+                </div>
+              )}
+
               {/* EMAIL FIELD */}
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase tracking-widest text-muted font-bold ml-1">Email Address</label>
@@ -476,7 +611,13 @@ export default function LoginPage() {
                 <div className="flex items-center justify-between ml-1">
                   <label className="text-[10px] uppercase tracking-widest text-muted font-bold">Password</label>
                   {isLogin && (
-                    <button type="button" className="text-[10px] text-gold-400 hover:underline">Forgot?</button>
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      className="text-[10px] text-gold-400 hover:underline"
+                    >
+                      Forgot?
+                    </button>
                   )}
                 </div>
                 <div className="relative group">
@@ -498,7 +639,7 @@ export default function LoginPage() {
               {/* CONDITIONAL AGENCY FIELDS */}
               {!isLogin && registerTab === 'agency' && (
                 <div className="space-y-4 p-4 border border-white/5 bg-white/[0.01] rounded-2xl">
-                  
+
                   {/* Join existing selection */}
                   {isAgencyRegistered ? (
                     <div className="space-y-1.5">
@@ -533,7 +674,7 @@ export default function LoginPage() {
                         />
                         {errors.agencyName && <p className="text-red-400 text-xs mt-1 ml-1 font-medium">{errors.agencyName}</p>}
                       </div>
-                      
+
                       <div className="space-y-1.5">
                         <label className="text-[10px] uppercase tracking-widest text-muted font-bold ml-1">New Agency Registration ID</label>
                         <input
@@ -571,11 +712,10 @@ export default function LoginPage() {
                 whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={loading}
-                className={`w-full py-4 mt-4 text-void font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 ${
-                  !isLogin && registerTab === 'agency' || isLogin && loginTab === 'agency'
-                    ? 'bg-gradient-to-r from-red-500 to-red-400 text-white shadow-red-500/20 hover:shadow-red-500/30'
-                    : 'bg-gold-gradient text-void shadow-gold hover:shadow-[0_0_40px_rgba(232,180,41,0.3)]'
-                }`}
+                className={`w-full py-4 mt-4 text-void font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 ${!isLogin && registerTab === 'agency' || isLogin && loginTab === 'agency'
+                  ? 'bg-gradient-to-r from-red-500 to-red-400 text-white shadow-red-500/20 hover:shadow-red-500/30'
+                  : 'bg-gold-gradient text-void shadow-gold hover:shadow-[0_0_40px_rgba(232,180,41,0.3)]'
+                  }`}
               >
                 {loading ? (
                   <motion.div
@@ -585,8 +725,8 @@ export default function LoginPage() {
                   />
                 ) : (
                   <>
-                    {isLogin 
-                      ? 'Sign In' 
+                    {isLogin
+                      ? 'Sign In'
                       : (registerTab === 'customer' ? 'Create Customer Account' : 'Register & Grant Staff Access')
                     }
                     <ArrowRight className="w-4 h-4" />

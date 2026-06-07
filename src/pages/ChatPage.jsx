@@ -7,6 +7,7 @@ import {
   AlertTriangle, CheckCircle, Clock
 } from 'lucide-react'
 import { callVoyageAI, detectTripIntent, generateMultiModalTrip, updateTripWithPreferences } from '../utils/multiModalApi'
+import { supabase } from './supabaseClient'
 import toast from 'react-hot-toast'
 import FlightCard from '../components/features/FlightCard'
 
@@ -49,11 +50,10 @@ function Message({ msg }) {
       transition={{ duration: 0.3 }}
       className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
     >
-      <div className={`w-8 h-8 flex-shrink-0 rounded-xl flex items-center justify-center ${
-        isUser
+      <div className={`w-8 h-8 flex-shrink-0 rounded-xl flex items-center justify-center ${isUser
           ? 'bg-sky-500/20 border border-sky-500/30'
           : 'bg-gradient-to-br from-gold-500 to-gold-400 shadow-gold-sm'
-      }`}>
+        }`}>
         {isUser
           ? <Users className="w-4 h-4 text-sky-400" />
           : <Sparkles className="w-4 h-4 text-void" />
@@ -62,11 +62,10 @@ function Message({ msg }) {
 
       <div className={`max-w-[80%] space-y-3 ${isUser ? 'items-end' : 'items-start'} flex flex-col`}>
         {msg.content && (
-          <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-            isUser
+          <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${isUser
               ? 'bg-sky-500/15 border border-sky-500/20 text-white ml-auto'
               : 'glass border border-border text-white/90'
-          } ${isUser ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}>
+            } ${isUser ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}>
             <pre className="font-body whitespace-pre-wrap">{msg.content}</pre>
           </div>
         )}
@@ -74,7 +73,7 @@ function Message({ msg }) {
         {msg.flights && (
           <div className="w-full space-y-3">
             {msg.flights.map((f, i) => (
-              <FlightCard key={i} flight={f} onSelect={() => {}} variant="chat" />
+              <FlightCard key={i} flight={f} onSelect={() => { }} variant="chat" />
             ))}
           </div>
         )}
@@ -105,11 +104,11 @@ function Message({ msg }) {
                 </span>
               </div>
             </div>
-            
+
             <p className="text-muted/80 text-xs leading-relaxed">
               All transport options (flights, trains, buses, roadways), hotel stays, top 10 local sights, and food choices are loaded.
             </p>
-            
+
             <Link
               to="/trip-builder"
               className="flex items-center justify-center gap-2 w-full py-2.5 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold text-xs rounded-xl shadow-gold-sm hover:shadow-gold transition-all"
@@ -244,12 +243,15 @@ export default function ChatPage() {
     setApiHistory(newHistory)
 
     try {
-      // Check for trip workspace intent
-      const activeTripRaw = localStorage.getItem('voyageai_active_trip')
-      let activeTrip = null
-      if (activeTripRaw) {
-        try { activeTrip = JSON.parse(activeTripRaw) } catch {}
-      }
+      // Fetch current workspace from DB
+      const { data: draft } = await supabase
+        .from('trips')
+        .select('itinerary_data')
+        .eq('user_id', user?.id)
+        .eq('status', 'draft')
+        .single()
+
+      const activeTrip = draft?.itinerary_data
 
       const intent = await detectTripIntent(userText, activeTrip)
 
@@ -259,19 +261,26 @@ export default function ChatPage() {
           // Display placeholder drafting message
           const draftMsg = `✨ Classifying request... I'm drafting a new trip plan to ${intent.destination} (${intent.duration}) in the background with preferences: "${intent.preferences || 'none'}". Generating all options...`
           setMessages(prev => [...prev, { role: 'assistant', content: draftMsg, ts: Date.now() }])
-          
+
           tripData = await generateMultiModalTrip(`${intent.destination} for ${intent.duration} ${intent.preferences ? `, preferences: ${intent.preferences}` : ''}`)
         } else if (intent.action === 'update' && activeTrip) {
           // Display placeholder updating message
           const updateMsg = `✨ Analyzing active trip... Applying change: "${intent.preferences || userText}" and regenerating pricing comparisons...`
           setMessages(prev => [...prev, { role: 'assistant', content: updateMsg, ts: Date.now() }])
-          
+
           tripData = await updateTripWithPreferences(activeTrip, userText)
         }
 
         if (tripData) {
-          localStorage.setItem('voyageai_active_trip', JSON.stringify(tripData))
-          
+          // Persist the AI result immediately to the database
+          await supabase.from('trips').upsert({
+            user_id: user?.id,
+            name: tripData.tripName || tripData.name,
+            itinerary_data: tripData,
+            status: 'draft',
+            updated_at: new Date()
+          })
+
           const confirmReply = `I've successfully updated your trip workspace! ✈️\n\nDestination: ${tripData.tripName || tripData.name || intent.destination}\nDuration: ${tripData.duration || intent.duration}\nEstimated budget: ₹${(tripData.totalBudget || 35000).toLocaleString()}\n\nI have synced these changes to your active Trip Builder workspace. Open it below to review flights, hotels, trains, buses, roadways, sights, and restaurants.`
 
           setMessages(prev => [
@@ -288,7 +297,7 @@ export default function ChatPage() {
               ts: Date.now()
             }
           ])
-          
+
           setApiHistory(prev => [
             ...prev,
             { role: 'assistant', content: confirmReply }
@@ -395,7 +404,7 @@ export default function ChatPage() {
         )}
 
         <div className="py-4 border-t border-border/40">
-          <div 
+          <div
             className="glass gradient-border rounded-2xl p-3 flex items-end gap-3 cursor-text"
             onClick={() => inputRef.current?.focus()}
           >
@@ -412,9 +421,8 @@ export default function ChatPage() {
               <button
                 type="button"
                 onClick={toggleListening}
-                className={`p-2 transition-colors rounded-lg ${
-                  isListening ? 'text-red-400 bg-red-400/10 animate-pulse' : 'text-muted hover:text-sky-400'
-                }`}
+                className={`p-2 transition-colors rounded-lg ${isListening ? 'text-red-400 bg-red-400/10 animate-pulse' : 'text-muted hover:text-sky-400'
+                  }`}
                 title={isListening ? 'Stop listening' : 'Start voice input'}
               >
                 <Mic className="w-5 h-5" />
@@ -424,11 +432,10 @@ export default function ChatPage() {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => sendMessage()}
                 disabled={!input.trim() || isTyping}
-                className={`p-2.5 rounded-xl transition-all ${
-                  input.trim() && !isTyping
+                className={`p-2.5 rounded-xl transition-all ${input.trim() && !isTyping
                     ? 'bg-gradient-to-r from-gold-500 to-gold-400 text-void shadow-gold-sm'
                     : 'bg-surface text-muted cursor-not-allowed'
-                }`}
+                  }`}
               >
                 <Send className="w-4 h-4" />
               </motion.button>

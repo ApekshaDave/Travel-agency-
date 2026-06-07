@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { getAIRecommendation } from '../utils/multiModalApi'
-import { motion} from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
-  AlertTriangle, CheckCircle, Clock, MessageCircle, Sparkles, Zap, ArrowRight, Phone, 
-  Mail,User, Plane, XCircle, ChevronRight
+  AlertTriangle, CheckCircle, Clock, MessageCircle, Sparkles, Zap, ArrowRight, Phone, Send,
+  Mail, User, Plane, XCircle, ChevronRight
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { supabase } from './supabaseClient'
 import StaffNav from '../components/layout/StaffNav'
 
 // ── Mock escalated cases ─────────────────────────────────────────────────────
@@ -149,11 +150,10 @@ function CaseCard({ c, i, selectedCase, setSelectedCase, handleResolve }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: i * 0.05 }}
       onClick={() => setSelectedCase(selectedCase?.id === c.id ? null : c)}
-      className={`glass border-l-4 rounded-2xl p-4 cursor-pointer transition-all duration-200 group flex items-start gap-4 ${
-        selectedCase?.id === c.id
-          ? 'border-gold-400/30 bg-gold-400/5'
-          : `border-border border-l-border/50 hover:border-gold-400/30 ${priorityBorder}`
-      }`}
+      className={`glass border-l-4 rounded-2xl p-4 cursor-pointer transition-all duration-200 group flex items-start gap-4 ${selectedCase?.id === c.id
+        ? 'border-gold-400/30 bg-gold-400/5'
+        : `border-border border-l-border/50 hover:border-gold-400/30 ${priorityBorder}`
+        }`}
     >
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap mb-1.5">
@@ -168,7 +168,7 @@ function CaseCard({ c, i, selectedCase, setSelectedCase, handleResolve }) {
             </span>
           )}
         </div>
-        
+
         <div className="flex items-center gap-x-3 gap-y-1 text-[11px] text-muted flex-wrap">
           <span className="flex items-center gap-1 font-medium text-white/70"><User className="w-3 h-3" />{c.customer}</span>
           <span className="flex items-center gap-1"><Plane className="w-3 h-3" />{c.route}</span>
@@ -201,9 +201,10 @@ function CaseCard({ c, i, selectedCase, setSelectedCase, handleResolve }) {
 }
 
 // ── Case Detail Panel ────────────────────────────────────────────────────────
-function CaseDetail({ caseData, onClose, onResolve }) {
+function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent }) {
   const [note, setNote] = useState('')
-  const priority = PRIORITY_STYLES[caseData.priority]
+  const [isResolving, setIsResolving] = useState(false)
+  const priority = PRIORITY_STYLES[caseData.priority] || PRIORITY_STYLES.medium
 
   return (
     <motion.div
@@ -293,11 +294,10 @@ function CaseDetail({ caseData, onClose, onResolve }) {
           <div className="space-y-2">
             {caseData.chatLog.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] px-3 py-2 rounded-xl text-xs ${
-                  msg.role === 'user'
-                    ? 'bg-sky-500/15 border border-sky-500/20 text-white rounded-tr-sm'
-                    : 'glass border border-border text-white/80 rounded-tl-sm'
-                }`}>
+                <div className={`max-w-[85%] px-3 py-2 rounded-xl text-xs ${msg.role === 'user'
+                  ? 'bg-sky-500/15 border border-sky-500/20 text-white rounded-tr-sm'
+                  : 'glass border border-border text-white/80 rounded-tl-sm'
+                  }`}>
                   <p className="leading-relaxed">{msg.msg}</p>
                   <p className="text-muted/50 text-xs mt-1">{msg.time}</p>
                 </div>
@@ -320,30 +320,67 @@ function CaseDetail({ caseData, onClose, onResolve }) {
 
       {/* Actions footer */}
       {caseData.status !== 'resolved' && (
-        <div className="p-4 border-t border-border/60 space-y-2">
-          <motion.button
-            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-            onClick={() => { onResolve(caseData.id); toast.success('Action performed: ' + caseData.aiAction) }}
-            className="w-full py-3 bg-gold-gradient text-void font-bold rounded-xl text-sm flex flex-col items-center justify-center leading-tight shadow-gold"
-          >
-            <span>{caseData.aiAction}</span>
-            <span className="text-[10px] opacity-70 font-medium mt-0.5">AI Recommended Action</span>
-          </motion.button>
-          
-          <div className="flex gap-2">
-            <button className="flex-1 py-2 glass border border-border rounded-lg text-xs text-muted hover:text-white transition-all flex items-center justify-center gap-1.5">
-              <Phone className="w-3.5 h-3.5" /> Call
-            </button>
-            <button className="flex-1 py-2 glass border border-border rounded-lg text-xs text-muted hover:text-white transition-all flex items-center justify-center gap-1.5">
-              <Mail className="w-3.5 h-3.5" /> Email
-            </button>
-            <button 
-              onClick={() => { onResolve(caseData.id); toast.success('Case resolved manually') }}
-              className="flex-1 py-2 glass border border-border rounded-lg text-xs text-sage-400 hover:bg-sage-400/10 transition-all flex items-center justify-center gap-1.5"
+        <div className="p-4 border-t border-border/60 space-y-4">
+          {!isResolving ? (
+            <div className="flex flex-col gap-2">
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                onClick={() => setIsResolving(true)}
+                className="w-full py-3 bg-gold-gradient text-void font-bold rounded-xl text-sm flex items-center justify-center gap-2"
+              >
+                <CheckCircle className="w-4 h-4" /> Resolve Case
+              </motion.button>
+            </div>
+          ) : (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3 bg-white/5 p-4 rounded-2xl border border-gold-400/20">
+              <p className="text-white text-xs font-bold uppercase tracking-wider">Resolution Center</p>
+              <textarea
+                value={note}
+                onChange={e => setNote(e.target.value)}
+                placeholder="Type instructions or resolution details for the customer..."
+                className="w-full bg-void/50 border border-border rounded-xl p-3 text-white text-sm h-24 focus:border-gold-400 outline-none"
+              />
+              <div className="flex gap-2">
+                <button onClick={() => onResolve(caseData.id, 'Issue has been resolved')} className="flex-1 py-2 glass border border-sage-400/30 text-sage-400 rounded-lg text-xs font-bold">
+                  Mark Resolved (Simple)
+                </button>
+                <button
+                  disabled={!note.trim()}
+                  onClick={() => onInstructionsSent(caseData.id, note)}
+                  className="flex-1 py-2 bg-gold-400 text-void rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-30"
+                >
+                  <Send className="w-3.5 h-3.5" /> Send Instructions
+                </button>
+              </div>
+              <button onClick={() => setIsResolving(false)} className="w-full text-[10px] text-muted hover:underline uppercase">Go Back</button>
+            </motion.div>
+          )}
+
+          {!isResolving && (
+            <motion.button
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+              onClick={() => { onResolve(caseData.id); toast.success('Action performed: ' + caseData.aiAction) }}
+              className="w-full py-3 glass border border-gold-400/20 text-gold-400 font-bold rounded-xl text-sm flex flex-col items-center justify-center leading-tight shadow-gold"
             >
-              <CheckCircle className="w-3.5 h-3.5" /> Resolve
-            </button>
-          </div>
+              <span>{caseData.aiAction}</span>
+              <span className="text-[10px] opacity-70 font-medium mt-0.5">AI Recommended Action</span>
+            </motion.button>
+          )}
+
+          {!isResolving && (
+            <div className="flex gap-2">
+              <button className="flex-1 py-2 glass border border-border rounded-lg text-xs text-muted hover:text-white transition-all flex items-center justify-center gap-1.5">
+                <Phone className="w-3.5 h-3.5" /> Call
+              </button>
+              <button className="flex-1 py-2 glass border border-border rounded-lg text-xs text-muted hover:text-white transition-all flex items-center justify-center gap-1.5">
+                <Mail className="w-3.5 h-3.5" /> Email
+              </button>
+              <button
+                className="flex-1 py-2 glass border border-border rounded-lg text-xs text-muted hover:text-white transition-all flex items-center justify-center gap-1.5">
+                <MessageCircle className="w-3.5 h-3.5" /> Chat
+              </button>
+            </div>
+          )}
         </div>
       )}
     </motion.div>
@@ -352,32 +389,86 @@ function CaseDetail({ caseData, onClose, onResolve }) {
 
 // ── Main Dashboard ───────────────────────────────────────────────────────────
 export default function AgentDashboard() {
-  const [cases, setCases] = useState(CASES)
+  const [cases, setCases] = useState([])
   const [selectedCase, setSelectedCase] = useState(null)
   const [filter] = useState('all')
   const [search, setSearch] = useState('')
   const [view, setView] = useState('summary') // summary, queue, work
+  const [loading, setLoading] = useState(true)
 
   const [aiTip, setAiTip] = useState('')
 
   useEffect(() => {
-  getAIRecommendation('Give a concise one-line tip for travel agents handling escalated cases today.')
-    .then(result => setAiTip(result))
-    .catch(() => {})
+    fetchIssues()
+  }, [])
+
+  const fetchIssues = async () => {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('booking_issues')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (!error) {
+      const mapped = (data || []).map(item => ({
+        ...item,
+        customer: item.customer_name,
+        email: item.customer_email,
+        phone: item.customer_phone,
+        typeLabel: item.issue_type,
+        created: new Date(item.created_at).toLocaleDateString(),
+        priority: 'high',
+        aiSummary: item.description,
+        chatLog: [] // Could be connected to a chat table later
+      }))
+      setCases(mapped)
+    }
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    getAIRecommendation('Give a concise one-line tip for travel agents handling escalated cases today.')
+      .then(result => setAiTip(result))
+      .catch(() => { })
   }, [])
 
   const filtered = cases.filter(c => {
     if (filter !== 'all' && c.status !== filter) return false
     if (search && !c.customer.toLowerCase().includes(search.toLowerCase()) &&
-        !c.route.toLowerCase().includes(search.toLowerCase()) &&
-        !c.id.toLowerCase().includes(search.toLowerCase())) return false
+      !c.route.toLowerCase().includes(search.toLowerCase()) &&
+      !c.id.toLowerCase().includes(search.toLowerCase())) return false
     return true
   })
 
-  const handleResolve = (id) => {
-    setCases(prev => prev.map(c => c.id === id ? { ...c, status: 'resolved' } : c))
-    if (selectedCase?.id === id) {
-      setSelectedCase(prev => ({ ...prev, status: 'resolved' }))
+  const handleResolve = async (id, message) => {
+    try {
+      const { error } = await supabase
+        .from('booking_issues')
+        .update({ status: 'resolved', resolution_note: message })
+        .eq('id', id)
+
+      if (error) throw error
+      toast.success('Issue marked as resolved!')
+      fetchIssues()
+      if (selectedCase?.id === id) setSelectedCase(null)
+    } catch (err) {
+      toast.error('Update failed: ' + err.message)
+    }
+  }
+
+  const handleInstructionsSent = async (id, note) => {
+    try {
+      const { error } = await supabase
+        .from('booking_issues')
+        .update({ status: 'pending', resolution_note: note })
+        .eq('id', id)
+
+      if (error) throw error
+      toast.success('Instructions sent to customer!')
+      fetchIssues()
+      if (selectedCase?.id === id) setSelectedCase(null)
+    } catch (err) {
+      toast.error('Update failed: ' + err.message)
     }
   }
 
@@ -407,9 +498,8 @@ export default function AgentDashboard() {
                 <button
                   key={v}
                   onClick={() => { setView(v); setSelectedCase(null) }}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium capitalize transition-all ${
-                    view === v ? 'text-gold-400 bg-gold-400/5' : 'text-muted hover:text-white'
-                  }`}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium capitalize transition-all ${view === v ? 'text-gold-400 bg-gold-400/5' : 'text-muted hover:text-white'
+                    }`}
                 >
                   {v}
                 </button>
@@ -431,18 +521,18 @@ export default function AgentDashboard() {
         </motion.div>
 
         {aiTip && (
-  <div className="flex items-start gap-3 p-4 mb-6 bg-gold-400/8 border border-gold-400/20 rounded-2xl">
-    <Sparkles className="w-4 h-4 text-gold-400 flex-shrink-0 mt-0.5" />
-    <p className="text-gold-200/80 text-sm">{aiTip}</p>
-  </div>
-)}
+          <div className="flex items-start gap-3 p-4 mb-6 bg-gold-400/8 border border-gold-400/20 rounded-2xl">
+            <Sparkles className="w-4 h-4 text-gold-400 flex-shrink-0 mt-0.5" />
+            <p className="text-gold-200/80 text-sm">{aiTip}</p>
+          </div>
+        )}
 
-        
+
         {/* Dynamic Views */}
         <div className="min-h-[600px]">
           {view === 'summary' && !selectedCase && (
             <div className="space-y-12">
-               {/* Stats (Compact) */}
+              {/* Stats (Compact) */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {stats.map(({ label, value, icon: Icon, color, bg }) => (
                   <div key={label} className={`glass border rounded-2xl p-4 ${bg}`}>
@@ -462,13 +552,14 @@ export default function AgentDashboard() {
                   Needs Your Immediate Focus
                 </h2>
                 <div className="grid md:grid-cols-2 gap-4">
-                    {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').slice(0, 4).map((c, i) => (
-                      <CaseCard 
-                        key={c.id} c={c} i={i} 
-                        handleResolve={handleResolve}
-                        setSelectedCase={(caseItem) => { setSelectedCase(caseItem); setView('work') }}
-                      />
-                    ))}
+                  {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').slice(0, 4).map((c, i) => (
+                    <CaseCard
+                      key={c.id} c={c} i={i}
+                      handleResolve={handleResolve}
+                      selectedCase={selectedCase}
+                      setSelectedCase={(caseItem) => { setSelectedCase(caseItem); setView('work') }}
+                    />
+                  ))}
                 </div>
                 {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').length > 4 && (
                   <button onClick={() => setView('queue')} className="mt-6 w-full py-4 glass border border-border rounded-2xl text-muted hover:text-white transition-all text-sm font-medium">
@@ -481,28 +572,27 @@ export default function AgentDashboard() {
 
           {(view === 'queue' || view === 'work') && (
             <div className={`grid gap-6 ${selectedCase ? 'lg:grid-cols-[320px_1fr]' : 'grid-cols-1'}`}>
-              
+
               {/* Sidebar List (only when in work mode) */}
               <div className={`${selectedCase ? 'block' : 'hidden'} space-y-3 max-h-[calc(100vh-180px)] overflow-y-auto pr-2 custom-scrollbar`}>
-                 <div className="text-[10px] font-bold text-muted uppercase tracking-widest px-2 mb-2">Remaining Tasks</div>
-                 {cases.filter(c => c.status !== 'resolved').map((c) => (
-                    <div 
-                      key={c.id}
-                      onClick={() => setSelectedCase(c)}
-                      className={`p-3 rounded-xl border transition-all cursor-pointer ${
-                        selectedCase?.id === c.id 
-                          ? 'bg-gold-400/10 border-gold-400/30' 
-                          : 'border-border hover:border-white/10 text-muted'
+                <div className="text-[10px] font-bold text-muted uppercase tracking-widest px-2 mb-2">Remaining Tasks</div>
+                {cases.filter(c => c.status !== 'resolved').map((c) => (
+                  <div
+                    key={c.id}
+                    onClick={() => setSelectedCase(c)}
+                    className={`p-3 rounded-xl border transition-all cursor-pointer ${selectedCase?.id === c.id
+                      ? 'bg-gold-400/10 border-gold-400/30'
+                      : 'border-border hover:border-white/10 text-muted'
                       }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] font-mono">{c.id}</span>
-                        <div className={`w-1.5 h-1.5 rounded-full ${PRIORITY_STYLES[c.priority].dot}`} />
-                      </div>
-                      <div className="text-xs font-bold text-white truncate">{c.customer}</div>
-                      <div className="text-[10px] opacity-60 truncate">{c.typeLabel}</div>
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-mono">{c.id}</span>
+                      <div className={`w-1.5 h-1.5 rounded-full ${PRIORITY_STYLES[c.priority].dot}`} />
                     </div>
-                 ))}
+                    <div className="text-xs font-bold text-white truncate">{c.customer}</div>
+                    <div className="text-[10px] opacity-60 truncate">{c.typeLabel}</div>
+                  </div>
+                ))}
               </div>
 
               {/* Main Workspace */}
@@ -512,30 +602,32 @@ export default function AgentDashboard() {
                     caseData={selectedCase}
                     onClose={() => { setSelectedCase(null); setView('summary') }}
                     onResolve={handleResolve}
+                    onInstructionsSent={handleInstructionsSent}
                   />
                 ) : (
                   <div className="space-y-4">
-                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-white font-bold text-xl uppercase tracking-tighter">Full Queue</h2>
-                        <div className="flex items-center gap-2">
-                           <input 
-                              placeholder="Search tickets..." 
-                              className="bg-surface border border-border text-xs px-4 py-2 rounded-xl outline-none focus:border-gold-400/30 transition-all w-64"
-                              value={search}
-                              onChange={e => setSearch(e.target.value)}
-                           />
-                        </div>
-                     </div>
-                     <div className="space-y-3">
-                        {filtered.map((c, i) => (
-                           <CaseCard 
-                              key={c.id} c={c} i={i} 
-                              handleResolve={handleResolve}
-                              selectedCase={selectedCase}
-                              setSelectedCase={(caseItem) => { setSelectedCase(caseItem); setView('work') }}
-                           />
-                        ))}
-                     </div>
+                    <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+                      <h2 className="text-white font-bold text-xl uppercase tracking-tighter">Full Queue</h2>
+                      <div className="flex items-center gap-2">
+                        <Search className="w-4 h-4 text-muted" />
+                        <input
+                          placeholder="Search tickets..."
+                          className="bg-surface border border-border text-xs px-4 py-2 rounded-xl outline-none focus:border-gold-400/30 transition-all w-64"
+                          value={search}
+                          onChange={e => setSearch(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      {filtered.map((c, i) => (
+                        <CaseCard
+                          key={c.id} c={c} i={i}
+                          handleResolve={handleResolve}
+                          selectedCase={selectedCase}
+                          setSelectedCase={(caseItem) => { setSelectedCase(caseItem); setView('work') }}
+                        />
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

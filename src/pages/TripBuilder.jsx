@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { generateMultiModalTrip } from '../utils/multiModalApi'
+import { supabase } from './supabaseClient'
 import { saveTrip, getTripById, updateTripItinerary, syncTripsWithSupabase } from '../utils/tripStore'
 import { useAuth } from '../context/AuthContext'
 
@@ -238,7 +239,7 @@ export default function TripBuilder() {
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState(null)
 
-  
+
   const [activeTrip, setActiveTrip] = useState(() => {
     const params = new URLSearchParams(window.location.search)
 
@@ -275,42 +276,50 @@ export default function TripBuilder() {
   })
 
 
-  
-  
 
 
-  // Sync active trip to localStorage when it changes
+
+
+  // Sync active trip to Supabase Draft when it changes
   useEffect(() => {
-    if (activeTrip) {
-      localStorage.setItem('voyageai_active_trip', JSON.stringify(activeTrip))
-    } else {
-      localStorage.removeItem('voyageai_active_trip')
-    }
-  }, [activeTrip])
+    if (!activeTrip || !user) return
 
-  // Cross-tab sync for active trip
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'voyageai_active_trip') {
-        if (e.newValue) {
-          try {
-            setActiveTrip(JSON.parse(e.newValue))
-          } catch(e) {console.error(e)}
-        } else {
-          setActiveTrip(null)
-        }
-      }
+    const syncDraft = async () => {
+      await supabase.from('trips').upsert({
+        user_id: user.id,
+        name: activeTrip.tripName || activeTrip.name,
+        itinerary_data: activeTrip,
+        status: 'draft',
+        updated_at: new Date()
+      }, { onConflict: 'user_id, status' })
     }
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [])
-  
+
+    const debounce = setTimeout(syncDraft, 2000)
+    return () => clearTimeout(debounce)
+  }, [activeTrip, user])
+
+  // Initial load of workspace from DB
+  useEffect(() => {
+    if (!user) return
+    const loadDraft = async () => {
+      const { data } = await supabase
+        .from('trips')
+        .select('itinerary_data')
+        .eq('user_id', user.id)
+        .eq('status', 'draft')
+        .single()
+
+      if (data) setActiveTrip(data.itinerary_data)
+    }
+    loadDraft()
+  }, [user])
+
   // Navigation tabs
   const [activeTab, setActiveTab] = useState('itinerary')
   const [sandboxAgentMode, setSandboxAgentMode] = useState(false)
 
   const canUseAgentOverride =
-  user?.role === 'agent' || user?.role === 'admin'
+    user?.role === 'agent' || user?.role === 'admin'
 
   const [editingItem, setEditingItem] = useState(null)
   const [editForm, setEditForm] = useState({})
@@ -336,7 +345,7 @@ export default function TripBuilder() {
       { name: 'Royal Biryani Corner', cuisine: 'Hyderabadi', specialty: 'Special Chicken Biryani', costForTwo: '₹800', description: 'Famous local recipe for biryani lovers.' },
       { name: "Coastal Spice Bay", cuisine: "Seafood", specialty: "Butter Garlic Prawns & Fish Curry", costForTwo: "₹1,200", description: "Fresh fish catch cooked with local spices." },
       { name: "Mughlai Heritage Diner", cuisine: "North Indian Non-Veg", specialty: "Chicken Jahangiri & Rumali Roti", costForTwo: "₹850", description: "Rich creamy gravies and kebabs." },
-      { name: "Angara Grill House", cuisine: "Barbecue", specialty: "Tandoori Chicken & Grill Platters", costForTwo: "₹1,100", description: "Live grilling tables and spicy dips." } ,
+      { name: "Angara Grill House", cuisine: "Barbecue", specialty: "Tandoori Chicken & Grill Platters", costForTwo: "₹1,100", description: "Live grilling tables and spicy dips." },
       { name: "Golden Sea Catch", cuisine: "Malabar Seafood", specialty: "Karimeen Pollichathu", costForTwo: "₹1,000", description: "Traditional banana leaf fish fries." },
       { name: "Biryani & Kebab Plaza", cuisine: "Awadhi", specialty: "Galouti Kebabs & Warqi Paratha", costForTwo: "₹900", description: "Melt-in-mouth soft meat kebabs." },
       { name: "Spicy Path Corner", cuisine: "Andhra Non-Veg", specialty: "Nellore Fish Curry & Spicy Chicken Fry", costForTwo: "₹750", description: "Authentic fiery hot Andhra spices." },
@@ -384,7 +393,7 @@ export default function TripBuilder() {
 
     try {
       const trip = await generateMultiModalTrip(prompt)
-      
+
       // Enriched AI response package
       const enrichedTrip = {
         ...trip,
@@ -505,6 +514,23 @@ export default function TripBuilder() {
       ...prev,
       segments: prev.segments.filter(s => s.id !== id),
     }))
+  }
+
+  const addManualSegment = (type) => {
+    const newId = `seg-manual-${Date.now()}`
+    const newSeg = {
+      id: newId,
+      type: type,
+      from: type === 'hotel' ? 'Stay Location' : 'Origin',
+      to: type === 'hotel' ? '' : 'Destination',
+      date: 'Select Date',
+      detail: 'Manual entry - click edit to change details',
+      price: 0,
+      icon: type === 'flight' ? '✈️' : type === 'hotel' ? '🏨' : type === 'train' ? '🚂' : type === 'bus' ? '🚌' : '🚗'
+    }
+    setActiveTrip(prev => ({ ...prev, segments: [...(prev.segments || []), newSeg] }))
+    toast.success(`Manual ${type} segment added!`)
+    if (isAgent) openEditModal('segment', newId, newSeg)
   }
 
   const getTransportEndpoints = (segments) => {
@@ -635,7 +661,7 @@ export default function TripBuilder() {
   const saveAgentEdits = () => {
     setActiveTrip(prev => {
       const copy = { ...prev }
-      
+
       if (editingItem.type === 'metadata') {
         copy.tripName = editForm.tripName || copy.tripName || copy.name
         copy.name = editForm.tripName || copy.name
@@ -643,12 +669,12 @@ export default function TripBuilder() {
         copy.duration = editForm.duration || copy.duration
       }
       else if (editingItem.type === 'segment') {
-        copy.segments = copy.segments.map(seg => 
+        copy.segments = copy.segments.map(seg =>
           seg.id === editingItem.idOrIndex ? { ...seg, ...editForm, price: Number(editForm.price) || 0 } : seg
         )
       }
       else if (editingItem.type === 'itinerary') {
-        copy.itineraryDays = copy.itineraryDays.map((d, i) => 
+        copy.itineraryDays = copy.itineraryDays.map((d, i) =>
           i === editingItem.idOrIndex ? { ...d, ...editForm } : d
         )
       }
@@ -669,14 +695,14 @@ export default function TripBuilder() {
 
       return copy
     })
-    
+
     setEditingItem(null)
     toast.success('Itinerary successfully updated by Agent!')
   }
 
   // Total Calculation Logic (Package vs Grand Trip Cost)
   const daysCount = activeTrip ? (parseInt(activeTrip.duration) || 5) : 5
-  
+
   // 1. Stays Cost
   const staysCost = activeTrip?.segments
     ?.filter(s => s.type === 'hotel')
@@ -718,19 +744,19 @@ export default function TripBuilder() {
 
           {/* Sandbox Agent Switcher */}
           {canUseAgentOverride && (
-          <div className="glass border border-border/80 px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl flex items-center gap-2 sm:gap-3 flex-shrink-0">
-            <span className="text-xs font-semibold text-white/80 hidden sm:block">Agent Override</span>
-            <span className="text-xs font-semibold text-white/80 sm:hidden">Agent</span>
-            <button
-              onClick={() => {
-                setSandboxAgentMode(!sandboxAgentMode)
-                toast.success(sandboxAgentMode ? 'Switched to Traveler View' : 'Switched to Travel Agent Mode!')
-              }}
-              className={`w-11 h-6 rounded-full transition-colors relative p-0.5 flex-shrink-0 ${isAgent ? 'bg-gold-500' : 'bg-white/10'}`}
-            >
-              <div className={`w-5 h-5 rounded-full bg-void shadow-sm transform transition-transform ${isAgent ? 'translate-x-5' : 'translate-x-0'}`} />
-            </button>
-          </div>
+            <div className="glass border border-border/80 px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <span className="text-xs font-semibold text-white/80 hidden sm:block">Agent Override</span>
+              <span className="text-xs font-semibold text-white/80 sm:hidden">Agent</span>
+              <button
+                onClick={() => {
+                  setSandboxAgentMode(!sandboxAgentMode)
+                  toast.success(sandboxAgentMode ? 'Switched to Traveler View' : 'Switched to Travel Agent Mode!')
+                }}
+                className={`w-11 h-6 rounded-full transition-colors relative p-0.5 flex-shrink-0 ${isAgent ? 'bg-gold-500' : 'bg-white/10'}`}
+              >
+                <div className={`w-5 h-5 rounded-full bg-void shadow-sm transform transition-transform ${isAgent ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+            </div>
           )}
         </motion.div>
 
@@ -744,7 +770,7 @@ export default function TripBuilder() {
           <label className="text-xs text-gold-400 uppercase tracking-wider mb-3 flex items-center gap-1.5 font-bold">
             <Sparkles className="w-3.5 h-3.5" /> Enter Destination & Preferences
           </label>
-          <div 
+          <div
             className="flex gap-3 cursor-text"
             onClick={() => inputRef.current?.focus()}
           >
@@ -762,11 +788,10 @@ export default function TripBuilder() {
               whileTap={{ scale: 0.97 }}
               onClick={handleGenerate}
               disabled={generating || !prompt.trim()}
-              className={`px-5 py-3 font-bold rounded-xl flex items-center gap-2 self-end transition-all flex-shrink-0 ${
-                !prompt.trim() || generating
-                  ? 'bg-surface text-muted cursor-not-allowed'
-                  : 'bg-gradient-to-r from-gold-500 to-gold-400 text-void shadow-gold-sm hover:shadow-gold'
-              }`}
+              className={`px-5 py-3 font-bold rounded-xl flex items-center gap-2 self-end transition-all flex-shrink-0 ${!prompt.trim() || generating
+                ? 'bg-surface text-muted cursor-not-allowed'
+                : 'bg-gradient-to-r from-gold-500 to-gold-400 text-void shadow-gold-sm hover:shadow-gold'
+                }`}
             >
               {generating ? (
                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
@@ -850,7 +875,7 @@ export default function TripBuilder() {
         <AnimatePresence>
           {activeTrip && !generating && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              
+
               {/* Agent mode banner */}
               {isAgent && (
                 <div className="mb-6 p-4 bg-gold-400/10 border border-gold-400/20 text-gold-300 text-xs rounded-2xl flex items-center justify-between">
@@ -858,11 +883,11 @@ export default function TripBuilder() {
                     <Zap className="w-4 h-4 text-gold-400 animate-pulse" />
                     <span><strong>Travel Agent Override Enabled</strong>: Click the edit icons (📝) next to any component to tweak pricing or titles.</span>
                   </div>
-                  <button 
-                    onClick={() => openEditModal('metadata', 'meta', { 
-                      tripName: activeTrip.tripName || activeTrip.name, 
+                  <button
+                    onClick={() => openEditModal('metadata', 'meta', {
+                      tripName: activeTrip.tripName || activeTrip.name,
                       desc: activeTrip.desc,
-                      duration: activeTrip.duration 
+                      duration: activeTrip.duration
                     })}
                     className="px-3 py-1 bg-gold-400 text-void font-bold rounded-lg flex items-center gap-1 hover:bg-gold-300 transition-colors hover:text-white"
                   >
@@ -872,24 +897,24 @@ export default function TripBuilder() {
               )}
 
               {activeTrip?.isAgentView && (
-  <div className="mb-6 p-4 bg-sky-400/10 border border-sky-400/20 rounded-2xl flex items-center justify-between">
-    <div className="flex items-center gap-3">
-      <Users className="w-4 h-4 text-sky-400" />
-      <div>
-        <p className="text-sky-300 font-semibold text-sm">Viewing Customer Trip</p>
-        <p className="text-sky-300/60 text-xs">
-          Built by {activeTrip.customerName} ({activeTrip.customerEmail})
-        </p>
-      </div>
-    </div>
-    <Link
-      to="/agent/trips"
-      className="px-3 py-1.5 glass border border-sky-400/20 text-sky-400 text-xs font-bold rounded-lg hover:bg-sky-400/10 transition-all"
-    >
-      ← Back to Requests
-    </Link>
-  </div>
-)}
+                <div className="mb-6 p-4 bg-sky-400/10 border border-sky-400/20 rounded-2xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Users className="w-4 h-4 text-sky-400" />
+                    <div>
+                      <p className="text-sky-300 font-semibold text-sm">Viewing Customer Trip</p>
+                      <p className="text-sky-300/60 text-xs">
+                        Built by {activeTrip.customerName} ({activeTrip.customerEmail})
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    to="/agent/trips"
+                    className="px-3 py-1.5 glass border border-sky-400/20 text-sky-400 text-xs font-bold rounded-lg hover:bg-sky-400/10 transition-all"
+                  >
+                    ← Back to Requests
+                  </Link>
+                </div>
+              )}
 
               {/* Title Header */}
               <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -922,7 +947,7 @@ export default function TripBuilder() {
                       <HelpCircle className="w-4 h-4 text-gold-400" /> AI Transportation Expense Analyzer & Recommendation
                     </h3>
                     {isAgent && (
-                      <button 
+                      <button
                         onClick={() => openEditModal('costComparison', 'comp', activeTrip.costComparison)}
                         className="text-muted hover:text-gold-400 transition-colors"
                         title="Edit Cost Comparison Suggestion"
@@ -964,10 +989,10 @@ export default function TripBuilder() {
 
               {/* Main Layout Grid — stacks on mobile/tablet, side-by-side on xl+ */}
               <div className="grid xl:grid-cols-[1fr_320px] gap-5 xl:gap-6 items-start">
-                
+
                 {/* Left: Interactive custom subpages */}
                 <div>
-                  
+
                   {/* Custom Navigation Tab Headers — horizontally scrollable on all screens */}
                   <div className="-mx-1 px-1">
                     <div className="flex overflow-x-auto gap-0.5 border-b border-white/10 pb-px mb-5 sm:mb-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
@@ -984,11 +1009,10 @@ export default function TripBuilder() {
                         <button
                           key={tab.id}
                           onClick={() => setActiveTab(tab.id)}
-                          className={`px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-xs font-bold uppercase tracking-wider border-b-2 transition-all whitespace-nowrap -mb-px flex-shrink-0 ${
-                            activeTab === tab.id
-                              ? 'border-gold-400 text-gold-400'
-                              : 'border-transparent text-muted hover:text-white'
-                          }`}
+                          className={`px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-xs font-bold uppercase tracking-wider border-b-2 transition-all whitespace-nowrap -mb-px flex-shrink-0 ${activeTab === tab.id
+                            ? 'border-gold-400 text-gold-400'
+                            : 'border-transparent text-muted hover:text-white'
+                            }`}
                         >
                           {tab.label}
                         </button>
@@ -998,20 +1022,20 @@ export default function TripBuilder() {
 
                   {/* Tab Contents */}
                   <AnimatePresence mode="wait">
-                    
+
                     {/* ITINERARY TAB */}
                     {activeTab === 'itinerary' && (
                       <motion.div key="itinerary" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
-                        
+
                         {/* Day-by-Day Detailed Schedule */}
                         <div className="space-y-4">
                           <h3 className="font-display text-lg font-bold text-white flex items-center gap-2">
                             <CalendarIcon className="w-4 h-4 text-gold-400" /> Detailed Daily Schedule
                           </h3>
-                          
+
                           {activeTrip.itineraryDays?.map((day, dIdx) => (
                             <div key={dIdx} className="glass border border-border rounded-2xl p-5 relative overflow-hidden">
-                              
+
                               <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
                                 <div className="flex items-center gap-3">
                                   <div className="w-10 h-10 rounded-xl bg-gold-400/15 border border-gold-400/20 flex flex-col items-center justify-center text-gold-400">
@@ -1024,7 +1048,7 @@ export default function TripBuilder() {
                                   </div>
                                 </div>
                                 {isAgent && (
-                                  <button 
+                                  <button
                                     onClick={() => openEditModal('itinerary', dIdx, day)}
                                     className="p-1.5 text-muted hover:text-gold-400 transition-colors rounded-lg hover:bg-white/5"
                                     title="Edit Day Itinerary"
@@ -1082,7 +1106,7 @@ export default function TripBuilder() {
                                   </div>
                                 </div>
                               )}
-                              
+
                               {/* Daily transport tips */}
                               {day.transport && (
                                 <div className="mt-3 text-[10px] text-muted flex items-center gap-1.5">
@@ -1125,11 +1149,10 @@ export default function TripBuilder() {
                                   <span className="text-gold-400 font-bold text-base">₹{fOpt.price.toLocaleString()}</span>
                                   <button
                                     onClick={() => selectFlightOption(fOpt)}
-                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                                      isActiveFlight
-                                        ? 'bg-gold-500/10 text-gold-400 border border-gold-400/20'
-                                        : 'bg-gold-gradient text-void hover:opacity-90 shadow-gold-sm'
-                                    }`}
+                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${isActiveFlight
+                                      ? 'bg-gold-500/10 text-gold-400 border border-gold-400/20'
+                                      : 'bg-gold-gradient text-void hover:opacity-90 shadow-gold-sm'
+                                      }`}
                                   >
                                     {isActiveFlight ? '✓ Selected' : 'Select Flight'}
                                   </button>
@@ -1173,11 +1196,10 @@ export default function TripBuilder() {
                                   </div>
                                   <button
                                     onClick={() => selectHotelOption(hOpt)}
-                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                                      isActiveHotel
-                                        ? 'bg-gold-500/10 text-gold-400 border border-gold-400/20'
-                                        : 'bg-gold-gradient text-void hover:opacity-90 shadow-gold-sm'
-                                    }`}
+                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${isActiveHotel
+                                      ? 'bg-gold-500/10 text-gold-400 border border-gold-400/20'
+                                      : 'bg-gold-gradient text-void hover:opacity-90 shadow-gold-sm'
+                                      }`}
                                   >
                                     {isActiveHotel ? '✓ Selected' : 'Select Stay'}
                                   </button>
@@ -1215,11 +1237,10 @@ export default function TripBuilder() {
                                   <span className="text-gold-400 font-bold text-base">₹{tOpt.price.toLocaleString()}</span>
                                   <button
                                     onClick={() => selectTrainOption(tOpt)}
-                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                                      isActiveTrain
-                                        ? 'bg-gold-500/10 text-gold-400 border border-gold-400/20'
-                                        : 'bg-gold-gradient text-void hover:opacity-90 shadow-gold-sm'
-                                    }`}
+                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${isActiveTrain
+                                      ? 'bg-gold-500/10 text-gold-400 border border-gold-400/20'
+                                      : 'bg-gold-gradient text-void hover:opacity-90 shadow-gold-sm'
+                                      }`}
                                   >
                                     {isActiveTrain ? '✓ Selected' : 'Select Train'}
                                   </button>
@@ -1257,11 +1278,10 @@ export default function TripBuilder() {
                                   <span className="text-gold-400 font-bold text-base">₹{bOpt.price.toLocaleString()}</span>
                                   <button
                                     onClick={() => selectBusOption(bOpt)}
-                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                                      isActiveBus
-                                        ? 'bg-gold-500/10 text-gold-400 border border-gold-400/20'
-                                        : 'bg-gold-gradient text-void hover:opacity-90 shadow-gold-sm'
-                                    }`}
+                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${isActiveBus
+                                      ? 'bg-gold-500/10 text-gold-400 border border-gold-400/20'
+                                      : 'bg-gold-gradient text-void hover:opacity-90 shadow-gold-sm'
+                                      }`}
                                   >
                                     {isActiveBus ? '✓ Selected' : 'Select Bus'}
                                   </button>
@@ -1296,11 +1316,10 @@ export default function TripBuilder() {
                                   <span className="text-gold-400 font-bold text-base">₹{rOpt.price.toLocaleString()}</span>
                                   <button
                                     onClick={() => selectRoadwaysOption(rOpt)}
-                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                                      isActiveRoad
-                                        ? 'bg-gold-500/10 text-gold-400 border border-gold-400/20'
-                                        : 'bg-gold-gradient text-void hover:opacity-90 shadow-gold-sm'
-                                    }`}
+                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${isActiveRoad
+                                      ? 'bg-gold-500/10 text-gold-400 border border-gold-400/20'
+                                      : 'bg-gold-gradient text-void hover:opacity-90 shadow-gold-sm'
+                                      }`}
                                   >
                                     {isActiveRoad ? '✓ Selected' : 'Select Roadways'}
                                   </button>
@@ -1348,7 +1367,7 @@ export default function TripBuilder() {
                                     )}
                                   </div>
                                 </div>
-                                
+
                                 <div>
                                   <h4 className="text-white font-bold text-sm mb-1.5 group-hover:text-gold-300 transition-colors">{place.name}</h4>
                                   <p className="text-muted text-xs leading-relaxed mb-4">{place.description}</p>
@@ -1381,9 +1400,9 @@ export default function TripBuilder() {
                             <p className="text-xs text-muted font-medium">Exactly 10 vegetarian and 10 non-vegetarian/mixed dining hotspots.</p>
                           </div>
                         </div>
-                        
+
                         <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
-                          
+
                           {/* Vegetarian Diner Column */}
                           <div className="space-y-4">
                             <h4 className="font-display text-sm font-bold text-emerald-400 flex items-center gap-2 pb-2 border-b border-emerald-500/10">
@@ -1394,13 +1413,13 @@ export default function TripBuilder() {
                                 <div key={rIdx} className="glass border border-emerald-500/10 rounded-2xl p-4 relative bg-emerald-500/2 hover:border-emerald-500/30 transition-all">
                                   <div className="flex items-start justify-between mb-2">
                                     <div className="flex items-center gap-2">
-                                      <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 w-5 h-5 rounded flex items-center justify-center">{(rIdx+1)}</span>
+                                      <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 w-5 h-5 rounded flex items-center justify-center">{(rIdx + 1)}</span>
                                       <h5 className="font-bold text-sm text-white">{rest.name}</h5>
                                     </div>
                                     <div className="flex items-center gap-2 flex-shrink-0">
                                       <span className="text-[9px] bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 px-2 py-0.5 rounded font-bold">{rest.cuisine}</span>
                                       {isAgent && (
-                                        <button 
+                                        <button
                                           onClick={() => openEditModal('dining', rIdx, rest, { category: 'veg' })}
                                           className="text-muted hover:text-gold-400 transition-colors"
                                           title="Edit Restaurant"
@@ -1430,13 +1449,13 @@ export default function TripBuilder() {
                                 <div key={rIdx} className="glass border border-rose-500/10 rounded-2xl p-4 relative bg-rose-500/2 hover:border-rose-500/30 transition-all">
                                   <div className="flex items-start justify-between mb-2">
                                     <div className="flex items-center gap-2">
-                                      <span className="text-[10px] font-mono font-bold text-rose-400 bg-rose-500/10 w-5 h-5 rounded flex items-center justify-center">{(rIdx+1)}</span>
+                                      <span className="text-[10px] font-mono font-bold text-rose-400 bg-rose-500/10 w-5 h-5 rounded flex items-center justify-center">{(rIdx + 1)}</span>
                                       <h5 className="font-bold text-sm text-white">{rest.name}</h5>
                                     </div>
                                     <div className="flex items-center gap-2 flex-shrink-0">
                                       <span className="text-[9px] bg-rose-400/10 text-rose-400 border border-rose-400/20 px-2 py-0.5 rounded font-bold">{rest.cuisine}</span>
                                       {isAgent && (
-                                        <button 
+                                        <button
                                           onClick={() => openEditModal('dining', rIdx, rest, { category: 'nonVeg' })}
                                           className="text-muted hover:text-gold-400 transition-colors"
                                           title="Edit Restaurant"
@@ -1465,7 +1484,7 @@ export default function TripBuilder() {
 
                 {/* Right: Summary panel — sticky only on xl+ screens, normal flow on smaller screens */}
                 <div className="space-y-4 xl:sticky xl:top-24">
-                  
+
                   {/* Comprehensive Summary card */}
                   <div className="glass border border-border rounded-2xl p-5 bg-surface/5">
                     <div className="flex items-center justify-between mb-4">
@@ -1479,7 +1498,7 @@ export default function TripBuilder() {
 
                     {/* Selected package components */}
                     <div className="space-y-2.5 mb-4 text-xs">
-                      
+
                       {/* 1. Stays */}
                       <div className="flex items-center justify-between border-b border-white/5 pb-2">
                         <div className="flex items-center gap-2">
@@ -1577,43 +1596,44 @@ export default function TripBuilder() {
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => {const entry = saveTrip(activeTrip, user)
-toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
-}}
+                      onClick={() => {
+                        const entry = saveTrip(activeTrip, user)
+                        toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
+                      }}
                       className="w-full py-3 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold rounded-xl shadow-gold-sm hover:shadow-gold transition-all flex items-center justify-center gap-2 text-xs"
                     >
                       <CheckCircle className="w-4 h-4" /> Save Package Details
                     </motion.button>
 
                     {activeTrip?.isAgentView && (
-  <motion.button
-    whileHover={{ scale: 1.02 }}
-    whileTap={{ scale: 0.98 }}
-    onClick={() => {
-      // Get trip ID from URL
-      const params = new URLSearchParams(window.location.search)
-      const tripId = params.get('agentView')
-      if (tripId) {
-        updateTripItinerary(tripId, {
-          segments: activeTrip.segments,
-          itineraryDays: activeTrip.itineraryDays,
-          placesToVisit: activeTrip.placesToVisit,
-          restaurants: activeTrip.restaurants,
-          costComparison: activeTrip.costComparison,
-          highlights: activeTrip.highlights,
-          name: activeTrip.tripName || activeTrip.name,
-          desc: activeTrip.desc,
-          duration: activeTrip.duration,
-          totalCost: grandTripTotal,
-        }, user?.name)
-        toast.success(`Updated itinerary sent to ${activeTrip.customerName}!`)
-      }
-    }}
-    className="mt-2 w-full py-3 bg-sky-500/15 border border-sky-400/20 text-sky-300 font-bold rounded-xl hover:bg-sky-500/20 transition-all flex items-center justify-center gap-2 text-xs"
-  >
-    <Send className="w-4 h-4" /> Send Updated Itinerary to Customer
-  </motion.button>
-)}
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          // Get trip ID from URL
+                          const params = new URLSearchParams(window.location.search)
+                          const tripId = params.get('agentView')
+                          if (tripId) {
+                            updateTripItinerary(tripId, {
+                              segments: activeTrip.segments,
+                              itineraryDays: activeTrip.itineraryDays,
+                              placesToVisit: activeTrip.placesToVisit,
+                              restaurants: activeTrip.restaurants,
+                              costComparison: activeTrip.costComparison,
+                              highlights: activeTrip.highlights,
+                              name: activeTrip.tripName || activeTrip.name,
+                              desc: activeTrip.desc,
+                              duration: activeTrip.duration,
+                              totalCost: grandTripTotal,
+                            }, user?.name)
+                            toast.success(`Updated itinerary sent to ${activeTrip.customerName}!`)
+                          }
+                        }}
+                        className="mt-2 w-full py-3 bg-sky-500/15 border border-sky-400/20 text-sky-300 font-bold rounded-xl hover:bg-sky-500/20 transition-all flex items-center justify-center gap-2 text-xs"
+                      >
+                        <Send className="w-4 h-4" /> Send Updated Itinerary to Customer
+                      </motion.button>
+                    )}
 
                     <Link
                       to="/chat"
@@ -1625,7 +1645,15 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
 
                   {/* Selected Package Components Timeline */}
                   <div className="glass border border-border rounded-2xl p-4 space-y-3">
-                    <span className="text-white text-xs font-semibold uppercase tracking-wider block">Package Components</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-white text-xs font-semibold uppercase tracking-wider block">Package Components</span>
+                      <button
+                        onClick={() => { if (confirm('Clear current workspace?')) setActiveTrip(null) }}
+                        className="text-[10px] text-red-400 hover:underline uppercase font-bold tracking-tighter"
+                      >
+                        Reset
+                      </button>
+                    </div>
                     <div className="space-y-2">
                       <AnimatePresence>
                         {activeTrip.segments?.map((seg, i) => (
@@ -1639,6 +1667,26 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                           />
                         ))}
                       </AnimatePresence>
+                      {(!activeTrip.segments || activeTrip.segments.length === 0) && (
+                        <p className="text-center py-4 text-muted text-[10px] italic">No segments added yet.</p>
+                      )}
+                    </div>
+
+                    {/* Manual Add Buttons */}
+                    <div className="pt-3 border-t border-white/5">
+                      <p className="text-[9px] text-muted uppercase font-bold mb-2 tracking-widest">Quick Add Segment</p>
+                      <div className="flex flex-wrap gap-2">
+                        {SEGMENT_TYPES.map(t => (
+                          <button
+                            key={t.id}
+                            onClick={() => addManualSegment(t.id)}
+                            className={`p-2 rounded-xl border ${t.bg} ${t.color} hover:opacity-80 transition-all`}
+                            title={`Add ${t.label}`}
+                          >
+                            <t.icon className="w-4 h-4" />
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -1669,7 +1717,7 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
       {/* TRAVEL AGENT INLINE EDIT MODAL OVERLAY */}
       {editingItem && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-void/80 backdrop-blur-md">
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="glass border border-gold-400/20 max-w-lg w-full rounded-3xl p-6 shadow-gold-lg max-h-[85vh] overflow-y-auto"
@@ -1688,17 +1736,17 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                 <>
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Trip Itinerary Title</label>
-                    <input 
-                      type="text" 
-                      value={editForm.tripName || ''} 
+                    <input
+                      type="text"
+                      value={editForm.tripName || ''}
                       onChange={e => setEditForm({ ...editForm, tripName: e.target.value })}
                       className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                     />
                   </div>
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Trip Short Description</label>
-                    <textarea 
-                      value={editForm.desc || ''} 
+                    <textarea
+                      value={editForm.desc || ''}
                       onChange={e => setEditForm({ ...editForm, desc: e.target.value })}
                       rows={3}
                       className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none resize-none"
@@ -1706,9 +1754,9 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                   </div>
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Duration Description</label>
-                    <input 
-                      type="text" 
-                      value={editForm.duration || ''} 
+                    <input
+                      type="text"
+                      value={editForm.duration || ''}
                       onChange={e => setEditForm({ ...editForm, duration: e.target.value })}
                       className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                     />
@@ -1722,18 +1770,18 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">From Destination</label>
-                      <input 
-                        type="text" 
-                        value={editForm.from || ''} 
+                      <input
+                        type="text"
+                        value={editForm.from || ''}
                         onChange={e => setEditForm({ ...editForm, from: e.target.value })}
                         className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                       />
                     </div>
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">To Destination</label>
-                      <input 
-                        type="text" 
-                        value={editForm.to || ''} 
+                      <input
+                        type="text"
+                        value={editForm.to || ''}
                         onChange={e => setEditForm({ ...editForm, to: e.target.value })}
                         className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                       />
@@ -1741,9 +1789,9 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                   </div>
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Booking/Departure Details</label>
-                    <input 
-                      type="text" 
-                      value={editForm.detail || ''} 
+                    <input
+                      type="text"
+                      value={editForm.detail || ''}
                       onChange={e => setEditForm({ ...editForm, detail: e.target.value })}
                       className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                     />
@@ -1751,18 +1799,18 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Travel Date</label>
-                      <input 
-                        type="text" 
-                        value={editForm.date || ''} 
+                      <input
+                        type="text"
+                        value={editForm.date || ''}
                         onChange={e => setEditForm({ ...editForm, date: e.target.value })}
                         className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                       />
                     </div>
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Cost / Price (₹)</label>
-                      <input 
-                        type="number" 
-                        value={editForm.price || 0} 
+                      <input
+                        type="number"
+                        value={editForm.price || 0}
                         onChange={e => setEditForm({ ...editForm, price: Number(e.target.value) || 0 })}
                         className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                       />
@@ -1777,18 +1825,18 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Day Heading</label>
-                      <input 
-                        type="text" 
-                        value={editForm.title || ''} 
+                      <input
+                        type="text"
+                        value={editForm.title || ''}
                         onChange={e => setEditForm({ ...editForm, title: e.target.value })}
                         className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                       />
                     </div>
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Theme / Focus Tag</label>
-                      <input 
-                        type="text" 
-                        value={editForm.theme || ''} 
+                      <input
+                        type="text"
+                        value={editForm.theme || ''}
                         onChange={e => setEditForm({ ...editForm, theme: e.target.value })}
                         className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                       />
@@ -1801,7 +1849,7 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                     return (
                       <div key={slotKey} className="p-3 bg-white/2 rounded-xl border border-white/5 space-y-2">
                         <span className="text-[10px] text-gold-400 font-bold uppercase block ">{slotKey} Schedule</span>
-                        <input 
+                        <input
                           type="text"
                           placeholder="Activity Title"
                           value={slotData.activity || ''}
@@ -1811,7 +1859,7 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                           }}
                           className="w-full bg-white/5 border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-gold-400"
                         />
-                        <textarea 
+                        <textarea
                           placeholder="Activity Description"
                           value={slotData.description || ''}
                           onChange={e => {
@@ -1822,7 +1870,7 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                           className="w-full bg-white/5 border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none resize-none focus:border-gold-400"
                         />
                         <div className="grid grid-cols-3 gap-2">
-                          <input 
+                          <input
                             type="text"
                             placeholder="Duration (e.g. 2h)"
                             value={slotData.duration || ''}
@@ -1832,7 +1880,7 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                             }}
                             className="w-full bg-white/5 border border-border/60 rounded px-2 py-1 text-[10px] text-white focus:border-gold-400 outline-none"
                           />
-                          <input 
+                          <input
                             type="text"
                             placeholder="Cost (e.g. ₹500)"
                             value={slotData.cost || ''}
@@ -1842,7 +1890,7 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                             }}
                             className="w-full bg-white/5 border border-border/60 rounded px-2 py-1 text-[10px] text-white focus:border-gold-400 outline-none"
                           />
-                          <input 
+                          <input
                             type="text"
                             placeholder="Local Tip"
                             value={slotData.tip || ''}
@@ -1861,9 +1909,9 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Meals Overview</label>
-                      <input 
-                        type="text" 
-                        value={editForm.meals ? `${editForm.meals.breakfast || ''} / ${editForm.meals.lunch || ''} / ${editForm.meals.dinner || ''}` : ''} 
+                      <input
+                        type="text"
+                        value={editForm.meals ? `${editForm.meals.breakfast || ''} / ${editForm.meals.lunch || ''} / ${editForm.meals.dinner || ''}` : ''}
                         onChange={e => {
                           const parts = e.target.value.split('/')
                           setEditForm({
@@ -1881,9 +1929,9 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                     </div>
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Local Transit Mode</label>
-                      <input 
-                        type="text" 
-                        value={editForm.transport || ''} 
+                      <input
+                        type="text"
+                        value={editForm.transport || ''}
                         onChange={e => setEditForm({ ...editForm, transport: e.target.value })}
                         className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                       />
@@ -1897,9 +1945,9 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                 <>
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Restaurant Name</label>
-                    <input 
-                      type="text" 
-                      value={editForm.name || ''} 
+                    <input
+                      type="text"
+                      value={editForm.name || ''}
                       onChange={e => setEditForm({ ...editForm, name: e.target.value })}
                       className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                     />
@@ -1907,18 +1955,18 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Cuisine / Diet Type</label>
-                      <input 
-                        type="text" 
-                        value={editForm.cuisine || ''} 
+                      <input
+                        type="text"
+                        value={editForm.cuisine || ''}
                         onChange={e => setEditForm({ ...editForm, cuisine: e.target.value })}
                         className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                       />
                     </div>
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Specialty Dish</label>
-                      <input 
-                        type="text" 
-                        value={editForm.specialty || ''} 
+                      <input
+                        type="text"
+                        value={editForm.specialty || ''}
                         onChange={e => setEditForm({ ...editForm, specialty: e.target.value })}
                         className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                       />
@@ -1926,17 +1974,17 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                   </div>
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Estimated Cost For Two</label>
-                    <input 
-                      type="text" 
-                      value={editForm.costForTwo || ''} 
+                    <input
+                      type="text"
+                      value={editForm.costForTwo || ''}
                       onChange={e => setEditForm({ ...editForm, costForTwo: e.target.value })}
                       className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                     />
                   </div>
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Restaurant Description</label>
-                    <textarea 
-                      value={editForm.description || ''} 
+                    <textarea
+                      value={editForm.description || ''}
                       onChange={e => setEditForm({ ...editForm, description: e.target.value })}
                       rows={2}
                       className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none resize-none"
@@ -1951,18 +1999,18 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Attraction Name</label>
-                      <input 
-                        type="text" 
-                        value={editForm.name || ''} 
+                      <input
+                        type="text"
+                        value={editForm.name || ''}
                         onChange={e => setEditForm({ ...editForm, name: e.target.value })}
                         className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                       />
                     </div>
                     <div>
                       <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Sight Category</label>
-                      <input 
-                        type="text" 
-                        value={editForm.category || ''} 
+                      <input
+                        type="text"
+                        value={editForm.category || ''}
                         onChange={e => setEditForm({ ...editForm, category: e.target.value })}
                         className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                       />
@@ -1970,8 +2018,8 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                   </div>
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Description of Sight</label>
-                    <textarea 
-                      value={editForm.description || ''} 
+                    <textarea
+                      value={editForm.description || ''}
                       onChange={e => setEditForm({ ...editForm, description: e.target.value })}
                       rows={3}
                       className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none resize-none"
@@ -1980,27 +2028,27 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                   <div className="grid grid-cols-3 gap-2">
                     <div>
                       <label className="text-[9px] text-muted uppercase font-bold block mb-1">Visit Duration</label>
-                      <input 
-                        type="text" 
-                        value={editForm.visitDuration || ''} 
+                      <input
+                        type="text"
+                        value={editForm.visitDuration || ''}
                         onChange={e => setEditForm({ ...editForm, visitDuration: e.target.value })}
                         className="w-full bg-white/5 border border-border/60 rounded px-2 py-1.5 text-xs text-white"
                       />
                     </div>
                     <div>
                       <label className="text-[9px] text-muted uppercase font-bold block mb-1">Best Time</label>
-                      <input 
-                        type="text" 
-                        value={editForm.recommendedTime || ''} 
+                      <input
+                        type="text"
+                        value={editForm.recommendedTime || ''}
                         onChange={e => setEditForm({ ...editForm, recommendedTime: e.target.value })}
                         className="w-full bg-white/5 border border-border/60 rounded px-2 py-1.5 text-xs text-white"
                       />
                     </div>
                     <div>
                       <label className="text-[9px] text-muted uppercase font-bold block mb-1">Entry Fee (₹)</label>
-                      <input 
-                        type="number" 
-                        value={editForm.price || 0} 
+                      <input
+                        type="number"
+                        value={editForm.price || 0}
                         onChange={e => setEditForm({ ...editForm, price: Number(e.target.value) || 0 })}
                         className="w-full bg-white/5 border border-border/60 rounded px-2 py-1.5 text-xs text-white"
                       />
@@ -2008,8 +2056,8 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                   </div>
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">💡 Local Insight / Trivia</label>
-                    <textarea 
-                      value={editForm.funFact || ''} 
+                    <textarea
+                      value={editForm.funFact || ''}
                       onChange={e => setEditForm({ ...editForm, funFact: e.target.value })}
                       rows={2}
                       className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none resize-none"
@@ -2024,36 +2072,36 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                   <div className="grid grid-cols-4 gap-2">
                     <div>
                       <label className="text-[9px] text-muted uppercase font-bold block mb-1">Flight Price</label>
-                      <input 
-                        type="text" 
-                        value={editForm.flightCost || ''} 
+                      <input
+                        type="text"
+                        value={editForm.flightCost || ''}
                         onChange={e => setEditForm({ ...editForm, flightCost: e.target.value })}
                         className="w-full bg-white/5 border border-border/60 rounded px-2 py-1.5 text-xs text-white"
                       />
                     </div>
                     <div>
                       <label className="text-[9px] text-muted uppercase font-bold block mb-1">Train Price</label>
-                      <input 
-                        type="text" 
-                        value={editForm.trainCost || ''} 
+                      <input
+                        type="text"
+                        value={editForm.trainCost || ''}
                         onChange={e => setEditForm({ ...editForm, trainCost: e.target.value })}
                         className="w-full bg-white/5 border border-border/60 rounded px-2 py-1.5 text-xs text-white"
                       />
                     </div>
                     <div>
                       <label className="text-[9px] text-muted uppercase font-bold block mb-1">Bus Price</label>
-                      <input 
-                        type="text" 
-                        value={editForm.busCost || ''} 
+                      <input
+                        type="text"
+                        value={editForm.busCost || ''}
                         onChange={e => setEditForm({ ...editForm, busCost: e.target.value })}
                         className="w-full bg-white/5 border border-border/60 rounded px-2 py-1.5 text-xs text-white"
                       />
                     </div>
                     <div>
                       <label className="text-[9px] text-muted uppercase font-bold block mb-1">Road Price</label>
-                      <input 
-                        type="text" 
-                        value={editForm.roadwaysCost || ''} 
+                      <input
+                        type="text"
+                        value={editForm.roadwaysCost || ''}
                         onChange={e => setEditForm({ ...editForm, roadwaysCost: e.target.value })}
                         className="w-full bg-white/5 border border-border/60 rounded px-2 py-1.5 text-xs text-white"
                       />
@@ -2061,8 +2109,8 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                   </div>
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Cost Analysis Explanation</label>
-                    <textarea 
-                      value={editForm.analysis || ''} 
+                    <textarea
+                      value={editForm.analysis || ''}
                       onChange={e => setEditForm({ ...editForm, analysis: e.target.value })}
                       rows={2}
                       className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none resize-none"
@@ -2070,9 +2118,9 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
                   </div>
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">AI Recommendation Suggestion</label>
-                    <input 
-                      type="text" 
-                      value={editForm.aiSuggestion || ''} 
+                    <input
+                      type="text"
+                      value={editForm.aiSuggestion || ''}
                       onChange={e => setEditForm({ ...editForm, aiSuggestion: e.target.value })}
                       className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
                     />
@@ -2082,14 +2130,14 @@ toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
             </div>
 
             <div className="flex justify-end gap-3 mt-6 border-t border-white/10 pt-4">
-              <button 
-                onClick={() => setEditingItem(null)} 
+              <button
+                onClick={() => setEditingItem(null)}
                 className="px-4 py-2 border border-border rounded-xl text-xs text-muted hover:text-white transition-colors"
               >
                 Cancel
               </button>
-              <button 
-                onClick={saveAgentEdits} 
+              <button
+                onClick={saveAgentEdits}
                 className="px-5 py-2 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold rounded-xl text-xs shadow-gold-sm hover:opacity-90 transition-opacity"
               >
                 Save Edits

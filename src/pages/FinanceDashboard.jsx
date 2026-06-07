@@ -101,7 +101,7 @@ export default function FinanceDashboard() {
     if (filterCategory !== 'all' && tx.category !== filterCategory) return false
     if (filterStatus !== 'all' && tx.status !== filterStatus) return false
     if (searchTx && !tx.description.toLowerCase().includes(searchTx.toLowerCase()) &&
-        !tx.bookingRef.toLowerCase().includes(searchTx.toLowerCase())) return false
+      !tx.bookingRef.toLowerCase().includes(searchTx.toLowerCase())) return false
     return true
   })
 
@@ -145,7 +145,7 @@ export default function FinanceDashboard() {
   ]
 
   return (
-    <div className="min-h-screen pt-28 pb-10 px-4">
+    <div className="min-h-screen pt-36 pb-10 px-4">
       <StaffNav />
       <div className="max-w-7xl mx-auto">
 
@@ -171,11 +171,10 @@ export default function FinanceDashboard() {
               <button
                 key={r}
                 onClick={() => setDateRange(r)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${
-                  dateRange === r
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${dateRange === r
                     ? 'bg-gold-400/15 text-gold-400 border border-gold-400/20'
                     : 'text-muted hover:text-white border border-transparent'
-                }`}
+                  }`}
               >
                 {r}
               </button>
@@ -241,11 +240,10 @@ export default function FinanceDashboard() {
                   <button
                     key={t}
                     onClick={() => setActiveChart(t)}
-                    className={`px-3 py-1 rounded-lg text-xs capitalize transition-all ${
-                      activeChart === t
+                    className={`px-3 py-1 rounded-lg text-xs capitalize transition-all ${activeChart === t
                         ? 'bg-gold-400/15 text-gold-400 border border-gold-400/20'
                         : 'text-muted hover:text-white'
-                    }`}
+                      }`}
                   >
                     {t}
                   </button>
@@ -272,7 +270,7 @@ export default function FinanceDashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(30,45,66,0.8)" />
                   <XAxis dataKey="month" tick={{ fill: '#4B6070', fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: '#4B6070', fontSize: 10 }} axisLine={false} tickLine={false}
-                    tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
+                    tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
                   <Tooltip content={<ChartTooltip />} />
                   <Area type="monotone" dataKey="corporate" name="Corporate" stroke="#38B6F0" strokeWidth={2} fill="url(#skyGrad)" />
                   <Area type="monotone" dataKey="bookings" name="Bookings" stroke="#E8B429" strokeWidth={2} fill="url(#goldGrad)" />
@@ -283,11 +281,11 @@ export default function FinanceDashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(30,45,66,0.8)" />
                   <XAxis dataKey="month" tick={{ fill: '#4B6070', fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: '#4B6070', fontSize: 10 }} axisLine={false} tickLine={false}
-                    tickFormatter={v => `₹${(v/1000).toFixed(0)}k`} />
+                    tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
                   <Tooltip content={<ChartTooltip />} />
-                  <Bar dataKey="corporate" name="Corporate" fill="#38B6F0" radius={[3,3,0,0]} />
-                  <Bar dataKey="bookings" name="Bookings" fill="#E8B429" radius={[3,3,0,0]} />
-                  <Bar dataKey="addons" name="Add-ons" fill="#7EC8A4" radius={[3,3,0,0]} />
+                  <Bar dataKey="corporate" name="Corporate" fill="#38B6F0" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="bookings" name="Bookings" fill="#E8B429" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="addons" name="Add-ons" fill="#7EC8A4" radius={[3, 3, 0, 0]} />
                 </BarChart>
               )}
             </ResponsiveContainer>
@@ -462,9 +460,8 @@ export default function FinanceDashboard() {
                   </span>
 
                   {/* Amount */}
-                  <div className={`text-right font-bold text-sm whitespace-nowrap ${
-                    tx.type === 'credit' ? 'text-sage-400' : 'text-amber-400'
-                  }`}>
+                  <div className={`text-right font-bold text-sm whitespace-nowrap ${tx.type === 'credit' ? 'text-sage-400' : 'text-amber-400'
+                    }`}>
                     {tx.type === 'credit' ? '+' : ''}{formatINR(tx.amount)}
                   </div>
                 </motion.div>

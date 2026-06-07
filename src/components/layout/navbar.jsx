@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plane, Train, Bus, Building2, Map,
   LayoutDashboard, Menu, X,
-  Sparkles, RefreshCw, 
+  Sparkles, RefreshCw, Car,
   ChevronDown, ArrowRight, LogIn,
   AlertTriangle, DollarSign, Bell, LogOut
 } from 'lucide-react'
@@ -12,18 +12,19 @@ import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
 const NAV_LINKS = [
-  { to: '/search',       label: 'Flights',       icon: Plane },
-  { to: '/hotels',       label: 'Hotels',        icon: Building2 },
-  { to: '/trains',       label: 'Trains',        icon: Train },
-  { to: '/buses',        label: 'Buses',         icon: Bus },
-  { to: '/trip-builder', label: 'Trip Builder',  icon: Map },
-  { to: '/chat',         label: 'AI Assistant',  icon: Sparkles, primary: true },
+  { to: '/search', label: 'Flights', icon: Plane },
+  { to: '/hotels', label: 'Hotels', icon: Building2 },
+  { to: '/trains', label: 'Trains', icon: Train },
+  { to: '/buses', label: 'Buses', icon: Bus },
+  { to: '/roadways', label: 'Roadways', icon: Car },
+  { to: '/trip-builder', label: 'Trip Builder', icon: Map },
+  { to: '/chat', label: 'AI Assistant', icon: Sparkles, primary: true },
 ]
 
 const USER_LINKS = [
-  { to: '/dashboard',    label: 'My Trips',      icon: LayoutDashboard },
+  { to: '/dashboard', label: 'My Trips', icon: LayoutDashboard },
   { to: '/post-booking', label: 'Manage Booking', icon: RefreshCw },
-  { to: '/corporate',    label: 'Corporate',     icon: Building2 },
+  { to: '/corporate', label: 'Corporate', icon: Building2 },
 ]
 
 function GenericDropdown({ label, links, active, isStaff }) {
@@ -32,9 +33,8 @@ function GenericDropdown({ label, links, active, isStaff }) {
 
   return (
     <div className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
-      <button className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-        hasActive ? 'text-gold-400' : isStaff ? 'text-red-400/70 hover:text-red-400' : 'text-muted hover:text-white'
-      }`}>
+      <button className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${hasActive ? 'text-gold-400' : isStaff ? 'text-red-400/70 hover:text-red-400' : 'text-muted hover:text-white'
+        }`}>
         {label}
         <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
@@ -52,20 +52,18 @@ function GenericDropdown({ label, links, active, isStaff }) {
               <Link
                 key={to}
                 to={to}
-                className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs transition-all ${
-                  active === to || active.startsWith(to + '/')
-                    ? 'bg-gold-400/10 text-gold-400'
-                    : 'text-muted hover:text-white hover:bg-white/5'
-                }`}
+                className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs transition-all ${active === to || active.startsWith(to + '/')
+                  ? 'bg-gold-400/10 text-gold-400'
+                  : 'text-muted hover:text-white hover:bg-white/5'
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <Icon className="w-3.5 h-3.5" />
                   {label}
                 </div>
                 {badge && (
-                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                    isStaff ? 'bg-red-500/20 text-red-400' : 'bg-gold-400/20 text-gold-400'
-                  }`}>
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${isStaff ? 'bg-red-500/20 text-red-400' : 'bg-gold-400/20 text-gold-400'
+                    }`}>
                     {badge}
                   </span>
                 )}
@@ -109,9 +107,8 @@ export default function Navbar() {
     <motion.nav
       initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled ? 'bg-void/90 backdrop-blur-xl border-b border-border py-2' : 'bg-transparent py-4'
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'bg-void/90 backdrop-blur-xl border-b border-border py-2' : 'bg-transparent py-4'
+        }`}
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3">
@@ -130,11 +127,10 @@ export default function Navbar() {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                    isLinkActive 
-                      ? 'text-gold-400 bg-gold-400/5 shadow-[0_0_20px_rgba(232,180,41,0.05)]' 
-                      : 'text-muted hover:text-white'
-                  }`}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${isLinkActive
+                    ? 'text-gold-400 bg-gold-400/5 shadow-[0_0_20px_rgba(232,180,41,0.05)]'
+                    : 'text-muted hover:text-white'
+                    }`}
                 >
                   {link.label}
                 </Link>
@@ -154,7 +150,7 @@ export default function Navbar() {
             )}
 
             <div className="h-6 w-px bg-white/10 mx-2" />
-            
+
             {user ? (
               <div className="flex items-center gap-3">
                 <span className="text-white text-xs font-semibold">
@@ -168,8 +164,8 @@ export default function Navbar() {
                 </button>
               </div>
             ) : (
-              <Link 
-                to="/login" 
+              <Link
+                to="/login"
                 className="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white text-xs font-bold rounded-xl border border-white/10 transition-all hover:border-gold-400/30"
               >
                 Sign In
@@ -203,11 +199,10 @@ export default function Navbar() {
                       key={l.to}
                       to={l.to}
                       onClick={() => setMobileOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl font-medium transition-all ${
-                        isLinkActive
-                          ? 'text-gold-400 bg-gold-400/5'
-                          : 'text-white hover:text-gold-400 hover:bg-white/5'
-                      }`}
+                      className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl font-medium transition-all ${isLinkActive
+                        ? 'text-gold-400 bg-gold-400/5'
+                        : 'text-white hover:text-gold-400 hover:bg-white/5'
+                        }`}
                     >
                       <l.icon className="w-4 h-4 text-gold-400/80" />
                       {l.label}
@@ -227,11 +222,10 @@ export default function Navbar() {
                         key={l.to}
                         to={l.to}
                         onClick={() => setMobileOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2 text-sm rounded-xl transition-all ${
-                          isLinkActive
-                            ? 'text-gold-400 bg-gold-400/5'
-                            : 'text-muted hover:text-white hover:bg-white/5'
-                        }`}
+                        className={`flex items-center gap-3 px-3 py-2 text-sm rounded-xl transition-all ${isLinkActive
+                          ? 'text-gold-400 bg-gold-400/5'
+                          : 'text-muted hover:text-white hover:bg-white/5'
+                          }`}
                       >
                         <l.icon className="w-4 h-4 text-sky-400/70" />
                         {l.label}
@@ -252,11 +246,10 @@ export default function Navbar() {
                         key={l.to}
                         to={l.to}
                         onClick={() => setMobileOpen(false)}
-                        className={`flex items-center justify-between px-3 py-2 text-sm rounded-xl transition-all ${
-                          isLinkActive
-                            ? 'text-red-400 bg-red-500/5'
-                            : 'text-muted hover:text-red-400 hover:bg-red-500/5'
-                        }`}
+                        className={`flex items-center justify-between px-3 py-2 text-sm rounded-xl transition-all ${isLinkActive
+                          ? 'text-red-400 bg-red-500/5'
+                          : 'text-muted hover:text-red-400 hover:bg-red-500/5'
+                          }`}
                       >
                         <div className="flex items-center gap-3">
                           <l.icon className="w-4 h-4 text-red-400/70" />
@@ -270,15 +263,15 @@ export default function Navbar() {
 
               <div className="pt-4 border-t border-white/5">
                 {user ? (
-                  <button 
+                  <button
                     onClick={handleLogout}
                     className="w-full py-3 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/20 font-bold rounded-xl flex items-center justify-center gap-2"
                   >
                     <LogOut className="w-4 h-4" /> Sign Out
                   </button>
                 ) : (
-                  <Link 
-                    to="/login" 
+                  <Link
+                    to="/login"
                     onClick={() => setMobileOpen(false)}
                     className="w-full py-3 bg-gold-gradient text-void font-bold rounded-xl flex items-center justify-center gap-2 shadow-gold"
                   >

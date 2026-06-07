@@ -54,10 +54,10 @@ export default function ChangeFlight() {
 
   const [aiTip, setAiTip] = useState('')
 
-useEffect(() => {
-  getAIRecommendation('Give a concise travel tip...')
-    .then(setAiTip).catch(() => {})
-}, [])
+  useEffect(() => {
+    getAIRecommendation('Give a concise travel tip...')
+      .then(setAiTip).catch(() => { })
+  }, [])
 
   const REASONS = [
     { id: 'meeting', label: 'Meeting rescheduled', icon: '📅' },
@@ -85,11 +85,11 @@ useEffect(() => {
       <div className="max-w-3xl mx-auto">
 
         {aiTip && (
-  <div className="flex items-start gap-3 p-4 bg-gold-400/8 border border-gold-400/20 rounded-2xl">
-    <Sparkles className="w-4 h-4 text-gold-400 flex-shrink-0 mt-0.5" />
-    <p className="text-gold-200/80 text-sm">{aiTip}</p>
-  </div>
-)}
+          <div className="flex items-start gap-3 p-4 bg-gold-400/8 border border-gold-400/20 rounded-2xl mb-6">
+            <Sparkles className="w-4 h-4 text-gold-400 flex-shrink-0 mt-0.5" />
+            <p className="text-gold-200/80 text-sm">{aiTip}</p>
+          </div>
+        )}
 
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
@@ -107,10 +107,9 @@ useEffect(() => {
           {['Reason', 'New Flight', 'Confirm'].map((s, i) => (
             <React.Fragment key={s}>
               <div className={`flex items-center gap-2 ${i <= step ? 'text-gold-400' : 'text-muted'}`}>
-                <div className={`w-7 h-7 rounded-full text-xs font-bold border flex items-center justify-center ${
-                  i < step ? 'bg-gold-400 border-gold-400 text-void' :
-                  i === step ? 'bg-gold-400/15 border-gold-400' : 'bg-surface border-border'
-                }`}>
+                <div className={`w-7 h-7 rounded-full text-xs font-bold border flex items-center justify-center ${i < step ? 'bg-gold-400 border-gold-400 text-void' :
+                    i === step ? 'bg-gold-400/15 border-gold-400' : 'bg-surface border-border'
+                  }`}>
                   {i < step ? <CheckCircle className="w-3.5 h-3.5" /> : i + 1}
                 </div>
                 <span className="text-sm hidden sm:block">{s}</span>
@@ -156,11 +155,10 @@ useEffect(() => {
                   <button
                     key={id}
                     onClick={() => setReason(id)}
-                    className={`flex items-center gap-3 p-4 rounded-xl border text-left transition-all ${
-                      reason === id
+                    className={`flex items-center gap-3 p-4 rounded-xl border text-left transition-all ${reason === id
                         ? 'border-gold-400/40 bg-gold-400/8 text-white'
                         : 'glass border-border text-muted hover:text-white hover:border-border/80'
-                    }`}
+                      }`}
                   >
                     <span className="text-xl">{icon}</span>
                     <span className="text-sm font-medium">{label}</span>
@@ -187,11 +185,10 @@ useEffect(() => {
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 onClick={() => reason && setStep(1)}
                 disabled={!reason}
-                className={`w-full py-4 font-bold rounded-xl flex items-center justify-center gap-2 transition-all ${
-                  reason
+                className={`w-full py-4 font-bold rounded-xl flex items-center justify-center gap-2 transition-all ${reason
                     ? 'bg-gradient-to-r from-gold-500 to-gold-400 text-void shadow-gold-sm'
                     : 'bg-surface text-muted cursor-not-allowed'
-                }`}
+                  }`}
               >
                 Find Available Flights <ArrowRight className="w-4 h-4" />
               </motion.button>
@@ -217,11 +214,10 @@ useEffect(() => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.07 }}
                   onClick={() => setSelectedFlight(flight)}
-                  className={`glass border rounded-2xl p-5 cursor-pointer transition-all duration-200 ${
-                    selectedFlight?.id === flight.id
+                  className={`glass border rounded-2xl p-5 cursor-pointer transition-all duration-200 ${selectedFlight?.id === flight.id
                       ? 'border-gold-400/40 bg-gold-400/5'
                       : 'border-border hover:border-border/80'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-4 flex-wrap">
                     <div className="flex items-center gap-2 w-32">
@@ -286,11 +282,10 @@ useEffect(() => {
                   whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   onClick={() => selectedFlight && setStep(2)}
                   disabled={!selectedFlight}
-                  className={`flex-1 py-3.5 font-bold rounded-xl flex items-center justify-center gap-2 transition-all ${
-                    selectedFlight
+                  className={`flex-1 py-3.5 font-bold rounded-xl flex items-center justify-center gap-2 transition-all ${selectedFlight
                       ? 'bg-gradient-to-r from-gold-500 to-gold-400 text-void shadow-gold-sm'
                       : 'bg-surface text-muted cursor-not-allowed'
-                  }`}
+                    }`}
                 >
                   Continue with {selectedFlight ? `${selectedFlight.code} ${selectedFlight.depart}` : 'selected flight'}
                   <ArrowRight className="w-4 h-4" />

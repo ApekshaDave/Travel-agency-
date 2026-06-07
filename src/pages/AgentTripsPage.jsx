@@ -1,20 +1,20 @@
-import { useState} from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { getAllTrips, updateTripStatus, deleteTrip } from '../utils/tripStore'
 import {
   Plane, Users, Calendar,
   DollarSign, Sparkles, Clock, CheckCircle, AlertTriangle,
-  Trash2, ChevronDown, ChevronUp, RefreshCw, FileText, Map 
+  Trash2, ChevronDown, ChevronUp, RefreshCw, FileText, Map
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import StaffNav from '../components/layout/StaffNav'
 import { Link } from 'react-router-dom'
 
 const STATUS_CONFIG = {
-  pending:   { color: 'text-amber-400',  bg: 'bg-amber-400/10 border-amber-400/20',  label: 'Pending Review' },
-  reviewed:  { color: 'text-sky-400',    bg: 'bg-sky-400/10 border-sky-400/20',      label: 'Reviewed' },
-  booked:    { color: 'text-sage-400',   bg: 'bg-sage-400/10 border-sage-400/20',    label: 'Booked' },
-  cancelled: { color: 'text-red-400',    bg: 'bg-red-400/10 border-red-400/20',      label: 'Cancelled' },
+  pending: { color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/20', label: 'Pending Review' },
+  reviewed: { color: 'text-sky-400', bg: 'bg-sky-400/10 border-sky-400/20', label: 'Reviewed' },
+  booked: { color: 'text-sage-400', bg: 'bg-sage-400/10 border-sage-400/20', label: 'Booked' },
+  cancelled: { color: 'text-red-400', bg: 'bg-red-400/10 border-red-400/20', label: 'Cancelled' },
 }
 
 const SEGMENT_ICONS = {
@@ -37,11 +37,10 @@ function TripCard({ entry, onUpdate, onDelete }) {
       layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`glass border rounded-2xl overflow-hidden transition-all ${
-        status === 'pending' ? 'border-amber-400/20' :
-        status === 'booked'  ? 'border-sage-400/20' :
-        status === 'cancelled' ? 'border-red-400/20' : 'border-border'
-      }`}
+      className={`glass border rounded-2xl overflow-hidden transition-all ${status === 'pending' ? 'border-amber-400/20' :
+        status === 'booked' ? 'border-sage-400/20' :
+          status === 'cancelled' ? 'border-red-400/20' : 'border-border'
+        }`}
     >
       {/* Card Header */}
       <div className="p-5">
@@ -57,6 +56,9 @@ function TripCard({ entry, onUpdate, onDelete }) {
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-white font-bold text-sm">{entry.customer.name}</h3>
                 <span className="text-muted text-xs">{entry.customer.email}</span>
+                {entry.customer.phone && (
+                  <span className="text-gold-400 text-xs font-mono ml-1">· {entry.customer.phone}</span>
+                )}
               </div>
               <div className="flex items-center gap-3 mt-1 flex-wrap">
                 <span className="text-gold-400 font-bold text-base">{entry.trip.name}</span>
@@ -183,25 +185,25 @@ function TripCard({ entry, onUpdate, onDelete }) {
             </div>
 
             <div className="flex gap-2">
-  <button
-    onClick={handleSave}
-    className="flex-1 py-2.5 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold rounded-xl text-sm flex items-center justify-center gap-2"
-  >
-    <CheckCircle className="w-4 h-4" /> Save Changes
-  </button>
-  <Link
-    to={`/trip-builder?agentView=${entry.id}`}
-    className="flex-1 py-2.5 glass border border-sky-400/20 text-sky-400 font-bold rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-sky-400/10 transition-all"
-  >
-    <Map className="w-4 h-4" /> View in Trip Builder
-  </Link>
-  <button
-    onClick={() => onDelete(entry.id)}
-    className="p-2.5 glass border border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-xl transition-all flex-shrink-0"
-  >
-    <Trash2 className="w-4 h-4" />
-  </button>
-</div>
+              <button
+                onClick={handleSave}
+                className="flex-1 py-2.5 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold rounded-xl text-sm flex items-center justify-center gap-2"
+              >
+                <CheckCircle className="w-4 h-4" /> Save Changes
+              </button>
+              <Link
+                to={`/trip-builder?agentView=${entry.id}`}
+                className="flex-1 py-2.5 glass border border-sky-400/20 text-sky-400 font-bold rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-sky-400/10 transition-all"
+              >
+                <Map className="w-4 h-4" /> View in Trip Builder
+              </Link>
+              <button
+                onClick={() => onDelete(entry.id)}
+                className="p-2.5 glass border border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-xl transition-all flex-shrink-0"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </motion.div>
       )}
@@ -210,7 +212,7 @@ function TripCard({ entry, onUpdate, onDelete }) {
 }
 
 export default function AgentTripsPage() {
-  
+
   const [filter, setFilter] = useState('all')
 
   const [trips, setTrips] = useState(() => getAllTrips().reverse())
@@ -238,7 +240,7 @@ export default function AgentTripsPage() {
   }
 
   return (
-    <div className="min-h-screen pt-28 pb-16 px-4">
+    <div className="min-h-screen pt-36 pb-16 px-4">
       <StaffNav />
       <div className="max-w-4xl mx-auto">
 
@@ -269,11 +271,10 @@ export default function AgentTripsPage() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
-                filter === f
-                  ? 'bg-gold-400/15 border-gold-400/30 text-gold-400'
-                  : 'glass border-border text-muted hover:text-white'
-              }`}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${filter === f
+                ? 'bg-gold-400/15 border-gold-400/30 text-gold-400'
+                : 'glass border-border text-muted hover:text-white'
+                }`}
             >
               {f.charAt(0).toUpperCase() + f.slice(1)} ({counts[f] ?? trips.length})
             </button>

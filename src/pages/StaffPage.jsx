@@ -43,8 +43,8 @@ export default function StaffPage() {
   const canUseStaff = user?.role === 'agent' || user?.role === 'admin'
 
   return (
-    
-    <div className="min-h-screen pt-28 pb-16 px-4">
+
+    <div className="min-h-screen pt-36 pb-16 px-4">
       <StaffNav />
       <div className="max-w-6xl mx-auto">
         <motion.div

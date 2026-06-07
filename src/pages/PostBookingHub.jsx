@@ -1,40 +1,32 @@
-
-import { motion } from 'framer-motion'
-import { Link, useNavigate  } from 'react-router-dom'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Link, useNavigate } from 'react-router-dom'
 import {
-  CheckCircle, Plane, Package, RefreshCw, MessageCircle,
-  Download, Clock, ChevronRight, Sparkles,
+  CheckCircle, Plane, Package, RefreshCw, MessageCircle, Train, Bus, Car, Building2, Map,
+  Download, Clock, ChevronRight, Sparkles, AlertCircle, FileWarning,
   QrCode, Smartphone, ArrowRight, RotateCcw, Headphones, Bell, Star, Zap
 } from 'lucide-react'
+import toast from 'react-hot-toast'
+import { supabase } from './supabaseClient'
+import { useAuth } from '../context/AuthContext'
 
-
-const ACTIVE_BOOKING = {
-  id: 'VAI-A7X2K1',
-  pnr: 'AIXTV8',
-  airline: 'Air India',
-  code: 'AI 619',
-  logo: '🔴',
-  from: 'DEL', fromCity: 'Delhi', fromAirport: 'Indira Gandhi International',
-  to: 'BOM', toCity: 'Mumbai', toAirport: 'Chhatrapati Shivaji Maharaj International',
-  depart: '09:30', arrive: '11:50',
-  date: 'Monday, 15 March 2025',
-  duration: '2h 20m',
-  terminal: 'T2', gate: 'B14',
-  seat: '14C', seatType: 'Window',
-  class: 'Economy',
+const MOCK_ACTIVE_TRIP = {
+  id: 'VAI-MULT-99',
+  name: 'Golden Triangle & Beyond',
   status: 'confirmed',
-  checkinOpen: true,
-  checkinCloses: '07:30',
-  baggageAllowance: '15kg cabin + 15kg check-in',
-  price: 5800,
+  segments: [
+    { type: 'flight', airline: 'Air India', code: 'AI 619', logo: '🔴', from: 'DEL', to: 'BOM', depart: '09:30', arrive: '11:50', date: '15 Mar', status: 'confirmed', pnr: 'AIXTV8', checkinOpen: true, checkinCloses: '07:30' },
+    { type: 'train', name: 'Shatabdi Exp', code: '12001', from: 'BOM', to: 'PUN', depart: '14:30', arrive: '17:15', date: '16 Mar', status: 'confirmed' },
+    { type: 'roadways', provider: 'Ola Cabs', vehicle: 'Sedan AC', from: 'Pune', to: 'Lonavala', depart: '09:00', date: '17 Mar', status: 'confirmed' }
+  ]
 }
 
 const SERVICES = [
   {
     id: 'checkin',
     icon: CheckCircle,
-    title: 'Web Check-in',
-    desc: 'Get your boarding pass in 30 seconds',
+    title: 'Digital Check-in',
+    desc: 'Verify details and get your tickets/passes',
     badge: 'Open Now',
     badgeColor: 'bg-sage-400/15 text-sage-400 border-sage-400/20',
     color: 'text-sage-400',
@@ -75,6 +67,17 @@ const SERVICES = [
     link: '/post-booking/cancel',
   },
   {
+    id: 'report_issue',
+    icon: AlertCircle,
+    title: 'Report Booking Issue',
+    desc: 'File a formal request regarding baggage, seats, or meals',
+    badge: 'Agent Alert',
+    badgeColor: 'bg-red-400/15 text-red-400 border-red-400/20',
+    color: 'text-red-400',
+    glow: 'hover:border-red-400/30',
+    link: '#',
+  },
+  {
     id: 'support',
     icon: Headphones,
     title: 'AI Support',
@@ -106,9 +109,87 @@ const TIMELINE = [
   { icon: Star, label: 'Rate Your Experience', time: 'After landing', done: false, color: 'text-gold-400' },
 ]
 
+function IssueReportModal({ onClose, user }) {
+  const [issueType, setIssueType] = useState('Seat Preference')
+  const [desc, setDesc] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setSubmitting(true)
+
+    try {
+      const { error } = await supabase.from('booking_issues').insert([{
+        user_id: user?.id,
+        trip_id: MOCK_ACTIVE_TRIP.id,
+        issue_type: issueType,
+        description: desc,
+        customer_name: user?.name || 'Guest',
+        customer_email: user?.email,
+        customer_phone: user?.phone || 'N/A'
+      }])
+
+      if (error) throw error
+      toast.success('Issue reported! An agent will contact you shortly.')
+      onClose()
+    } catch (err) {
+      toast.error('Failed to send report: ' + err.message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-void/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="glass border border-red-500/20 rounded-3xl p-6 max-w-md w-full">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
+            <FileWarning className="w-6 h-6 text-red-400" />
+          </div>
+          <h2 className="text-xl font-bold text-white">File Booking Issue</h2>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-[10px] uppercase text-muted font-bold block mb-1.5">Issue Category</label>
+            <select
+              value={issueType}
+              onChange={e => setIssueType(e.target.value)}
+              className="w-full bg-white/5 border border-border rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-red-500/50"
+            >
+              {['Seat Preference', 'Meal Choice', 'Baggage Allowance', 'Payment Discrepancy', 'Name Correction', 'Other'].map(opt => (
+                <option key={opt} value={opt} className="bg-void">{opt}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-[10px] uppercase text-muted font-bold block mb-1.5">Details</label>
+            <textarea
+              required value={desc} onChange={e => setDesc(e.target.value)}
+              placeholder="Please describe your issue in detail..."
+              rows={4} className="w-full bg-white/5 border border-border rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-red-500/50 resize-none"
+            />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 py-3 glass border border-border rounded-xl text-white text-sm font-bold">Cancel</button>
+            <button type="submit" disabled={submitting} className="flex-1 py-3 bg-red-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-red-500/20 disabled:opacity-50">
+              {submitting ? 'Sending...' : 'Send to Agents'}
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 export default function PostBookingHub() {
-  
+  const { user } = useAuth()
   const navigate = useNavigate()
+  const [showIssueModal, setShowIssueModal] = useState(false)
+  const ACTIVE_TRIP = MOCK_ACTIVE_TRIP
+
+  // Find the first segment that has an open check-in
+  const checkinSegment = ACTIVE_TRIP.segments.find(s => s.checkinOpen)
+
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
       <div className="max-w-5xl mx-auto">
@@ -119,21 +200,23 @@ export default function PostBookingHub() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <div className="flex items-center gap-2 text-muted text-sm mb-3">
-            <Link to="/dashboard" className="hover:text-gold-400 transition-colors">My Trips</Link>
+          <div className="flex items-center gap-2 text-muted text-xs sm:text-sm mb-3">
+            <Link to="/dashboard" className="hover:text-gold-400 transition-colors">My Dashboard</Link>
             <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-white">{ACTIVE_BOOKING.id}</span>
+            <span className="text-white">Manage Trip</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+            <span className="text-gold-400 font-mono text-xs">{ACTIVE_TRIP.id}</span>
           </div>
-          <h1 className="font-display text-4xl font-bold text-white mb-1">Manage Your Trip</h1>
-          <p className="text-muted">Everything you need before, during, and after your flight.</p>
+          <h1 className="font-display text-3xl sm:text-4xl font-bold text-white mb-1">Manage Your Trip</h1>
+          <p className="text-muted">Review itinerary, modify segments, and manage digital check-ins.</p>
         </motion.div>
 
         {/* AI Prompt Bar */}
         <motion.div
-           initial={{ opacity: 0, y: 10 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ delay: 0.1 }}
-           className="mb-8 flex items-center gap-3 p-4 glass border border-gold-400/20 rounded-2xl group focus-within:border-gold-400/50 transition-all hover:bg-gold-400/5"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8 flex items-center gap-3 p-4 glass border border-gold-400/20 rounded-2xl group focus-within:border-gold-400/50 transition-all hover:bg-gold-400/5"
         >
           <Sparkles className="w-5 h-5 text-gold-400 flex-shrink-0" />
           <input
@@ -145,88 +228,49 @@ export default function PostBookingHub() {
           <ArrowRight className="w-4 h-4 text-muted group-focus-within:text-gold-400 group-focus-within:translate-x-1 transition-all" />
         </motion.div>
 
-        {/* Flight Summary Card */}
+        {/* Trip Summary Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.08 }}
           className="glass gradient-border rounded-3xl p-6 mb-8"
         >
-          <div className="flex items-start justify-between flex-wrap gap-4 mb-5">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">{ACTIVE_BOOKING.logo}</span>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-white font-bold text-lg">{ACTIVE_BOOKING.airline}</span>
-                  <span className="font-mono text-muted text-sm">{ACTIVE_BOOKING.code}</span>
-                  <span className="px-2 py-0.5 bg-sage-400/15 text-sage-400 border border-sage-400/20 text-xs rounded-full font-medium">
-                    Confirmed
-                  </span>
+          <h2 className="text-white font-bold text-xl mb-6 flex items-center gap-2">
+            <Map className="w-5 h-5 text-gold-400" /> {ACTIVE_TRIP.name}
+          </h2>
+
+          <div className="space-y-4">
+            {ACTIVE_TRIP.segments.map((seg, idx) => {
+              const Icon = seg.type === 'flight' ? Plane : seg.type === 'train' ? Train : seg.type === 'bus' ? Bus : Car
+              return (
+                <div key={idx} className="flex items-center gap-4 p-4 bg-white/2 border border-border/50 rounded-2xl">
+                  <div className="w-10 h-10 rounded-xl bg-gold-400/10 flex items-center justify-center flex-shrink-0">
+                    <Icon className="w-5 h-5 text-gold-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-white font-bold text-sm uppercase">{seg.type}</span>
+                      <span className="text-muted text-[10px] font-mono">{seg.date} · {seg.depart}</span>
+                    </div>
+                    <p className="text-white/80 text-xs truncate">
+                      {seg.from} → {seg.to} · {seg.airline || seg.name || seg.provider || seg.vehicle}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] text-sage-400 font-bold uppercase tracking-tighter block mb-1">Confirmed</span>
+                    {seg.pnr && <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[9px] font-mono text-muted">PNR: {seg.pnr}</span>}
+                  </div>
                 </div>
-                <p className="text-muted text-sm">{ACTIVE_BOOKING.date}</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <span className="font-mono text-xs text-muted px-3 py-1.5 glass border border-border rounded-lg">
-                PNR: {ACTIVE_BOOKING.pnr}
-              </span>
-              <span className="font-mono text-xs text-muted px-3 py-1.5 glass border border-border rounded-lg">
-                {ACTIVE_BOOKING.id}
-              </span>
-            </div>
+              )
+            })}
           </div>
 
-          {/* Route visual */}
-          <div className="flex items-center gap-6 mb-5">
-            <div>
-              <div className="font-bold text-4xl text-white">{ACTIVE_BOOKING.depart}</div>
-              <div className="font-mono text-gold-400 font-semibold text-lg">{ACTIVE_BOOKING.from}</div>
-              <div className="text-muted text-xs mt-1 max-w-28">{ACTIVE_BOOKING.fromAirport}</div>
-              <div className="text-muted text-xs mt-0.5">Terminal {ACTIVE_BOOKING.terminal}</div>
-            </div>
-
-            <div className="flex-1 flex flex-col items-center px-4">
-              <div className="text-muted text-xs mb-2 flex items-center gap-1">
-                <Clock className="w-3 h-3" /> {ACTIVE_BOOKING.duration} · Direct
-              </div>
-              <div className="w-full flex items-center gap-2">
-                <div className="flex-1 h-px bg-gradient-to-r from-gold-400/40 to-border" />
-                <div className="w-8 h-8 rounded-full bg-gold-400/10 border border-gold-400/20 flex items-center justify-center">
-                  <Plane className="w-4 h-4 text-gold-400" />
-                </div>
-                <div className="flex-1 h-px bg-gradient-to-r from-border to-gold-400/40" />
-              </div>
-              <div className="text-muted text-xs mt-2">Non-stop</div>
-            </div>
-
-            <div className="text-right">
-              <div className="font-bold text-4xl text-white">{ACTIVE_BOOKING.arrive}</div>
-              <div className="font-mono text-gold-400 font-semibold text-lg">{ACTIVE_BOOKING.to}</div>
-              <div className="text-muted text-xs mt-1 max-w-28 text-right">{ACTIVE_BOOKING.toAirport}</div>
-            </div>
-          </div>
-
-          {/* Seat & baggage info */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-5 border-t border-border/40">
-            {[
-              { label: 'Seat', value: `${ACTIVE_BOOKING.seat} (${ACTIVE_BOOKING.seatType})`, icon: '💺' },
-              { label: 'Class', value: ACTIVE_BOOKING.class, icon: '🎫' },
-              { label: 'Baggage', value: ACTIVE_BOOKING.baggageAllowance, icon: '🧳' },
-              { label: 'Gate', value: ACTIVE_BOOKING.gate, icon: '🚪' },
-            ].map(({ label, value, icon }) => (
-              <div key={label} className="text-center sm:text-left">
-                <div className="text-muted text-xs uppercase tracking-wider mb-1">{icon} {label}</div>
-                <div className="text-white text-sm font-medium">{value}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Check-in alert */}
-          {ACTIVE_BOOKING.checkinOpen && (
+          {/* Check-in alert for active segments */}
+          {ACTIVE_TRIP.segments.some(s => s.checkinOpen) && (
             <motion.div
               initial={{ opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="mt-4 flex items-center justify-between gap-3 p-4 bg-sage-400/10 border border-sage-400/25 rounded-2xl flex-wrap"
+              className="mt-6 flex items-center justify-between gap-3 p-4 bg-sage-400/10 border border-sage-400/25 rounded-2xl flex-wrap"
             >
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-sage-400/20 rounded-lg flex items-center justify-center">
@@ -234,7 +278,7 @@ export default function PostBookingHub() {
                 </div>
                 <div>
                   <p className="text-sage-300 font-semibold text-sm">Web Check-in is Open!</p>
-                  <p className="text-sage-300/60 text-xs">Closes at {ACTIVE_BOOKING.checkinCloses} on day of departure</p>
+                  <p className="text-sage-300/60 text-xs">Closes at {checkinSegment?.checkinCloses} on day of departure</p>
                 </div>
               </div>
               <Link
@@ -254,7 +298,7 @@ export default function PostBookingHub() {
             <h2 className="font-display text-2xl font-bold text-white mb-4">What do you need?</h2>
             <div className="grid grid-cols-1 gap-4 mb-8">
               {/* Featured Check-in when open */}
-              {ACTIVE_BOOKING.checkinOpen && (
+              {checkinSegment && (
                 <Link
                   to="/post-booking/checkin"
                   className="glass border border-sage-400/40 bg-sage-400/5 ring-1 ring-sage-400/20 rounded-2xl p-6 group transition-all duration-300 relative overflow-hidden"
@@ -270,7 +314,7 @@ export default function PostBookingHub() {
                         <p className="text-muted text-sm mt-0.5">Select your seat and get your mobile boarding pass</p>
                         <p className="text-sage-400 text-xs font-mono mt-2 flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full bg-sage-400 animate-pulse" />
-                          Closes at {ACTIVE_BOOKING.checkinCloses} — {ACTIVE_BOOKING.checkinCloses === '07:30' ? '6 hours from now' : 'Limited time left'}
+                          Closes at {checkinSegment.checkinCloses} — {checkinSegment.checkinCloses === '07:30' ? '6 hours from now' : 'Limited time left'}
                         </p>
                       </div>
                     </div>
@@ -283,7 +327,7 @@ export default function PostBookingHub() {
               )}
 
               <div className="grid sm:grid-cols-2 gap-4">
-                {SERVICES.filter(s => s.id !== 'checkin' || !ACTIVE_BOOKING.checkinOpen).map(({ id, icon: Icon, title, desc, badge, badgeColor, color, glow, link }, i) => (
+                {SERVICES.filter(s => s.id !== 'checkin' || !checkinSegment).map(({ id, icon: Icon, title, desc, badge, badgeColor, color, glow, link }, i) => (
                   <motion.div
                     key={id}
                     initial={{ opacity: 0, y: 15 }}
@@ -291,7 +335,8 @@ export default function PostBookingHub() {
                     transition={{ delay: i * 0.06 }}
                   >
                     <Link
-                      to={link}
+                      to={id === 'report_issue' ? '#' : link}
+                      onClick={id === 'report_issue' ? () => setShowIssueModal(true) : undefined}
                       className={`block glass border border-border ${glow} rounded-2xl p-5 group transition-all duration-200 h-full`}
                     >
                       <div className="flex items-start justify-between mb-4">
@@ -304,13 +349,14 @@ export default function PostBookingHub() {
                       </div>
                       <h3 className="font-semibold text-white text-sm mb-1 group-hover:text-gold-300 transition-colors">{title}</h3>
                       <p className="text-muted text-[11px] leading-relaxed line-clamp-2">{desc}</p>
-                      
+
                       {/* Context snippets */}
                       <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] text-muted group-hover:text-white transition-colors">
                         <span className="font-mono">
-                          {id === 'addons' ? 'Until 2h before departure' : 
-                           id === 'change' ? 'Fare diff. + ₹2,000' :
-                           id === 'cancel' ? 'Refund Estimate: ₹4,800' : 'Available 24/7'}
+                          {id === 'addons' ? 'Until 2h before departure' :
+                            id === 'change' ? 'Fare diff. + ₹2,000' :
+                              id === 'cancel' ? 'Refund Estimate: ₹4,800' :
+                                id === 'report_issue' ? '2-4h Response Time' : 'Available 24/7'}
                         </span>
                         <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-all" />
                       </div>
@@ -363,11 +409,10 @@ export default function PostBookingHub() {
                     {i < TIMELINE.length - 1 && (
                       <div className={`absolute left-4 top-8 w-px h-full ${done ? 'bg-sage-400/40' : 'bg-border/40'}`} />
                     )}
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 z-10 ${
-                      done ? 'bg-sage-400/20 border border-sage-400/30' :
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 z-10 ${done ? 'bg-sage-400/20 border border-sage-400/30' :
                       active ? 'bg-gold-400/15 border border-gold-400/30' :
-                      'bg-surface border border-border'
-                    }`}>
+                        'bg-surface border border-border'
+                      }`}>
                       <Icon className={`w-3.5 h-3.5 ${done ? 'text-sage-400' : active ? 'text-gold-400' : 'text-muted'}`} />
                     </div>
                     <div className="pb-5 flex-1">
@@ -395,7 +440,7 @@ export default function PostBookingHub() {
                 Complete web check-in first. Your boarding pass QR will appear here.
               </p>
               <div className="w-full aspect-square rounded-xl bg-surface/60 border border-border flex items-center justify-center">
-                {ACTIVE_BOOKING.checkinOpen ? (
+                {checkinSegment ? (
                   <div className="text-center">
                     <QrCode className="w-10 h-10 text-muted/30 mx-auto mb-2" />
                     <p className="text-muted text-xs">Check in to unlock</p>
@@ -408,6 +453,11 @@ export default function PostBookingHub() {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showIssueModal && <IssueReportModal onClose={() => setShowIssueModal(false)} user={user} />}
+      </AnimatePresence>
+
     </div>
   )
 }

@@ -44,7 +44,7 @@ export function AuthProvider({ children }) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (session?.user) {
           const email = session.user.email
-          
+
           // Query PostgreSQL staff registry via Supabase
           const { data: staffData } = await supabase
             .from('staff_members')
@@ -60,7 +60,7 @@ export function AuthProvider({ children }) {
             agencyName: staffData?.agency_name || null,
             position: staffData?.position || null
           }
-          
+
           localStorage.setItem('voyageai_user', JSON.stringify(mockUser))
           setUser(mockUser)
         } else {
@@ -80,7 +80,7 @@ export function AuthProvider({ children }) {
 
       const isStaff = options.staff || email.includes('agent') || email.includes('staff') || email.includes('admin')
       let staffData = null
-      
+
       if (isStaff) {
         const { data: dbStaff } = await supabase
           .from('staff_members')
@@ -98,7 +98,7 @@ export function AuthProvider({ children }) {
         agencyName: staffData?.agency_name || null,
         position: staffData?.position || null
       }
-      
+
       // Save local device caching profile
       const saved = JSON.parse(localStorage.getItem('voyageai_saved_accounts') || '[]')
       if (!saved.some(a => a.email.toLowerCase() === mockUser.email.toLowerCase())) {
@@ -110,15 +110,16 @@ export function AuthProvider({ children }) {
         })
         localStorage.setItem('voyageai_saved_accounts', JSON.stringify(saved))
       }
+      setUser(mockUser)
       return mockUser
     } else {
       // Local Mock DB Fallback
       const staffList = JSON.parse(localStorage.getItem('voyageai_registered_staff') || '[]')
       const isStaff = options.staff || email.includes('agent') || email.includes('staff') || email.includes('admin')
-      
+
       let matchedUser = null
       let role = 'user'
-      
+
       if (isStaff) {
         const staffMember = staffList.find(s => s.email.toLowerCase() === email.toLowerCase())
         if (staffMember) {
@@ -146,7 +147,7 @@ export function AuthProvider({ children }) {
       }
 
       localStorage.setItem('voyageai_user', JSON.stringify(mockUser))
-      
+
       const saved = JSON.parse(localStorage.getItem('voyageai_saved_accounts') || '[]')
       if (!saved.some(a => a.email.toLowerCase() === mockUser.email.toLowerCase())) {
         saved.push({
@@ -157,7 +158,7 @@ export function AuthProvider({ children }) {
         })
         localStorage.setItem('voyageai_saved_accounts', JSON.stringify(saved))
       }
-      
+
       setUser(mockUser)
       return mockUser
     }
@@ -167,13 +168,14 @@ export function AuthProvider({ children }) {
     if (hasSupabase && supabase) {
       const isStaff = options.staff || !!options.agencyName
       const role = isStaff ? (email.includes('admin') ? 'admin' : 'agent') : 'user'
-      
+
+      const authOptions = { data: { name, role } }
+      if (options.emailRedirectTo) authOptions.emailRedirectTo = options.emailRedirectTo
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: { name, role }
-        }
+        options: authOptions
       })
       if (error) throw error
 
@@ -189,14 +191,14 @@ export function AuthProvider({ children }) {
             position: options.position || 'Agent'
           })
         if (dbError) throw dbError
-        
+
         // Save new agency registry to PostgreSQL if needed
         const { data: existingAg } = await supabase
           .from('agencies')
           .select('*')
           .eq('name', options.agencyName)
           .maybeSingle()
-          
+
         if (!existingAg) {
           await supabase.from('agencies').insert({
             name: options.agencyName,
@@ -224,6 +226,7 @@ export function AuthProvider({ children }) {
         })
         localStorage.setItem('voyageai_saved_accounts', JSON.stringify(saved))
       }
+      setUser(mockUser)
       return mockUser
     } else {
       // Local Mock DB Fallback
@@ -231,17 +234,17 @@ export function AuthProvider({ children }) {
       let role = 'user'
       let agencyName = null
       let position = null
-      
+
       if (isStaff) {
         role = email.includes('admin') ? 'admin' : 'agent'
         agencyName = options.agencyName
         position = options.position || 'Agent'
-        
+
         const staffList = JSON.parse(localStorage.getItem('voyageai_registered_staff') || '[]')
         if (staffList.some(s => s.email.toLowerCase() === email.toLowerCase())) {
           throw new Error('Email is already registered as a travel agent')
         }
-        
+
         const newStaff = { name, email, password, agencyName, position }
         staffList.push(newStaff)
         localStorage.setItem('voyageai_registered_staff', JSON.stringify(staffList))
@@ -259,7 +262,7 @@ export function AuthProvider({ children }) {
       }
 
       localStorage.setItem('voyageai_user', JSON.stringify(mockUser))
-      
+
       const saved = JSON.parse(localStorage.getItem('voyageai_saved_accounts') || '[]')
       if (!saved.some(a => a.email.toLowerCase() === mockUser.email.toLowerCase())) {
         saved.push({
@@ -270,7 +273,7 @@ export function AuthProvider({ children }) {
         })
         localStorage.setItem('voyageai_saved_accounts', JSON.stringify(saved))
       }
-      
+
       setUser(mockUser)
       return mockUser
     }
