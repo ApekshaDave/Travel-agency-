@@ -169,7 +169,7 @@ export function AuthProvider({ children }) {
       const isStaff = options.staff || !!options.agencyName
       const role = isStaff ? (email.includes('admin') ? 'admin' : 'agent') : 'user'
 
-      const authOptions = { data: { name, role } }
+      const authOptions = { data: { name, role, phone: options.phone } }
       if (options.emailRedirectTo) authOptions.emailRedirectTo = options.emailRedirectTo
 
       const { data, error } = await supabase.auth.signUp({

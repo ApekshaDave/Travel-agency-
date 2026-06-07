@@ -7,7 +7,7 @@ import {
   QrCode, Smartphone, ArrowRight, RotateCcw, Headphones, Bell, Star, Zap
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { supabase } from './supabaseClient'
+import { supabase } from '../utils/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 
 const MOCK_ACTIVE_TRIP = {

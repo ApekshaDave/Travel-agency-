@@ -6,7 +6,7 @@ import {
   Mail, User, Plane, XCircle, ChevronRight
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { supabase } from './supabaseClient'
+import { supabase } from '../utils/supabaseClient'
 import StaffNav from '../components/layout/StaffNav'
 
 // ── Mock escalated cases ─────────────────────────────────────────────────────
@@ -359,7 +359,7 @@ function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent }) {
           {!isResolving && (
             <motion.button
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-              onClick={() => { onResolve(caseData.id); toast.success('Action performed: ' + caseData.aiAction) }}
+              onClick={() => { onResolve(caseData.id, `AI Action Applied: ${caseData.aiAction}`); toast.success('Action performed: ' + caseData.aiAction) }}
               className="w-full py-3 glass border border-gold-400/20 text-gold-400 font-bold rounded-xl text-sm flex flex-col items-center justify-center leading-tight shadow-gold"
             >
               <span>{caseData.aiAction}</span>

@@ -8,10 +8,10 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim()
 
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-        'Supabase environment variables are missing! Please create a .env file at the project root with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.'
-    )
+export const hasSupabase = Boolean(supabaseUrl && supabaseAnonKey)
+
+if (!hasSupabase) {
+    console.warn('Supabase configuration not found. VoyageAI is running in Mock/Offline mode.')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = hasSupabase ? createClient(supabaseUrl, supabaseAnonKey) : null

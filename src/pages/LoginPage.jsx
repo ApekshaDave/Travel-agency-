@@ -54,6 +54,7 @@ export default function LoginPage() {
   // Load data from Supabase instead of LocalStorage
   useEffect(() => {
     const fetchAgencies = async () => {
+      if (!supabase) return
       const { data } = await supabase.from('agencies').select('*').order('name')
       if (data) setRegisteredAgencies(data)
     }
@@ -121,6 +122,7 @@ export default function LoginPage() {
 
   const handleForgotPassword = async () => {
     if (!email) {
+      if (!supabase) return toast.error("Database connection unavailable in mock mode.")
       setErrors({ email: 'Email is required to reset password' })
       toast.error('Please enter your email address first.')
       return
@@ -141,6 +143,7 @@ export default function LoginPage() {
   }
 
   const handleResendConfirmation = async (targetEmail) => {
+    if (!supabase) return toast.error("Database connection unavailable.")
     setLoading(true)
     try {
       const { error } = await supabase.auth.resend({

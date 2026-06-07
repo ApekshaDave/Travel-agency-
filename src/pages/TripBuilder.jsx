@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { generateMultiModalTrip } from '../utils/multiModalApi'
-import { supabase } from './supabaseClient'
+import { supabase } from '../utils/supabaseClient'
 import { saveTrip, getTripById, updateTripItinerary, syncTripsWithSupabase } from '../utils/tripStore'
 import { useAuth } from '../context/AuthContext'
 

@@ -7,7 +7,7 @@ import {
   AlertTriangle, CheckCircle, Clock
 } from 'lucide-react'
 import { callVoyageAI, detectTripIntent, generateMultiModalTrip, updateTripWithPreferences } from '../utils/multiModalApi'
-import { supabase } from './supabaseClient'
+import { supabase } from '../utils/supabaseClient'
 import toast from 'react-hot-toast'
 import FlightCard from '../components/features/FlightCard'
 
@@ -51,8 +51,8 @@ function Message({ msg }) {
       className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
     >
       <div className={`w-8 h-8 flex-shrink-0 rounded-xl flex items-center justify-center ${isUser
-          ? 'bg-sky-500/20 border border-sky-500/30'
-          : 'bg-gradient-to-br from-gold-500 to-gold-400 shadow-gold-sm'
+        ? 'bg-sky-500/20 border border-sky-500/30'
+        : 'bg-gradient-to-br from-gold-500 to-gold-400 shadow-gold-sm'
         }`}>
         {isUser
           ? <Users className="w-4 h-4 text-sky-400" />
@@ -63,8 +63,8 @@ function Message({ msg }) {
       <div className={`max-w-[80%] space-y-3 ${isUser ? 'items-end' : 'items-start'} flex flex-col`}>
         {msg.content && (
           <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${isUser
-              ? 'bg-sky-500/15 border border-sky-500/20 text-white ml-auto'
-              : 'glass border border-border text-white/90'
+            ? 'bg-sky-500/15 border border-sky-500/20 text-white ml-auto'
+            : 'glass border border-border text-white/90'
             } ${isUser ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}>
             <pre className="font-body whitespace-pre-wrap">{msg.content}</pre>
           </div>
@@ -433,8 +433,8 @@ export default function ChatPage() {
                 onClick={() => sendMessage()}
                 disabled={!input.trim() || isTyping}
                 className={`p-2.5 rounded-xl transition-all ${input.trim() && !isTyping
-                    ? 'bg-gradient-to-r from-gold-500 to-gold-400 text-void shadow-gold-sm'
-                    : 'bg-surface text-muted cursor-not-allowed'
+                  ? 'bg-gradient-to-r from-gold-500 to-gold-400 text-void shadow-gold-sm'
+                  : 'bg-surface text-muted cursor-not-allowed'
                   }`}
               >
                 <Send className="w-4 h-4" />
