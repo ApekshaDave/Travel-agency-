@@ -6,10 +6,12 @@ import {
   LayoutDashboard, Menu, X,
   Sparkles, RefreshCw,
   ChevronDown, ArrowRight, LogIn,
-  AlertTriangle, DollarSign, Bell, LogOut
+  AlertTriangle, DollarSign, Bell, LogOut, User,
+  FileText, Users
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
+
 const NAV_LINKS = [
   { to: '/trip-builder', label: 'Trip Builder', icon: Map },
   { to: '/chat', label: 'AI Chat', icon: Sparkles },
@@ -21,16 +23,27 @@ const USER_LINKS = [
   { to: '/corporate', label: 'Corporate', icon: Building2 },
 ]
 
+const STAFF_LINKS = [
+  { to: '/agent', label: 'Agent Desk', icon: AlertTriangle },
+  { to: '/agent/trips', label: 'Trip Requests', icon: Users },
+  { to: '/finance', label: 'Finance Office', icon: DollarSign },
+  { to: '/finance/invoices', label: 'Invoices', icon: FileText },
+  { to: '/finance/billing', label: 'Billing', icon: DollarSign },
+  { to: '/finance/refunds', label: 'Refunds', icon: RefreshCw },
+  { to: '/finance/notifications', label: 'Admin Alerts', icon: Bell },
+]
+
 function GenericDropdown({ label, links, active, isStaff }) {
   const [open, setOpen] = useState(false)
   const hasActive = links.some(l => active === l.to || active.startsWith(l.to + '/'))
 
   return (
     <div className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
-      <button className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${hasActive
-        ? isStaff ? 'text-accent-500 font-semibold' : 'text-brand-600 font-semibold'
-        : 'text-slate-600 hover:text-slate-900'
-        }`}>
+      <button className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+        hasActive
+          ? isStaff ? 'text-accent-500 font-semibold' : 'text-brand-600 font-semibold'
+          : 'text-slate-600 hover:text-slate-900'
+      }`}>
         {label}
         <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
@@ -42,25 +55,141 @@ function GenericDropdown({ label, links, active, isStaff }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className={`absolute top-full right-0 mt-2 w-52 bg-white border rounded-2xl p-1.5 shadow-xl z-50 ${isStaff ? 'border-accent-200' : 'border-brand-100'
-              }`}
+            className={`absolute top-full right-0 mt-2 w-52 bg-white border rounded-2xl p-1.5 shadow-xl z-50 ${
+              isStaff ? 'border-accent-200' : 'border-brand-100'
+            }`}
           >
-            {links.map(({ to, label, icon: Icon }) => {
+            {links.map(({ to, label: linkLabel, icon: Icon }) => {
               const isActive = active === to || active.startsWith(to + '/')
               return (
                 <Link
                   key={to}
                   to={to}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-all ${isActive
-                    ? isStaff ? 'bg-accent-50 text-accent-600 font-semibold' : 'bg-brand-50 text-brand-600 font-semibold'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                    }`}
+                  className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-all ${
+                    isActive
+                      ? isStaff
+                        ? 'bg-accent-50 text-accent-600 font-semibold'
+                        : 'bg-brand-50 text-brand-600 font-semibold'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
                 >
                   <Icon className={`w-4 h-4 ${isActive ? (isStaff ? 'text-accent-500' : 'text-brand-500') : 'text-slate-400'}`} />
-                  {label}
+                  {linkLabel}
                 </Link>
               )
             })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// ── User Avatar + Info pill ───────────────────────────────────────────────────
+function UserPill({ user, onLogout }) {
+  const [open, setOpen] = useState(false)
+  const isStaff = user.role === 'agent' || user.role === 'admin' || user.role === 'finance'
+
+  const displayName = user.user_metadata?.full_name
+    || user.user_metadata?.name
+    || user.name
+    || user.email?.split('@')[0]
+    || 'User'
+
+  const initials = displayName
+    .split(' ')
+    .map(w => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+
+  const roleLabel = {
+    agent: 'Travel Agent',
+    admin: 'Admin',
+    finance: 'Finance',
+    user: 'Traveller',
+  }[user.role] || 'Traveller'
+
+  return (
+    <div className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <button className="flex items-center gap-2.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full hover:bg-slate-100 hover:border-brand-primary/30 transition-all group">
+        {/* Avatar */}
+        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${
+          isStaff
+            ? 'bg-gradient-to-br from-orange-500 to-amber-400'
+            : 'bg-gradient-to-br from-brand-500 to-brand-400'
+        }`}>
+          {initials}
+        </div>
+        {/* Name + role */}
+        <div className="text-left hidden sm:block">
+          <div className="text-slate-800 text-xs font-bold leading-tight">{displayName}</div>
+          <div className={`text-[10px] font-medium leading-tight ${isStaff ? 'text-orange-500' : 'text-brand-500'}`}>
+            {roleLabel}
+          </div>
+        </div>
+        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-full right-0 mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden"
+          >
+            {/* Email header */}
+            <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0 ${
+                  isStaff
+                    ? 'bg-gradient-to-br from-orange-500 to-amber-400'
+                    : 'bg-gradient-to-br from-brand-500 to-brand-400'
+                }`}>
+                  {initials}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-slate-900 text-sm font-bold truncate">{displayName}</div>
+                  <div className="text-slate-500 text-xs truncate">{user.email}</div>
+                  <div className={`text-[10px] font-bold mt-0.5 ${isStaff ? 'text-orange-500' : 'text-brand-500'}`}>
+                    {roleLabel}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick links */}
+            <div className="p-1.5">
+              <Link
+                to={isStaff ? '/agent' : '/dashboard'}
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
+              >
+                <User className="w-4 h-4 text-slate-400" />
+                {isStaff ? 'Agent Dashboard' : 'My Trips'}
+              </Link>
+              {isStaff && (
+                <Link
+                  to="/agent/trips"
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
+                >
+                  <Users className="w-4 h-4 text-slate-400" />
+                  Trip Requests
+                </Link>
+              )}
+            </div>
+
+            {/* Sign out */}
+            <div className="p-1.5 border-t border-slate-100">
+              <button
+                onClick={onLogout}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-red-500 hover:bg-red-50 transition-all font-medium"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -76,9 +205,7 @@ export default function Navbar() {
   const { user, logout } = useAuth()
 
   const isStaff = user && (user.role === 'agent' || user.role === 'admin' || user.role === 'finance')
-
-  // Check if we're on the hero homepage (dark bg) so we use white text
-  const isHeroPage = active === '/' // Keep this for potential future dark hero sections
+  const isHeroPage = active === '/'
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30)
@@ -92,14 +219,7 @@ export default function Navbar() {
     setMobileOpen(false)
   }
 
-  const staffLinks = [
-    { to: '/agent', label: 'Agent Desk', icon: AlertTriangle },
-    { to: '/finance', label: 'Finance Office', icon: DollarSign },
-    { to: '/finance/notifications', label: 'Admin Alerts', icon: Bell }
-  ]
-
-  // Determine nav style based on page + scroll
-  const navBg = scrolled || !isHeroPage // Always light for now, unless hero is dark
+  const navBg = scrolled || !isHeroPage
     ? 'bg-white/90 backdrop-blur-md border-b border-border shadow-sm'
     : 'bg-transparent border-b border-border/0'
 
@@ -126,13 +246,13 @@ export default function Navbar() {
         <div className="hidden lg:flex items-center gap-1">
           {NAV_LINKS.map(link => {
             const isLinkActive = active === link.to || active.startsWith(link.to + '/')
-            if (link.primary) return null
             return (
               <Link
                 key={link.to}
                 to={link.to}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${isLinkActive ? `bg-brand-primary/10 ${activeColor}` : linkColor
-                  } hover:bg-slate-100`}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  isLinkActive ? `bg-brand-primary/10 ${activeColor}` : linkColor
+                } hover:bg-slate-100`}
               >
                 {link.label}
               </Link>
@@ -140,33 +260,19 @@ export default function Navbar() {
           })}
         </div>
 
-        {/* Desktop Right Context */}
+        {/* Desktop Right */}
         <div className="hidden lg:flex items-center gap-3">
           {!isStaff && (
             <GenericDropdown label="My Journey" links={USER_LINKS} active={active} />
           )}
           {isStaff && (
-            <GenericDropdown label="Staff Desk" links={staffLinks} active={active} isStaff />
+            <GenericDropdown label="Staff Desk" links={STAFF_LINKS} active={active} isStaff />
           )}
 
-          <div className="w-px h-6 bg-slate-200 mx-2" />
+          <div className="w-px h-6 bg-slate-200 mx-1" />
 
           {user ? (
-            <div className="flex items-center gap-2">
-              <div className="text-right">
-                <p className="text-sm font-semibold text-slate-800">{user.name}</p>
-                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">
-                  {user.role === 'user' ? 'Customer' : user.agencyName || 'Staff'}
-                </p>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="p-2 rounded-xl text-slate-500 hover:bg-red-50 hover:text-red-500 transition-all"
-                title="Sign Out"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
+            <UserPill user={user} onLogout={handleLogout} />
           ) : (
             <div className="flex items-center gap-2">
               <Link
@@ -188,7 +294,9 @@ export default function Navbar() {
 
         {/* Mobile Toggle */}
         <button
-          className={`lg:hidden p-2 rounded-xl transition-colors ${(!scrolled && isHeroPage) ? 'text-white hover:bg-white/10' : 'text-slate-700 hover:bg-slate-100'}`}
+          className={`lg:hidden p-2 rounded-xl transition-colors ${
+            (!scrolled && isHeroPage) ? 'text-white hover:bg-white/10' : 'text-slate-700 hover:bg-slate-100'
+          }`}
           onClick={() => setMobileOpen(!mobileOpen)}
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -205,6 +313,7 @@ export default function Navbar() {
             className="lg:hidden bg-white border-t border-slate-100 overflow-y-auto max-h-[85vh] shadow-xl"
           >
             <div className="p-5 space-y-5">
+
               {/* Plan Section */}
               <div className="space-y-1">
                 <p className="text-xs uppercase tracking-wider text-brand-600 mb-3 px-3 font-bold">Plan Your Trip</p>
@@ -215,20 +324,18 @@ export default function Navbar() {
                       key={l.to}
                       to={l.to}
                       onClick={() => setMobileOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl font-medium transition-all ${isLinkActive
-                        ? 'text-brand-600 bg-brand-50 font-semibold'
-                        : 'text-slate-700 hover:bg-slate-50'
-                        }`}
+                      className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl font-medium transition-all ${
+                        isLinkActive ? 'text-brand-600 bg-brand-50 font-semibold' : 'text-slate-700 hover:bg-slate-50'
+                      }`}
                     >
                       <l.icon className={`w-4 h-4 ${isLinkActive ? 'text-brand-500' : 'text-slate-400'}`} />
                       {l.label}
                     </Link>
                   )
                 })}
-                {/* AI Assistant link for mobile */}
               </div>
 
-              {/* My Travel (for customers) */}
+              {/* My Travel (customers) */}
               {!isStaff && (
                 <div className="space-y-1">
                   <p className="text-xs uppercase tracking-wider text-slate-400 mb-3 px-3 font-bold">My Travel</p>
@@ -239,8 +346,9 @@ export default function Navbar() {
                         key={l.to}
                         to={l.to}
                         onClick={() => setMobileOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl transition-all ${isLinkActive ? 'text-brand-600 bg-brand-50 font-semibold' : 'text-slate-600 hover:bg-slate-50'
-                          }`}
+                        className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl transition-all ${
+                          isLinkActive ? 'text-brand-600 bg-brand-50 font-semibold' : 'text-slate-600 hover:bg-slate-50'
+                        }`}
                       >
                         <l.icon className="w-4 h-4 text-slate-400" />
                         {l.label}
@@ -253,16 +361,17 @@ export default function Navbar() {
               {/* Staff Desk */}
               {isStaff && (
                 <div className="space-y-1">
-                  <p className="text-xs uppercase tracking-wider text-accent-500 mb-3 px-3 font-bold">Staff Desk</p>
-                  {staffLinks.map(l => {
+                  <p className="text-xs uppercase tracking-wider text-orange-500 mb-3 px-3 font-bold">Staff Desk</p>
+                  {STAFF_LINKS.map(l => {
                     const isLinkActive = active === l.to || active.startsWith(l.to + '/')
                     return (
                       <Link
                         key={l.to}
                         to={l.to}
                         onClick={() => setMobileOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl transition-all ${isLinkActive ? 'text-accent-600 bg-accent-50 font-semibold' : 'text-slate-600 hover:bg-slate-50'
-                          }`}
+                        className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl transition-all ${
+                          isLinkActive ? 'text-orange-600 bg-orange-50 font-semibold' : 'text-slate-600 hover:bg-slate-50'
+                        }`}
                       >
                         <l.icon className="w-4 h-4 text-slate-400" />
                         {l.label}
@@ -276,9 +385,25 @@ export default function Navbar() {
               <div className="pt-4 border-t border-slate-100">
                 {user ? (
                   <div className="space-y-3">
-                    <div className="px-3 py-2 bg-slate-50 rounded-xl">
-                      <p className="text-sm font-semibold text-slate-800">{user.name}</p>
-                      <p className="text-xs text-slate-400">{user.email}</p>
+                    {/* User info card */}
+                    <div className="px-4 py-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold flex-shrink-0 ${
+                        isStaff
+                          ? 'bg-gradient-to-br from-orange-500 to-amber-400'
+                          : 'bg-gradient-to-br from-brand-500 to-brand-400'
+                      }`}>
+                        {(user.user_metadata?.full_name || user.name || user.email || 'U')
+                          .split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-slate-900 truncate">
+                          {user.user_metadata?.full_name || user.name || user.email?.split('@')[0]}
+                        </p>
+                        <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                        <p className={`text-[10px] font-bold mt-0.5 ${isStaff ? 'text-orange-500' : 'text-brand-500'}`}>
+                          {isStaff ? 'Travel Agent' : 'Traveller'}
+                        </p>
+                      </div>
                     </div>
                     <button
                       onClick={handleLogout}

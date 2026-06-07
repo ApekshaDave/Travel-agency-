@@ -6,51 +6,67 @@ import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 
 export default function AuthCallback() {
-  const { setUser } = useAuth()
+  const { handleOAuthCallback } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
   useEffect(() => {
     const token = searchParams.get('token')
-    const role = searchParams.get('role')
+    const role  = searchParams.get('role')
     const email = searchParams.get('email')
-    const name = searchParams.get('name')
+    const name  = searchParams.get('name')
     const phone = searchParams.get('phone')
+    const needsProfile = searchParams.get('needs_profile') === 'true'
 
-    if (!token || !role || !email) {
-      toast.error('Authentication callback failed. Missing credentials.')
+    if (!token || !email) {
+      toast.error('Authentication failed. Missing credentials.')
+      navigate('/login')
+      return
+    }
+
+    // If the backend says this Google user has no profile yet,
+    // send them to complete-profile with the temp token + intent
+    if (needsProfile) {
+      const intent = searchParams.get('intent') || 'user'
+      navigate(
+        `/complete-profile?token=${token}&email=${encodeURIComponent(email)}&name=${encodeURIComponent(name || '')}&intent=${intent}`,
+        { replace: true }
+      )
+      return
+    }
+
+    if (!role) {
+      toast.error('Authentication failed. Missing role.')
       navigate('/login')
       return
     }
 
     try {
-      // 1. Establish session in localStorage
-      localStorage.setItem('voyageai_jwt_token', token)
-
       const loggedUser = {
         email,
         name: decodeURIComponent(name || 'Traveler'),
         role,
-        phone: phone ? decodeURIComponent(phone) : ''
+        phone: phone ? decodeURIComponent(phone) : '',
+        // Mirror what Supabase user_metadata looks like so Navbar UserPill works
+        user_metadata: {
+          full_name: decodeURIComponent(name || 'Traveler'),
+          email,
+        }
       }
 
-      localStorage.setItem('voyageai_user', JSON.stringify(loggedUser))
+      // Use the context method so token state + localStorage stay in sync
+      handleOAuthCallback(token, loggedUser)
 
-      // 2. Set user state in AuthContext
-      setUser(loggedUser)
+      toast.success(`Welcome back, ${loggedUser.name}!`)
 
-      // 3. Notify success
-      toast.success(`Welcome to your journey, ${loggedUser.name}!`)
-
-      // 4. Redirect based on role
-      const isStaff = role === 'agent' || role === 'admin' || role === 'finance'
-      navigate(isStaff ? '/agent' : '/dashboard', { replace: true })
+      const isStaff = ['agent', 'admin', 'finance'].includes(role)
+      navigate(isStaff ? '/staff' : '/dashboard', { replace: true })
     } catch (err) {
       console.error('Session establishment error:', err)
       toast.error('Failed to log in. Please try again.')
       navigate('/login')
     }
-  }, [searchParams, navigate, setUser])
+  }, [searchParams, navigate, handleOAuthCallback])
 
   return (
     <div className="min-h-screen relative flex items-center justify-center bg-void">

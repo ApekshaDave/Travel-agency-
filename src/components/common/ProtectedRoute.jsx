@@ -25,8 +25,11 @@ export default function ProtectedRoute({ children, requiredRole, loginPath = '/l
     return <Navigate to={loginPath} state={{ from: location }} replace />
   }
 
-  if (requiredRole && user?.role !== requiredRole && user?.role !== 'admin') {
-    return <Navigate to={loginPath} state={{ from: location }} replace />
+  if (requiredRole) {
+    const STAFF_ROLES = ['agent', 'admin', 'finance']
+    if (!STAFF_ROLES.includes(user.role)) {
+      return <Navigate to="/dashboard" replace />
+    }
   }
 
   return children

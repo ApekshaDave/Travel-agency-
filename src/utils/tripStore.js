@@ -53,6 +53,53 @@ export function saveTrip(trip, user) {
   return entry
 }
 
+/**
+ * Submit an existing trip to an agent for review.
+ * Marks status as 'submitted' and persists both locally and in Supabase.
+ *
+ * @param {string} tripId - The ID of the trip to submit
+ * @param {object} user   - The current user object (id, name, email)
+ * @returns {object|null} The updated trip entry, or null if not found
+ */
+export function submitTripToAgent(tripId, user) {
+  const all = getAllTrips()
+  const index = all.findIndex(t => t.id === tripId)
+
+  if (index === -1) {
+    console.error(`submitTripToAgent: trip "${tripId}" not found`)
+    return null
+  }
+
+  const updatedEntry = {
+    ...all[index],
+    status: 'submitted',
+    submittedAt: new Date().toISOString(),
+    submittedBy: {
+      id: user?.id || 'guest',
+      name: user?.name || 'Guest',
+      email: user?.email || '',
+    },
+  }
+
+  all[index] = updatedEntry
+  localStorage.setItem(STORE_KEY, JSON.stringify(all))
+
+  // Sync to Supabase in background
+  if (hasSupabase && supabase) {
+    supabase.from('trips').update({
+      status: 'submitted',
+      submitted_at: updatedEntry.submittedAt,
+      submitted_by_id: updatedEntry.submittedBy.id,
+      submitted_by_name: updatedEntry.submittedBy.name,
+      submitted_by_email: updatedEntry.submittedBy.email,
+    }).eq('id', tripId).then(({ error }) => {
+      if (error) console.error("Supabase submitTripToAgent failed:", error)
+    })
+  }
+
+  return updatedEntry
+}
+
 export function getAllTrips() {
   try {
     return JSON.parse(localStorage.getItem(STORE_KEY) || '[]')

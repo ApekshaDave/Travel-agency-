@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
-import { motion} from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-   
   ArrowRight,
   Globe, Sparkles,
   ShieldCheck,
@@ -14,9 +13,9 @@ import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 
 export default function LoginPage() {
-  const [loading, setLoading] = useState(false)
+  const [loadingIntent, setLoadingIntent] = useState(null) // 'user' | 'agent' | null
   const navigate = useNavigate()
-  
+
   const { user, signInWithOAuth } = useAuth()
 
   // Redirect users who are already logged in
@@ -27,21 +26,25 @@ export default function LoginPage() {
     }
   }, [user, navigate])
 
-  const handleSocialLogin = async (provider) => {
-    setLoading(true)
+  // intent = 'user' for traveler, 'agent' for travel agent
+  const handleSocialLogin = async (provider, intent = 'user') => {
+    setLoadingIntent(intent)
     try {
-      await signInWithOAuth(provider)
+      await signInWithOAuth(provider, intent)
+      // Page redirects automatically to Google — no need to reset state
     } catch (err) {
       toast.error(`${provider} login failed: ${err.message}`)
-    } finally {
-      setLoading(false)
+      setLoadingIntent(null)
     }
   }
+
+  const isLoading = loadingIntent !== null
 
   return (
     <div className="min-h-screen relative flex items-center justify-center py-20 px-4 bg-white">
       <div className="absolute inset-0 starfield pointer-events-none" />
       <div className="relative z-10 w-full max-w-[900px] flex flex-col md:flex-row glass border border-slate-200 rounded-[2.5rem] overflow-hidden shadow-2xl">
+
         {/* Left Side: Brand Panel */}
         <div className="hidden md:flex md:w-[45%] bg-blue-600 p-12 flex-col justify-between text-white relative">
           <div className="relative z-10">
@@ -77,48 +80,76 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Right Side: Simple Google Auth */}
+        {/* Right Side: Google Auth */}
         <div className="flex-1 bg-white p-8 sm:p-12 lg:p-16 flex flex-col justify-center">
           <div className="max-w-sm mx-auto w-full text-center">
             <h1 className="text-slate-900 text-3xl font-extrabold tracking-tight mb-2">Welcome back</h1>
             <p className="text-slate-500 text-sm mb-10">Choose your path to begin your journey.</p>
 
             <div className="space-y-4">
+
+              {/* Traveler button — intent = 'user' */}
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleSocialLogin('google')}
-                className="w-full flex items-center justify-center gap-4 py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-blue-500/20 shadow-lg hover:bg-blue-700 transition-all text-lg group"
+                whileHover={{ scale: isLoading ? 1 : 1.02 }}
+                whileTap={{ scale: isLoading ? 1 : 0.98 }}
+                onClick={() => handleSocialLogin('google', 'user')}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-4 py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-blue-500/20 shadow-lg hover:bg-blue-700 transition-all text-lg group disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                <Globe className="w-6 h-6 text-white" />
-                Continue as Traveler
-                <ArrowRight className="w-5 h-5 opacity-0 group-hover:translate-x-1 group-hover:opacity-100 transition-all" />
+                {loadingIntent === 'user' ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Globe className="w-6 h-6 text-white" />
+                    Continue as Traveler
+                    <ArrowRight className="w-5 h-5 opacity-0 group-hover:translate-x-1 group-hover:opacity-100 transition-all" />
+                  </>
+                )}
               </motion.button>
 
               <div className="relative py-4">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
-                <div className="relative flex justify-center text-[10px] uppercase tracking-widest"><span className="px-4 bg-white text-slate-400 font-bold">Or</span></div>
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-100" />
+                </div>
+                <div className="relative flex justify-center text-[10px] uppercase tracking-widest">
+                  <span className="px-4 bg-white text-slate-400 font-bold">Or</span>
+                </div>
               </div>
 
+              {/* Travel Agent button — intent = 'agent' */}
               <motion.button
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                onClick={() => handleSocialLogin('google')}
-                className="w-full flex items-center justify-center gap-3 py-3.5 border-2 border-slate-100 text-slate-700 font-bold rounded-2xl hover:bg-slate-50 transition-all"
+                whileHover={{ scale: isLoading ? 1 : 1.01 }}
+                whileTap={{ scale: isLoading ? 1 : 0.99 }}
+                onClick={() => handleSocialLogin('google', 'agent')}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-3 py-3.5 border-2 border-slate-100 text-slate-700 font-bold rounded-2xl hover:bg-slate-50 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                <Building2 className="w-5 h-5 text-blue-600" />
-                I am a Travel Agent
+                {loadingIntent === 'agent' ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Building2 className="w-5 h-5 text-blue-600" />
+                    I am a Travel Agent
+                  </>
+                )}
               </motion.button>
             </div>
 
-            {loading && (
-              <div className="mt-8 flex flex-col items-center gap-3">
-                <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                <p className="text-xs text-slate-400 font-medium animate-pulse">Establishing secure session...</p>
-              </div>
+            {/* Redirect hint while loading */}
+            {isLoading && (
+              <p className="mt-6 text-xs text-slate-400 font-medium animate-pulse">
+                Redirecting to Google — please wait...
+              </p>
             )}
           </div>
         </div>
+
       </div>
     </div>
   )

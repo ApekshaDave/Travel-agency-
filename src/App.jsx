@@ -20,6 +20,7 @@ import ItineraryPage from './pages/ItineraryPage'
 import LoginPage from './pages/LoginPage'
 import AuthCallback from './pages/AuthCallback'
 import CompleteProfile from './pages/CompleteProfile'
+import ReviewTripPage from './pages/ReviewTripPage'
 
 // Phase 2
 import PostBookingHub from './pages/PostBookingHub'
@@ -191,6 +192,7 @@ export default function App() {
                 <Route path="/buses" element={<BusSearch />} />
                 <Route path="/trip-builder" element={<TripBuilder />} />
                 <Route path="/passenger-details" element={<PassengerDetailsPage />} />
+                <Route path="/review-trip" element={<ReviewTripPage />} />
 
                 {/* 404 Catch-All */}
                 <Route path="*" element={<NotFoundPage />} />

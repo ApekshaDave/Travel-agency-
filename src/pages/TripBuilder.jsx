@@ -1,16 +1,16 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Sparkles, Plane, Train, Bus, Building2, Trash2, Clock, ChevronRight,
-  CheckCircle, DollarSign, Zap, Compass, Landmark, Utensils, Trees, ShoppingBag, MapPin,
-  Edit3, Coffee, Sun, Moon, Calendar as CalendarIcon, HelpCircle, Car, Send, User
+   DollarSign, Zap, Compass, Landmark, Utensils, Trees, ShoppingBag, MapPin,
+  Edit3, Coffee, Sun, Moon, Calendar as CalendarIcon, HelpCircle, Car, Send, User, ArrowRight
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import { generateMultiModalTrip } from '../utils/multiModalApi'
 import { supabase } from '../utils/supabaseClient'
-import { saveTrip, getTripById, updateTripItinerary } from '../utils/tripStore'
+import {  getTripById, updateTripItinerary } from '../utils/tripStore'
 
 
 // ── Segment types ─────────────────────────────────────────────────────────────
@@ -233,6 +233,7 @@ function TripSegment({ segment, onRemove, onEdit, index, isAgent }) {
 // ── Main TripBuilder ──────────────────────────────────────────────────────────
 export default function TripBuilder() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [prompt, setPrompt] = useState('')
   const inputRef = useRef(null)
   const [generating, setGenerating] = useState(false)
@@ -315,10 +316,10 @@ export default function TripBuilder() {
 
     // Load passenger details from local storage if coming from PassengerDetailsPage
     const storedPassengers = localStorage.getItem('voyageai_passenger_details')
-if (storedPassengers) {
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  setPassengerDetails(JSON.parse(storedPassengers))
-}
+    if (storedPassengers) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPassengerDetails(JSON.parse(storedPassengers))
+    }
   }, [user])
 
   // Navigation tabs
@@ -1015,10 +1016,9 @@ if (storedPassengers) {
                     <div className="flex overflow-x-auto gap-0.5 border-b border-white/10 pb-px mb-5 sm:mb-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                       {[
                         { id: 'itinerary', label: '📋 Plan' },
-                        { id: 'transport_to', label: '✈️ To Destination' },
-                        { id: 'transport_within', label: '🚂 Within City (Train)' },
-                        { id: 'buses', label: '🚌 Buses' },
-                        { id: 'roadways', label: '🚗 Roadways' },
+                        { id: 'transport_to', label: '🛫 To Destination' },
+                        { id: 'transport_within', label: '🚗 Within City' },
+                        { id: 'transport_from', label: '🏠 From Dest (Home)' },
                         { id: 'stay', label: '🏨 Stay' },
                         { id: 'attractions', label: '🏛 Sights' },
                         { id: 'dining', label: '🍲 Dining' }
@@ -1616,17 +1616,17 @@ if (storedPassengers) {
                       <span className="text-gold-400 font-bold text-xl font-mono">₹{grandTripTotal.toLocaleString()}</span>
                     </div>
 
-                    {/* Save itinerary option */}
+                    {/* Proceed to Review */}
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => {
-                        const entry = saveTrip(activeTrip, user)
-                        toast.success(`Trip saved! Ref: ${entry.id.slice(-6).toUpperCase()}`)
+                        localStorage.setItem('voyageai_active_trip', JSON.stringify(activeTrip))
+                        navigate('/review-trip')
                       }}
-                      className="w-full py-3 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold rounded-xl shadow-gold-sm hover:shadow-gold transition-all flex items-center justify-center gap-2 text-xs"
+                      className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2 text-sm"
                     >
-                      <CheckCircle className="w-4 h-4" /> Save Package Details
+                      <ArrowRight className="w-4 h-4" /> Review & Confirm Booking
                     </motion.button>
 
                     {activeTrip?.isAgentView && (
