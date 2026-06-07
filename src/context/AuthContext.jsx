@@ -35,23 +35,28 @@ export function AuthProvider({ children }) {
       return null
     }
   })
+  const [token, setToken] = useState(() => localStorage.getItem('voyageai_jwt_token'))
   const [loading, setLoading] = useState(true)
 
   // Check for existing session on load
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const token = localStorage.getItem('voyageai_jwt_token')
-        if (!token) {
+        const storedToken = localStorage.getItem('voyageai_jwt_token')
+        if (!storedToken) {
           setLoading(false)
           return
         }
         const session = await api.request('/api/auth/session')
-        if (session.user) setUser(session.user)
+        if (session.user) {
+          setUser(session.user)
+          setToken(storedToken)
+        }
       } catch (err) {
         localStorage.removeItem('voyageai_jwt_token')
         localStorage.removeItem('voyageai_user')
         setUser(null)
+        setToken(null)
       } finally {
         setLoading(false)
       }
@@ -72,6 +77,7 @@ export function AuthProvider({ children }) {
       }
 
       setUser(response.user)
+      setToken(response.token)
       localStorage.setItem('voyageai_jwt_token', response.token)
       localStorage.setItem('voyageai_user', JSON.stringify(response.user))
       return response.user
@@ -90,6 +96,7 @@ export function AuthProvider({ children }) {
         body: JSON.stringify({ email, password, name, ...options })
       })
       setUser(response.user)
+      setToken(response.token)
       localStorage.setItem('voyageai_jwt_token', response.token)
       localStorage.setItem('voyageai_user', JSON.stringify(response.user))
       return response.user
@@ -109,6 +116,7 @@ export function AuthProvider({ children }) {
       })
       
       setUser(response.user)
+      setToken(response.token)
       localStorage.setItem('voyageai_jwt_token', response.token)
       localStorage.setItem('voyageai_user', JSON.stringify(response.user))
       return response.user
@@ -128,6 +136,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('voyageai_jwt_token')
     localStorage.removeItem('voyageai_user')
     setUser(null)
+    setToken(null)
   }
 
   const signInWithOAuth = async (provider) => {
@@ -136,7 +145,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, completeProfileRegister, logout, signInWithOAuth, isAuthenticated: !!user, setUser }}>
+    <AuthContext.Provider value={{ user, token, loading, login, signup, completeProfileRegister, logout, signInWithOAuth, isAuthenticated: !!user, setUser }}>
       {children}
     </AuthContext.Provider>
   )

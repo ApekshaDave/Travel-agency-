@@ -1,99 +1,216 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { getAllTrips, updateTripStatus, deleteTrip } from '../utils/tripStore'
+import { useState, useEffect, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Plane, Users, Calendar,
-  DollarSign, Sparkles, Clock, CheckCircle, AlertTriangle,
-  Trash2, ChevronDown, ChevronUp, RefreshCw, FileText, Map
+  Plane, Users, Calendar, DollarSign, Sparkles, Clock,
+  CheckCircle, AlertTriangle, Trash2, ChevronDown, ChevronUp,
+  RefreshCw, FileText, Map, UserCheck, EyeOff, Undo2, Car,
+  Phone, User, AlertCircle, X
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import StaffNav from '../components/layout/StaffNav'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
+const VEHICLE_TYPES = [
+  { value: 'Sedan',           label: 'Sedan',           capacity: 4 },
+  { value: 'SUV',             label: 'SUV / MUV',       capacity: 6 },
+  { value: 'Tempo Traveller', label: 'Tempo Traveller', capacity: 12 },
+  { value: 'Mini Bus',        label: 'Mini Bus',        capacity: 20 },
+  { value: 'Luxury SUV',      label: 'Luxury SUV',      capacity: 5 },
+]
 
 const STATUS_CONFIG = {
-  pending: { color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/20', label: 'Pending Review' },
-  reviewed: { color: 'text-sky-400', bg: 'bg-sky-400/10 border-sky-400/20', label: 'Reviewed' },
-  booked: { color: 'text-sage-400', bg: 'bg-sage-400/10 border-sage-400/20', label: 'Booked' },
-  cancelled: { color: 'text-red-400', bg: 'bg-red-400/10 border-red-400/20', label: 'Cancelled' },
+  pending:  { color: 'text-sand-400',   bg: 'badge-pending',   label: 'Pending Review',  dot: 'bg-sand-400' },
+  accepted: { color: 'text-ocean-400',  bg: 'badge-accepted',  label: 'Accepted',         dot: 'bg-ocean-400' },
+  reviewed: { color: 'text-sky-400',    bg: 'badge-reviewed',  label: 'Reviewed',         dot: 'bg-sky-400' },
+  booked:   { color: 'text-forest-400', bg: 'badge-booked',    label: 'Booked',           dot: 'bg-forest-400' },
+  cancelled:{ color: 'text-coral-400',  bg: 'badge-cancelled', label: 'Cancelled',        dot: 'bg-coral-400' },
+}
+const SEGMENT_ICONS = { flight: '✈️', train: '🚂', bus: '🚌', roadways: '🚗', hotel: '🏨' }
+
+// ─── Driver Assignment Panel ─────────────────────────────────────────────────
+function DriverPanel({ tripData, passengers, onSave }) {
+  const [driverName, setDriverName]     = useState(tripData?.driverName || '')
+  const [driverPhone, setDriverPhone]   = useState(tripData?.driverPhone || '')
+  const [vehicleType, setVehicleType]   = useState(tripData?.vehicleType || 'SUV')
+  const [saving, setSaving]             = useState(false)
+
+  const vehicle = VEHICLE_TYPES.find(v => v.value === vehicleType) || VEHICLE_TYPES[1]
+  const vehiclesNeeded = Math.ceil((passengers || 1) / vehicle.capacity)
+
+  const handleSave = async () => {
+    setSaving(true)
+    await onSave({ driverName, driverPhone, vehicleType, vehiclesNeeded })
+    setSaving(false)
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      className="mt-4 rounded-2xl p-4 border"
+      style={{ background: 'rgba(247, 201, 72, 0.06)', borderColor: 'rgba(247, 201, 72, 0.2)' }}
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <Car className="w-4 h-4 text-sand-400" />
+        <p className="text-sand-400 text-xs font-bold uppercase tracking-wider">Road Trip — Driver & Vehicle Assignment</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label className="text-[10px] text-muted uppercase font-bold block mb-1">Driver Name</label>
+          <div className="relative">
+            <User className="absolute left-3 top-2.5 w-3.5 h-3.5 text-muted" />
+            <input
+              value={driverName} onChange={e => setDriverName(e.target.value)}
+              placeholder="Enter driver's full name"
+              className="w-full ai-input pl-8 pr-3 py-2 rounded-xl text-sm"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="text-[10px] text-muted uppercase font-bold block mb-1">Driver Phone</label>
+          <div className="relative">
+            <Phone className="absolute left-3 top-2.5 w-3.5 h-3.5 text-muted" />
+            <input
+              value={driverPhone} onChange={e => setDriverPhone(e.target.value)}
+              placeholder="+91 98765 43210"
+              className="w-full ai-input pl-8 pr-3 py-2 rounded-xl text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label className="text-[10px] text-muted uppercase font-bold block mb-1">Vehicle Type</label>
+          <select
+            value={vehicleType} onChange={e => setVehicleType(e.target.value)}
+            className="w-full ai-input px-3 py-2 rounded-xl text-sm"
+          >
+            {VEHICLE_TYPES.map(v => (
+              <option key={v.value} value={v.value} className="bg-deep">
+                {v.label} ({v.capacity} seats)
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] text-muted uppercase font-bold block mb-1">Vehicles Needed</label>
+          <div className="px-3 py-2 glass rounded-xl text-sm text-white font-bold flex items-center gap-2">
+            <Car className="w-3.5 h-3.5 text-sand-400" />
+            {vehiclesNeeded} × {vehicleType}
+            <span className="text-muted text-xs font-normal">({passengers} pax)</span>
+          </div>
+        </div>
+      </div>
+
+      <button
+        onClick={handleSave}
+        disabled={saving || !driverName}
+        className="px-4 py-2 rounded-xl text-sm font-bold transition-all btn-ocean flex items-center gap-2 disabled:opacity-50"
+      >
+        <CheckCircle className="w-3.5 h-3.5" />
+        {saving ? 'Saving…' : 'Save Driver Details'}
+      </button>
+    </motion.div>
+  )
 }
 
-const SEGMENT_ICONS = {
-  flight: '✈️', train: '🚂', bus: '🚌', roadways: '🚗', hotel: '🏨'
-}
+// ─── Trip Card ───────────────────────────────────────────────────────────────
+function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEmail }) {
+  const [expanded, setExpanded]     = useState(false)
+  const [notes, setNotes]           = useState(entry.agent_notes || '')
+  const [status, setStatus]         = useState(entry.status || 'pending')
+  const [accepting, setAccepting]   = useState(false)
 
-function TripCard({ entry, onUpdate, onDelete }) {
-  const [expanded, setExpanded] = useState(false)
-  const [notes, setNotes] = useState(entry.agentNotes || '')
-  const [status, setStatus] = useState(entry.status || 'pending')
-  const cfg = STATUS_CONFIG[status]
+  const trip      = entry.trip_data || {}
+  const cfg       = STATUS_CONFIG[status] || STATUS_CONFIG.pending
+  const isAccepted = entry.status === 'accepted'
+  const isMine     = entry.assigned_agent_email === currentUserEmail
+  const hasRoad    = trip.segments?.some(s => s.type === 'roadways')
 
-  const handleSave = () => {
-    onUpdate(entry.id, status, notes)
-    toast.success('Trip updated!')
+  const handleAccept = async () => {
+    setAccepting(true)
+    await onAccept(entry.id)
+    setAccepting(false)
+  }
+
+  const handleDriverSave = async (driverDetails) => {
+    const updatedTrip = { ...trip, ...driverDetails }
+    await onUpdate(entry.id, { trip_data: updatedTrip, status: 'reviewed', agent_name: currentUserEmail })
+    toast.success('Driver details saved!')
   }
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`glass border rounded-2xl overflow-hidden transition-all ${status === 'pending' ? 'border-amber-400/20' :
-        status === 'booked' ? 'border-sage-400/20' :
-          status === 'cancelled' ? 'border-red-400/20' : 'border-border'
-        }`}
+      exit={{ opacity: 0, scale: 0.97 }}
+      className="travel-card overflow-hidden"
+      style={{
+        borderColor: isAccepted && isMine
+          ? 'rgba(0, 201, 177, 0.3)'
+          : status === 'pending'
+          ? 'rgba(247, 201, 72, 0.2)'
+          : 'rgba(255,255,255,0.08)'
+      }}
     >
-      {/* Card Header */}
+      {/* Accepted by me — ocean top bar */}
+      {isAccepted && isMine && (
+        <div className="h-1" style={{ background: 'linear-gradient(90deg, #00A896, #00C9B1, #45B7D1)' }} />
+      )}
+
       <div className="p-5">
         <div className="flex items-start justify-between gap-4 flex-wrap">
+          {/* Customer info */}
           <div className="flex items-start gap-4">
-            {/* Customer avatar */}
-            <div className="w-10 h-10 rounded-xl bg-gold-400/15 border border-gold-400/20 flex items-center justify-center flex-shrink-0">
-              <span className="text-gold-400 font-bold text-sm">
-                {entry.customer.name?.charAt(0).toUpperCase()}
-              </span>
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm text-white"
+                 style={{ background: 'linear-gradient(135deg, #FF6B6B, #F7C948)' }}>
+              {(entry.customer_name || 'U').charAt(0).toUpperCase()}
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-white font-bold text-sm">{entry.customer.name}</h3>
-                <span className="text-muted text-xs">{entry.customer.email}</span>
-                {entry.customer.phone && (
-                  <span className="text-gold-400 text-xs font-mono ml-1">· {entry.customer.phone}</span>
-                )}
+                <h3 className="text-white font-bold text-sm">{entry.customer_name || 'Unknown'}</h3>
+                <span className="text-muted text-xs">{entry.customer_email}</span>
               </div>
               <div className="flex items-center gap-3 mt-1 flex-wrap">
-                <span className="text-gold-400 font-bold text-base">{entry.trip.name}</span>
-                {entry.trip.isAI && (
-                  <span className="px-2 py-0.5 bg-gold-400/10 border border-gold-400/20 text-gold-400 text-[10px] rounded-full font-bold flex items-center gap-1">
-                    <Sparkles className="w-2.5 h-2.5" /> AI Generated
+                <span className="text-sand-400 font-bold text-base">{trip.name || 'Unnamed Trip'}</span>
+                {trip.isAI && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1"
+                        style={{ background: 'rgba(247,201,72,0.12)', border: '1px solid rgba(247,201,72,0.25)', color: '#F7C948' }}>
+                    <Sparkles className="w-2.5 h-2.5" /> AI
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-3 mt-1 text-xs text-muted flex-wrap">
+                <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {trip.duration}</span>
+                <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {trip.passengers} pax</span>
                 <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> {entry.trip.duration}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Users className="w-3 h-3" /> {entry.trip.passengers} passenger{entry.trip.passengers > 1 ? 's' : ''}
-                </span>
-                <span className="flex items-center gap-1">
-                  <DollarSign className="w-3 h-3 text-gold-400" />
-                  <span className="text-gold-400 font-bold">₹{entry.trip.totalCost.toLocaleString()}</span>
+                  <DollarSign className="w-3 h-3 text-sand-400" />
+                  <span className="text-sand-400 font-bold">₹{trip.totalCost?.toLocaleString()}</span>
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  {new Date(entry.savedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  {new Date(entry.saved_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </span>
               </div>
             </div>
           </div>
 
+          {/* Right: status + actions */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span className={`px-2.5 py-1 rounded-lg border text-xs font-bold ${cfg.bg} ${cfg.color}`}>
+            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${cfg.bg} ${cfg.color} flex items-center gap-1.5`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
               {cfg.label}
             </span>
             <button
               onClick={() => setExpanded(!expanded)}
-              className="p-2 glass border border-border rounded-xl text-muted hover:text-white transition-all"
+              className="p-2 glass border rounded-xl text-muted hover:text-white transition-all"
+              style={{ borderColor: 'rgba(255,255,255,0.08)' }}
             >
               {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
@@ -102,164 +219,338 @@ function TripCard({ entry, onUpdate, onDelete }) {
 
         {/* Segment pills */}
         <div className="flex gap-2 mt-3 flex-wrap">
-          {entry.trip.segments.map((seg, i) => (
-            <span key={i} className="px-2 py-1 glass border border-border rounded-lg text-xs text-muted flex items-center gap-1">
-              {SEGMENT_ICONS[seg.type] || '📍'}
-              {seg.from}{seg.to ? ` → ${seg.to}` : ''} · ₹{seg.price?.toLocaleString()}
+          {(trip.segments || []).map((seg, i) => (
+            <span key={i} className="px-2 py-1 glass border rounded-lg text-xs text-muted flex items-center gap-1"
+                  style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+              {SEGMENT_ICONS[seg.type] || '📍'} {seg.from}{seg.to ? ` → ${seg.to}` : ''} · ₹{seg.price?.toLocaleString()}
             </span>
           ))}
         </div>
+
+        {/* Quick Accept/Ignore bar for pending trips */}
+        {status === 'pending' && (
+          <div className="flex gap-2 mt-4">
+            <motion.button
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              onClick={handleAccept}
+              disabled={accepting}
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 btn-ocean disabled:opacity-60"
+            >
+              {accepting
+                ? <RefreshCw className="w-4 h-4 animate-spin" />
+                : <UserCheck className="w-4 h-4" />}
+              {accepting ? 'Accepting…' : 'Accept Trip'}
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              onClick={() => onIgnore(entry.id, entry.customer_name)}
+              className="px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 glass border transition-all hover:border-coral-400/30 hover:text-coral-400"
+              style={{ borderColor: 'rgba(255,255,255,0.08)', color: '#7A9BB5' }}
+            >
+              <EyeOff className="w-4 h-4" /> Ignore
+            </motion.button>
+          </div>
+        )}
+
+        {/* Already accepted by this agent */}
+        {isAccepted && isMine && (
+          <div className="mt-3 px-3 py-2 rounded-xl text-sm flex items-center gap-2"
+               style={{ background: 'rgba(0,201,177,0.08)', border: '1px solid rgba(0,201,177,0.2)' }}>
+            <UserCheck className="w-4 h-4 text-ocean-400" />
+            <span className="text-ocean-400 font-semibold">You are the assigned travel partner for this trip</span>
+          </div>
+        )}
+        {/* Accepted by another agent */}
+        {isAccepted && !isMine && (
+          <div className="mt-3 px-3 py-2 rounded-xl text-sm flex items-center gap-2"
+               style={{ background: 'rgba(69,183,209,0.08)', border: '1px solid rgba(69,183,209,0.2)' }}>
+            <AlertCircle className="w-4 h-4 text-sky-400" />
+            <span className="text-sky-400 text-xs">Assigned to <strong>{entry.assigned_agent_name}</strong></span>
+          </div>
+        )}
       </div>
 
-      {/* Expanded Detail Panel */}
-      {expanded && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="border-t border-border/50 p-5 space-y-5"
-        >
-          {/* Cost breakdown */}
-          {entry.trip.costComparison && (
-            <div className="p-4 bg-gold-400/5 border border-gold-400/20 rounded-xl">
-              <p className="text-gold-300 text-xs font-bold mb-1 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" /> AI Route Suggestion
-              </p>
-              <p className="text-gold-200/70 text-xs leading-relaxed">{entry.trip.costComparison.aiSuggestion}</p>
-            </div>
-          )}
+      {/* ── Expanded Detail Panel ── */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden border-t"
+            style={{ borderColor: 'rgba(255,255,255,0.06)' }}
+          >
+            <div className="p-5 space-y-5">
+              {/* AI suggestion */}
+              {trip.costComparison && (
+                <div className="p-4 rounded-xl"
+                     style={{ background: 'rgba(247,201,72,0.06)', border: '1px solid rgba(247,201,72,0.2)' }}>
+                  <p className="text-sand-400 text-xs font-bold mb-1 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5" /> AI Route Suggestion
+                  </p>
+                  <p className="text-xs" style={{ color: 'rgba(247,201,72,0.7)' }}>
+                    {trip.costComparison.aiSuggestion}
+                  </p>
+                </div>
+              )}
 
-          {/* Places to visit */}
-          {entry.trip.placesToVisit?.length > 0 && (
-            <div>
-              <p className="text-white text-xs font-bold mb-2 uppercase tracking-wider">Places Requested</p>
-              <div className="flex gap-2 flex-wrap">
-                {entry.trip.placesToVisit.slice(0, 6).map((p, i) => (
-                  <span key={i} className="px-2.5 py-1 glass border border-border rounded-lg text-xs text-muted">
-                    {p.name}
-                  </span>
-                ))}
-                {entry.trip.placesToVisit.length > 6 && (
-                  <span className="px-2.5 py-1 glass border border-border rounded-lg text-xs text-muted">
-                    +{entry.trip.placesToVisit.length - 6} more
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
+              {/* Places */}
+              {trip.placesToVisit?.length > 0 && (
+                <div>
+                  <p className="text-white text-xs font-bold mb-2 uppercase tracking-wider">Places Requested</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {trip.placesToVisit.slice(0, 6).map((p, i) => (
+                      <span key={i} className="px-2.5 py-1 glass rounded-lg text-xs text-muted"
+                            style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+                        {p.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {/* Agent controls */}
-          <div className="space-y-3 pt-3 border-t border-border/50">
-            <p className="text-white text-xs font-bold uppercase tracking-wider">Agent Actions</p>
+              {/* Driver panel for road trips */}
+              {hasRoad && (
+                <DriverPanel
+                  tripData={trip}
+                  passengers={trip.passengers}
+                  onSave={handleDriverSave}
+                />
+              )}
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-[10px] text-muted uppercase font-bold block mb-1">Update Status</label>
-                <select
-                  value={status}
-                  onChange={e => setStatus(e.target.value)}
-                  className="w-full bg-white/5 border border-border rounded-xl px-3 py-2 text-sm text-white outline-none"
-                >
-                  <option value="pending" className="bg-deep">Pending Review</option>
-                  <option value="reviewed" className="bg-deep">Reviewed</option>
-                  <option value="booked" className="bg-deep">Booked</option>
-                  <option value="cancelled" className="bg-deep">Cancelled</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-[10px] text-muted uppercase font-bold block mb-1">Ref ID</label>
-                <div className="px-3 py-2 glass border border-border rounded-xl text-sm text-muted font-mono">
-                  {entry.id.slice(-8).toUpperCase()}
+              {/* Agent controls */}
+              <div className="space-y-3 pt-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                <p className="text-white text-xs font-bold uppercase tracking-wider">Agent Actions</p>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Update Status</label>
+                    <select
+                      value={status} onChange={e => setStatus(e.target.value)}
+                      className="w-full ai-input px-3 py-2 rounded-xl text-sm"
+                    >
+                      <option value="pending" className="bg-deep">Pending Review</option>
+                      <option value="accepted" className="bg-deep">Accepted</option>
+                      <option value="reviewed" className="bg-deep">Reviewed</option>
+                      <option value="booked" className="bg-deep">Booked</option>
+                      <option value="cancelled" className="bg-deep">Cancelled</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Trip Ref ID</label>
+                    <div className="px-3 py-2 glass rounded-xl text-sm text-muted font-mono"
+                         style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+                      {entry.id.slice(-8).toUpperCase()}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Agent Notes</label>
+                  <textarea
+                    value={notes} onChange={e => setNotes(e.target.value)}
+                    placeholder="Add notes for this trip request…"
+                    rows={2}
+                    className="w-full ai-input px-3 py-2 rounded-xl text-sm resize-none"
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => onUpdate(entry.id, { status, agent_notes: notes })}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 btn-ocean"
+                  >
+                    <CheckCircle className="w-4 h-4" /> Save Changes
+                  </button>
+                  <Link
+                    to={`/trip-builder?agentView=${entry.id}`}
+                    className="flex-1 py-2.5 glass border rounded-xl text-sm font-bold flex items-center justify-center gap-2 text-sky-400 hover:border-sky-400/30 transition-all"
+                    style={{ borderColor: 'rgba(69,183,209,0.2)' }}
+                  >
+                    <Map className="w-4 h-4" /> View Trip
+                  </Link>
+                  <button
+                    onClick={() => onDelete(entry.id)}
+                    className="p-2.5 glass border rounded-xl text-coral-400 hover:bg-coral-400/10 transition-all"
+                    style={{ borderColor: 'rgba(255,107,107,0.2)' }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             </div>
-
-            <div>
-              <label className="text-[10px] text-muted uppercase font-bold block mb-1">Agent Notes</label>
-              <textarea
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                placeholder="Add notes for this trip request..."
-                rows={2}
-                className="w-full bg-white/5 border border-border rounded-xl px-3 py-2 text-sm text-white outline-none resize-none focus:border-gold-400"
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={handleSave}
-                className="flex-1 py-2.5 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold rounded-xl text-sm flex items-center justify-center gap-2"
-              >
-                <CheckCircle className="w-4 h-4" /> Save Changes
-              </button>
-              <Link
-                to={`/trip-builder?agentView=${entry.id}`}
-                className="flex-1 py-2.5 glass border border-sky-400/20 text-sky-400 font-bold rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-sky-400/10 transition-all"
-              >
-                <Map className="w-4 h-4" /> View in Trip Builder
-              </Link>
-              <button
-                onClick={() => onDelete(entry.id)}
-                className="p-2.5 glass border border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-xl transition-all flex-shrink-0"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
 
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AgentTripsPage() {
+  const { user, token } = useAuth()
+  const [trips, setTrips]             = useState([])
+  const [loading, setLoading]         = useState(true)
+  const [filter, setFilter]           = useState('all')
+  const [undoStack, setUndoStack]     = useState([]) // { id, name, timeoutId }
 
-  const [filter, setFilter] = useState('all')
+  const authHeaders = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
 
-  const [trips, setTrips] = useState(() => getAllTrips().reverse())
-  const load = () => setTrips(getAllTrips().reverse())
+  const loadTrips = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(`${API}/api/trips`, { headers: authHeaders })
+      const data = await res.json()
+      setTrips(Array.isArray(data) ? data : [])
+    } catch (err) {
+      toast.error('Failed to load trips')
+    } finally {
+      setLoading(false)
+    }
+  }, [token])
 
-  const filtered = filter === 'all' ? trips : trips.filter(t => t.status === filter)
+  useEffect(() => { loadTrips() }, [loadTrips])
 
-  const counts = {
-    all: trips.length,
-    pending: trips.filter(t => t.status === 'pending').length,
-    reviewed: trips.filter(t => t.status === 'reviewed').length,
-    booked: trips.filter(t => t.status === 'booked').length,
+  // ── Accept Trip ──
+  const handleAccept = async (id) => {
+    try {
+      const res = await fetch(`${API}/api/trips/accept?id=${id}`, {
+        method: 'PATCH', headers: authHeaders
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        if (res.status === 409) toast.error('Another agent already accepted this trip.')
+        else toast.error(err.message || 'Failed to accept')
+        return
+      }
+      toast.success('🎉 You are now the Travel Partner for this trip!', { duration: 4000 })
+      loadTrips()
+    } catch {
+      toast.error('Network error accepting trip')
+    }
+  }
+
+  // ── Ignore Trip (with 5s undo) ──
+  const handleIgnore = (id, customerName) => {
+    // Optimistically remove from view
+    setTrips(prev => prev.filter(t => t.id !== id))
+
+    const timeoutId = setTimeout(async () => {
+      // Commit the ignore to DB
+      try {
+        await fetch(`${API}/api/trips/ignore?id=${id}`, {
+          method: 'PATCH', headers: authHeaders
+        })
+      } catch { /* fail silently */ }
+      setUndoStack(prev => prev.filter(u => u.id !== id))
+    }, 5000)
+
+    setUndoStack(prev => [...prev, { id, customerName, timeoutId }])
+  }
+
+  const handleUndo = async (id) => {
+    const item = undoStack.find(u => u.id === id)
+    if (!item) return
+    clearTimeout(item.timeoutId)
+    setUndoStack(prev => prev.filter(u => u.id !== id))
+    loadTrips() // restore
+    toast.success('Restored! Trip is back in your queue.')
+  }
+
+  // ── Update Trip ──
+  const handleUpdate = async (id, fields) => {
+    try {
+      const res = await fetch(`${API}/api/trips?id=${id}`, {
+        method: 'PATCH', headers: authHeaders, body: JSON.stringify(fields)
+      })
+      if (!res.ok) throw new Error()
+      toast.success('Trip updated!')
+      loadTrips()
+    } catch {
+      toast.error('Failed to update trip')
+    }
+  }
+
+  // ── Delete Trip ──
+  const handleDelete = async (id) => {
+    try {
+      await fetch(`${API}/api/trips?id=${id}`, { method: 'DELETE', headers: authHeaders })
+      toast.success('Trip removed')
+      loadTrips()
+    } catch {
+      toast.error('Failed to delete trip')
+    }
+  }
+
+  const statusCounts = {
+    all:       trips.length,
+    pending:   trips.filter(t => t.status === 'pending').length,
+    accepted:  trips.filter(t => t.status === 'accepted').length,
+    reviewed:  trips.filter(t => t.status === 'reviewed').length,
+    booked:    trips.filter(t => t.status === 'booked').length,
     cancelled: trips.filter(t => t.status === 'cancelled').length,
   }
 
-  const handleUpdate = (id, status, notes) => {
-    updateTripStatus(id, status, notes)
-    load()
-  }
+  const filtered = filter === 'all'
+    ? trips
+    : trips.filter(t => t.status === filter)
 
-  const handleDelete = (id) => {
-    deleteTrip(id)
-    load()
-    toast.success('Trip removed')
-  }
+  const myAccepted = trips.filter(t => t.status === 'accepted' && t.assigned_agent_email === user?.email)
 
   return (
-    <div className="min-h-screen pt-36 pb-16 px-4">
+    <div className="min-h-screen pt-36 pb-16 px-4 travel-hero-bg">
       <StaffNav />
       <div className="max-w-4xl mx-auto">
 
+        {/* Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="font-display text-3xl font-bold text-white mb-1">Customer Trip Requests</h1>
-          <p className="text-muted">All trips built by customers via Trip Builder — review, annotate and act.</p>
+          <div className="flex items-start justify-between flex-wrap gap-4">
+            <div>
+              <h1 className="font-display text-3xl font-bold text-white mb-1">
+                Customer Trip Requests
+              </h1>
+              <p className="text-muted">Review & accept trip requests — accepted trips assign you as Travel Partner</p>
+            </div>
+            <button onClick={loadTrips}
+                    className="p-2.5 glass border rounded-xl text-muted hover:text-white transition-all"
+                    style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </motion.div>
 
+        {/* My Accepted banner */}
+        {myAccepted.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 rounded-2xl"
+            style={{ background: 'rgba(0,201,177,0.08)', border: '1px solid rgba(0,201,177,0.25)' }}
+          >
+            <p className="text-ocean-400 font-bold text-sm flex items-center gap-2 mb-2">
+              <UserCheck className="w-4 h-4" /> You are the Travel Partner for {myAccepted.length} trip(s)
+            </p>
+            {myAccepted.map(t => (
+              <div key={t.id} className="text-xs text-muted">
+                • {t.customer_name} — {(t.trip_data?.name) || 'Unnamed Trip'}
+              </div>
+            ))}
+          </motion.div>
+        )}
+
         {/* Stats row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
           {[
-            { key: 'pending', label: 'Pending', color: 'text-amber-400', icon: AlertTriangle },
-            { key: 'reviewed', label: 'Reviewed', color: 'text-sky-400', icon: FileText },
-            { key: 'booked', label: 'Booked', color: 'text-sage-400', icon: CheckCircle },
-            { key: 'cancelled', label: 'Cancelled', color: 'text-red-400', icon: Trash2 },
-          ].map(({ key, label, color, icon: Icon }) => (
-            <div key={key} className="glass border border-border rounded-2xl p-4">
-              <Icon className={`w-4 h-4 ${color} mb-2`} />
-              <div className={`text-2xl font-bold ${color}`}>{counts[key]}</div>
+            { key: 'pending',  label: 'Pending',   icon: AlertTriangle, color: 'text-sand-400' },
+            { key: 'accepted', label: 'Accepted',  icon: UserCheck,     color: 'text-ocean-400' },
+            { key: 'reviewed', label: 'Reviewed',  icon: FileText,      color: 'text-sky-400' },
+            { key: 'booked',   label: 'Booked',    icon: CheckCircle,   color: 'text-forest-400' },
+            { key: 'cancelled',label: 'Cancelled', icon: Trash2,        color: 'text-coral-400' },
+          ].map(({ key, label, icon: Icon, color }) => (
+            <div key={key} className="travel-card p-4 text-center cursor-pointer"
+                 onClick={() => setFilter(key)}
+                 style={{ borderColor: filter === key ? 'rgba(0,201,177,0.3)' : undefined }}>
+              <Icon className={`w-4 h-4 ${color} mx-auto mb-2`} />
+              <div className={`text-2xl font-bold ${color}`}>{statusCounts[key]}</div>
               <div className="text-muted text-xs">{label}</div>
             </div>
           ))}
@@ -267,42 +558,89 @@ export default function AgentTripsPage() {
 
         {/* Filter tabs */}
         <div className="flex gap-2 mb-6 flex-wrap">
-          {['all', 'pending', 'reviewed', 'booked', 'cancelled'].map(f => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${filter === f
-                ? 'bg-gold-400/15 border-gold-400/30 text-gold-400'
-                : 'glass border-border text-muted hover:text-white'
-                }`}
-            >
-              {f.charAt(0).toUpperCase() + f.slice(1)} ({counts[f] ?? trips.length})
+          {['all', 'pending', 'accepted', 'reviewed', 'booked', 'cancelled'].map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                      filter === f
+                        ? 'text-ocean-400'
+                        : 'text-muted hover:text-white'
+                    }`}
+                    style={{
+                      background: filter === f ? 'rgba(0,201,177,0.12)' : 'rgba(22,32,50,0.7)',
+                      borderColor: filter === f ? 'rgba(0,201,177,0.3)' : 'rgba(255,255,255,0.08)'
+                    }}>
+              {f.charAt(0).toUpperCase() + f.slice(1)} ({statusCounts[f] ?? trips.length})
             </button>
           ))}
-          <button onClick={load} className="ml-auto p-1.5 glass border border-border rounded-xl text-muted hover:text-white transition-all">
-            <RefreshCw className="w-4 h-4" />
-          </button>
         </div>
 
         {/* Trip list */}
-        {filtered.length === 0 ? (
-          <div className="text-center py-20 glass border border-border rounded-3xl">
+        {loading ? (
+          <div className="text-center py-20">
+            <div className="w-12 h-12 border-2 border-ocean-400 border-t-transparent rounded-full mx-auto mb-4"
+                 style={{ animation: 'spin 1s linear infinite' }} />
+            <p className="text-muted">Loading trips…</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20 travel-card">
             <Plane className="w-12 h-12 text-muted/20 mx-auto mb-4" />
             <h3 className="text-white font-display text-xl mb-2">No trip requests yet</h3>
             <p className="text-muted text-sm">When customers save trips in Trip Builder, they'll appear here.</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {filtered.map(entry => (
-              <TripCard
-                key={entry.id}
-                entry={entry}
-                onUpdate={handleUpdate}
-                onDelete={handleDelete}
-              />
-            ))}
+            <AnimatePresence>
+              {filtered.map(entry => (
+                <TripCard
+                  key={entry.id}
+                  entry={entry}
+                  onUpdate={handleUpdate}
+                  onDelete={handleDelete}
+                  onAccept={handleAccept}
+                  onIgnore={handleIgnore}
+                  currentUserEmail={user?.email}
+                />
+              ))}
+            </AnimatePresence>
           </div>
         )}
+      </div>
+
+      {/* ── Undo Toast Stack ── */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 items-center w-full max-w-sm px-4">
+        <AnimatePresence>
+          {undoStack.map(({ id, customerName }) => (
+            <motion.div
+              key={id}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              className="w-full rounded-2xl p-4 shadow-card"
+              style={{ background: 'rgba(22,32,50,0.95)', border: '1px solid rgba(255,107,107,0.3)' }}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <EyeOff className="w-4 h-4 text-coral-400 flex-shrink-0" />
+                  <div>
+                    <p className="text-white text-sm font-semibold">Trip by {customerName} hidden</p>
+                    <p className="text-muted text-xs">Will be permanently ignored in 5s</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleUndo(id)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold btn-ocean flex-shrink-0"
+                >
+                  <Undo2 className="w-3.5 h-3.5" /> Undo
+                </button>
+              </div>
+              {/* Progress bar */}
+              <div className="mt-3 h-1 bg-white/5 rounded-full overflow-hidden">
+                <div className="undo-progress h-full rounded-full"
+                     style={{ background: 'linear-gradient(90deg, #FF6B6B, #F7C948)' }} />
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   )

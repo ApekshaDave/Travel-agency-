@@ -166,7 +166,12 @@ export async function syncTripsWithSupabase() {
           agentNotes: dbTrip.agent_notes,
           agentName: dbTrip.agent_name,
           agentSentBack: dbTrip.agent_sent_back,
-          agentUpdatedAt: dbTrip.agent_updated_at
+          agentUpdatedAt: dbTrip.agent_updated_at,
+          assignedAgentId: dbTrip.assigned_agent_id,
+          assignedAgentName: dbTrip.assigned_agent_name,
+          assignedAgentEmail: dbTrip.assigned_agent_email,
+          assignedAgentPhone: dbTrip.assigned_agent_phone,
+          assignedAt: dbTrip.assigned_at
         }))
         localStorage.setItem(STORE_KEY, JSON.stringify(mapped))
         return mapped

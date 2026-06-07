@@ -1,103 +1,89 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Design Tokens ──────────────────────────────────────────────────────────── */
 :root {
-  --gold: #E8B429;
-  --sky: #38B6F0;
-  --void: #080C14;
-  --deep: #0D1421;
+  --coral:   #FF6B6B;
+  --ocean:   #00C9B1;
+  --sky:     #45B7D1;
+  --sand:    #F7C948;
+  --forest:  #34D399;
+  --void:    #0D1B2A;
+  --deep:    #162032;
+  --surface: #1E2E42;
 }
 
+/* ─── Reset ──────────────────────────────────────────────────────────────────── */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
+html { scroll-behavior: smooth; }
 
-html {
-  scroll-behavior: smooth;
-}
-
+/* ─── Base Body ──────────────────────────────────────────────────────────────── */
 body {
-  background-color: #080C14;
-  color: #E8EDF5;
+  background: linear-gradient(160deg, #0D1B2A 0%, #0F2235 40%, #0A1E33 100%);
+  background-attachment: fixed;
+  color: #E8F4FD;
   font-family: 'DM Sans', sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #0D1421;
-}
+/* ─── Custom Scrollbar ───────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0D1B2A; }
 ::-webkit-scrollbar-thumb {
-  background: #1E2D42;
+  background: rgba(0, 201, 177, 0.3);
   border-radius: 3px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #E8B429;
-}
+::-webkit-scrollbar-thumb:hover { background: #00C9B1; }
 
-/* Selection */
+/* ─── Selection ──────────────────────────────────────────────────────────────── */
 ::selection {
-  background: rgba(232, 180, 41, 0.25);
-  color: #F5D98A;
+  background: rgba(0, 201, 177, 0.25);
+  color: #5EF3E3;
 }
 
-/* Grain overlay */
-.grain::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 9999;
-  opacity: 0.4;
-}
-
-/* Gold shimmer text */
-.text-shimmer {
-  background: linear-gradient(90deg, #E8B429 0%, #F5D98A 50%, #E8B429 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shimmer 3s linear infinite;
-}
-
-/* Glass card */
+/* ─── Glass Card ─────────────────────────────────────────────────────────────── */
+/* Primary glass — deep navy with subtle backdrop */
 .glass {
-  background: rgba(22, 31, 46, 0.6);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(22, 32, 50, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Bright glass — for light accent cards */
+.glass-light {
+  background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(30, 45, 66, 0.8);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-/* Glow lines */
-.glow-line {
-  background: linear-gradient(90deg, transparent, rgba(232,180,41,0.6), transparent);
-  height: 1px;
+/* Coral glass — for accent highlights */
+.glass-coral {
+  background: rgba(255, 107, 107, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 107, 107, 0.2);
 }
 
-/* Chat bubble typing animation */
-.typing-dot {
-  animation: typingBounce 1.2s ease-in-out infinite;
-}
-.typing-dot:nth-child(2) { animation-delay: 0.2s; }
-.typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes typingBounce {
-  0%, 60%, 100% { transform: translateY(0); }
-  30% { transform: translateY(-8px); }
+/* Ocean glass — for success/agent states */
+.glass-ocean {
+  background: rgba(0, 201, 177, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 201, 177, 0.2);
 }
 
-/* Animated gradient border */
+/* ─── Animated Gradient Border ───────────────────────────────────────────────── */
 .gradient-border {
   position: relative;
 }
@@ -106,152 +92,259 @@ body {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(232,180,41,0.5),
-    rgba(56,182,240,0.3),
-    rgba(232,180,41,0.1)
-  );
-  pointer-events: none;
-
-  -webkit-mask: linear-gradient(#fff 0 0) content-box,
-              linear-gradient(#fff 0 0);
-
-  mask: linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-
+  padding: 1.5px;
+  background: linear-gradient(135deg, rgba(255,107,107,0.6), rgba(0,201,177,0.4), rgba(247,201,72,0.3));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
+  pointer-events: none;
 }
 
-/* Input focus style */
+/* ─── Glow Lines ─────────────────────────────────────────────────────────────── */
+.glow-line {
+  background: linear-gradient(90deg, transparent, rgba(0,201,177,0.5), transparent);
+  height: 1px;
+}
+.glow-line-coral {
+  background: linear-gradient(90deg, transparent, rgba(255,107,107,0.5), transparent);
+  height: 1px;
+}
+
+/* ─── Shimmer Text ───────────────────────────────────────────────────────────── */
+.text-shimmer {
+  background: linear-gradient(90deg, #FF6B6B 0%, #F7C948 35%, #00C9B1 65%, #45B7D1 100%);
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 5s linear infinite;
+}
+
+.text-shimmer-gold {
+  background: linear-gradient(90deg, #E8A800 0%, #F7C948 50%, #E8A800 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
+}
+
+/* ─── Input Styles ───────────────────────────────────────────────────────────── */
 .ai-input {
-  background: rgba(13, 20, 33, 0.8);
-  border: 1px solid rgba(30, 45, 66, 0.8);
+  background: rgba(13, 27, 42, 0.8);
+  border: 1px solid rgba(69, 183, 209, 0.2);
+  color: #E8F4FD;
   transition: all 0.3s ease;
 }
+.ai-input::placeholder { color: rgba(122, 155, 181, 0.6); }
 .ai-input:focus {
   outline: none;
-  border-color: rgba(232, 180, 41, 0.5);
-  box-shadow: 0 0 0 3px rgba(232, 180, 41, 0.1), 0 0 20px rgba(232, 180, 41, 0.05);
+  border-color: rgba(0, 201, 177, 0.5);
+  box-shadow: 0 0 0 3px rgba(0, 201, 177, 0.1), 0 0 20px rgba(0, 201, 177, 0.05);
 }
 
-/* Star field background */
+/* ─── Travel Background Patterns ─────────────────────────────────────────────── */
+/* Replaced dark starfield with a warm sky/ocean gradient + dots */
 .starfield {
-  background-image: 
-    radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.5) 0%, transparent 100%),
-    radial-gradient(1px 1px at 40% 70%, rgba(255,255,255,0.3) 0%, transparent 100%),
-    radial-gradient(1px 1px at 60% 20%, rgba(255,255,255,0.4) 0%, transparent 100%),
-    radial-gradient(1px 1px at 80% 60%, rgba(255,255,255,0.2) 0%, transparent 100%),
-    radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,0.5) 0%, transparent 100%),
-    radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,0.3) 0%, transparent 100%),
-    radial-gradient(1px 1px at 50% 50%, rgba(255,255,255,0.2) 0%, transparent 100%),
-    radial-gradient(2px 2px at 35% 45%, rgba(232,180,41,0.3) 0%, transparent 100%),
-    radial-gradient(2px 2px at 75% 25%, rgba(56,182,240,0.2) 0%, transparent 100%);
+  background-image:
+    radial-gradient(1px 1px at 15% 25%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 35% 65%, rgba(0,201,177,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 55% 15%, rgba(255,255,255,0.35) 0%, transparent 100%),
+    radial-gradient(1px 1px at 75% 55%, rgba(247,201,72,0.25) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 8%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 8% 80%, rgba(0,201,177,0.2) 0%, transparent 100%),
+    radial-gradient(2px 2px at 45% 45%, rgba(255,107,107,0.2) 0%, transparent 100%),
+    radial-gradient(2px 2px at 70% 20%, rgba(69,183,209,0.2) 0%, transparent 100%);
 }
 
-@keyframes shimmer {
-  to { background-position: 200% center; }
+/* ─── Animated Travel Hero Background ───────────────────────────────────────── */
+.travel-hero-bg {
+  background: 
+    radial-gradient(ellipse at 20% 50%, rgba(255, 107, 107, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(0, 201, 177, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(69, 183, 209, 0.08) 0%, transparent 50%),
+    linear-gradient(160deg, #0D1B2A 0%, #0F2235 50%, #0A1E33 100%);
 }
-/* Global UX Affordances */
+
+/* ─── Floating Animated Elements ─────────────────────────────────────────────── */
+.float-element {
+  animation: floatUp 6s ease-in-out infinite;
+}
+.float-element:nth-child(2) { animation-delay: -2s; }
+.float-element:nth-child(3) { animation-delay: -4s; }
+
+@keyframes floatUp {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-10px) rotate(2deg); }
+  66% { transform: translateY(-5px) rotate(-1deg); }
+}
+
+/* ─── Typing Dots ─────────────────────────────────────────────────────────────── */
+.typing-dot { animation: typingBounce 1.2s ease-in-out infinite; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-8px); }
+}
+
+/* ─── Shimmer ─────────────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  to { background-position: 300% center; }
+}
+
+/* ─── Travel Card ─────────────────────────────────────────────────────────────── */
+.travel-card {
+  background: rgba(22, 32, 50, 0.75);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 201, 177, 0.12);
+  border-radius: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.travel-card:hover {
+  border-color: rgba(0, 201, 177, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 201, 177, 0.1), 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* ─── Status Badges ───────────────────────────────────────────────────────────── */
+.badge-pending {
+  background: rgba(247, 201, 72, 0.15);
+  border: 1px solid rgba(247, 201, 72, 0.3);
+  color: #F7C948;
+}
+.badge-accepted {
+  background: rgba(0, 201, 177, 0.15);
+  border: 1px solid rgba(0, 201, 177, 0.3);
+  color: #00C9B1;
+}
+.badge-reviewed {
+  background: rgba(69, 183, 209, 0.15);
+  border: 1px solid rgba(69, 183, 209, 0.3);
+  color: #45B7D1;
+}
+.badge-booked {
+  background: rgba(52, 211, 153, 0.15);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  color: #34D399;
+}
+.badge-cancelled {
+  background: rgba(255, 107, 107, 0.15);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  color: #FF6B6B;
+}
+
+/* ─── Button Primary Variants ─────────────────────────────────────────────────── */
+.btn-coral {
+  background: linear-gradient(135deg, #FF6B6B, #FF9A8B);
+  color: #0D1B2A;
+  font-weight: 700;
+  border: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+.btn-coral:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.45);
+}
+.btn-ocean {
+  background: linear-gradient(135deg, #00A896, #00C9B1);
+  color: #0D1B2A;
+  font-weight: 700;
+  border: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 168, 150, 0.3);
+}
+.btn-ocean:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 168, 150, 0.45);
+}
+
+/* ─── Hover Pull ──────────────────────────────────────────────────────────────── */
 .hover-pull {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.hover-pull:hover {
-  transform: translateY(-4px);
-}
+.hover-pull:hover { transform: translateY(-4px); }
 
+/* ─── Clickable Card ──────────────────────────────────────────────────────────── */
 .clickable-card {
   cursor: pointer;
   transition: all 0.3s ease;
 }
 .clickable-card:hover {
-  border-color: rgba(232, 180, 41, 0.4);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(232, 180, 41, 0.05);
+  border-color: rgba(0, 201, 177, 0.3);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 201, 177, 0.06);
 }
 
-/* Group hover animations for arrows */
+/* ─── Scrollbar Utilities ─────────────────────────────────────────────────────── */
+.hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.custom-scrollbar::-webkit-scrollbar { width: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 201, 177, 0.15);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 201, 177, 0.3);
+}
+
+/* ─── Group hover arrows ──────────────────────────────────────────────────────── */
 .group:hover .group-hover-arrow {
   transform: translateX(4px);
   opacity: 1;
 }
 
-/* Custom Scrollbar for dark theme */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.1);
-  border-radius: 10px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(232, 180, 41, 0.2);
+/* ─── Grain overlay ───────────────────────────────────────────────────────────── */
+.grain::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.3;
 }
 
-/* ─── Global Responsive Utilities ───────────────────────────────────────────── */
-
-/* Hide scrollbar while keeping scroll functionality */
-.hide-scrollbar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-/* Responsive container — used on every page */
+/* ─── Page Container ──────────────────────────────────────────────────────────── */
 .page-container {
-  width: 100%;
-  max-width: 1280px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  width: 100%; max-width: 1280px;
+  margin-left: auto; margin-right: auto;
+  padding-left: 1rem; padding-right: 1rem;
 }
-@media (min-width: 640px) {
-  .page-container { padding-left: 1.5rem; padding-right: 1.5rem; }
-}
-@media (min-width: 1024px) {
-  .page-container { padding-left: 2rem; padding-right: 2rem; }
-}
+@media (min-width: 640px) { .page-container { padding-left: 1.5rem; padding-right: 1.5rem; } }
+@media (min-width: 1024px) { .page-container { padding-left: 2rem; padding-right: 2rem; } }
 
-/* Responsive cards grid */
+/* Cards grid */
 .cards-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
+  display: grid; grid-template-columns: 1fr; gap: 1rem;
 }
-@media (min-width: 480px) {
-  .cards-grid { grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 480px) { .cards-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .cards-grid { grid-template-columns: repeat(3, 1fr); gap: 1.25rem; } }
+@media (min-width: 1280px) { .cards-grid { grid-template-columns: repeat(4, 1fr); } }
+
+/* Mobile rounding */
+@media (max-width: 640px) { .glass, .travel-card { border-radius: 1rem; } }
+
+/* Table overflow */
+.table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ─── Partner Card Special Pulse ──────────────────────────────────────────────── */
+@keyframes partnerPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 201, 177, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(0, 201, 177, 0); }
 }
-@media (min-width: 1024px) {
-  .cards-grid { grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
-}
-@media (min-width: 1280px) {
-  .cards-grid { grid-template-columns: repeat(4, 1fr); }
+.partner-pulse {
+  animation: partnerPulse 2.5s ease-out infinite;
 }
 
-/* Prevent horizontal overflow on mobile */
-@media (max-width: 640px) {
-  .glass {
-    border-radius: 1rem;
-  }
+/* ─── Ignore Undo Toast ───────────────────────────────────────────────────────── */
+@keyframes progressShrink {
+  from { width: 100%; }
+  to { width: 0%; }
 }
-
-/* Smooth responsive font scaling */
-@media (max-width: 480px) {
-  .font-display {
-    letter-spacing: -0.02em;
-  }
-}
-
-/* Responsive table overflow wrapper */
-.table-scroll {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+.undo-progress {
+  animation: progressShrink 5s linear forwards;
 }

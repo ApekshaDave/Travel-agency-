@@ -65,12 +65,12 @@ export default function CompleteProfile() {
       isValid = false
     }
 
-    if (role === 'user') {
-      if (!phone.trim()) {
-        newErrors.phone = 'Phone number is required'
-        isValid = false
-      }
-    } else {
+    if (!phone.trim()) {
+      newErrors.phone = 'Phone number is required'
+      isValid = false
+    }
+
+    if (role === 'agent') {
       if (!isAgencyRegistered) {
         if (!agencyName.trim()) {
           newErrors.agencyName = 'Agency name is required'
@@ -207,27 +207,25 @@ export default function CompleteProfile() {
               {errors.name && <p className="text-red-400 text-xs mt-1 ml-1 font-medium">{errors.name}</p>}
             </div>
 
-            {/* Customer Specific */}
-            {role === 'user' && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest text-muted font-bold ml-1">Phone Number</label>
-                <div className="relative group">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-gold-400 transition-colors" />
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => {
-                      setPhone(e.target.value)
-                      if (errors.phone) setErrors(prev => ({ ...prev, phone: '' }))
-                    }}
-                    placeholder="+91 98765 43210"
-                    className="ai-input w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm"
-                    required
-                  />
-                </div>
-                {errors.phone && <p className="text-red-400 text-xs mt-1 ml-1 font-medium">{errors.phone}</p>}
-              </motion.div>
-            )}
+            {/* Phone Number Field */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase tracking-widest text-muted font-bold ml-1">Phone Number</label>
+              <div className="relative group">
+                <Phone className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:${role === 'agent' ? 'text-red-400' : 'text-gold-400'} transition-colors`} />
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => {
+                    setPhone(e.target.value)
+                    if (errors.phone) setErrors(prev => ({ ...prev, phone: '' }))
+                  }}
+                  placeholder="+91 98765 43210"
+                  className="ai-input w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm"
+                  required
+                />
+              </div>
+              {errors.phone && <p className="text-red-400 text-xs mt-1 ml-1 font-medium">{errors.phone}</p>}
+            </div>
 
             {/* Travel Agent Specific */}
             {role === 'agent' && (

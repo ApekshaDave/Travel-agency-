@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
@@ -7,7 +7,7 @@ import {
   MapPin, Star, TrendingUp, Sparkles, Package,
   ArrowRight, Bell, MoreHorizontal, Shield, Map
 } from 'lucide-react'
-import { getCustomerTrips } from '../utils/tripStore'
+import { getCustomerTrips, syncTripsWithSupabase } from '../utils/tripStore'
 import { useAuth } from '../context/AuthContext'
 
 const TRIPS = [
@@ -208,9 +208,28 @@ function TripCard({ trip }) {
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('all')
   const { user } = useAuth()
-  const customerTrips = user ? getCustomerTrips(user.id) : []
+  const [customerTrips, setCustomerTrips] = useState(() => user ? getCustomerTrips(user.id) : [])
+  const [loadingSync, setLoadingSync] = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    const sync = async () => {
+      setLoadingSync(true)
+      try {
+        const synced = await syncTripsWithSupabase()
+        setCustomerTrips(synced.filter(t => t.customer.id === user.id).reverse())
+      } catch (err) {
+        console.error('Failed to sync customer trips:', err)
+      } finally {
+        setLoadingSync(false)
+      }
+    }
+    sync()
+  }, [user])
+
   const agentUpdatedTrips = customerTrips.filter(t => t.agentSentBack)
   const pendingTrips = customerTrips.filter(t => !t.agentSentBack)
+  const acceptedTrip = customerTrips.find(t => t.status === 'accepted' && t.assignedAgentName)
 
   const filtered = TRIPS.filter(t =>
     activeTab === 'all' ? true :
@@ -382,6 +401,43 @@ export default function DashboardPage() {
 
           {/* Sidebar */}
           <div className="space-y-5">
+            {/* Travel Partner Card */}
+            {acceptedTrip && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="glass border border-ocean/30 rounded-2xl p-5 bg-gradient-to-br from-ocean/10 to-transparent relative overflow-hidden partner-pulse"
+              >
+                <div className="absolute top-0 right-0 w-24 h-24 bg-ocean/5 rounded-full blur-xl pointer-events-none" />
+                <h3 className="font-semibold text-white mb-3 flex items-center gap-2">
+                  <span className="flex h-2.5 w-2.5 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-ocean opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-ocean"></span>
+                  </span>
+                  Your Travel Partner
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-[10px] text-ocean/80 uppercase font-bold tracking-wider">Assigned Agent</div>
+                    <div className="text-white font-bold text-base mt-0.5">{acceptedTrip.assignedAgentName}</div>
+                  </div>
+                  {acceptedTrip.assignedAgentPhone && (
+                    <div>
+                      <div className="text-[10px] text-muted uppercase font-bold tracking-wider">Phone</div>
+                      <a href={`tel:${acceptedTrip.assignedAgentPhone}`} className="text-sky-400 hover:underline text-sm font-semibold block mt-0.5">{acceptedTrip.assignedAgentPhone}</a>
+                    </div>
+                  )}
+                  <div>
+                    <div className="text-[10px] text-muted uppercase font-bold tracking-wider">Email</div>
+                    <a href={`mailto:${acceptedTrip.assignedAgentEmail}`} className="text-sky-400 hover:underline text-sm font-semibold block mt-0.5">{acceptedTrip.assignedAgentEmail}</a>
+                  </div>
+                  <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs text-muted">
+                    <span>Trip: {acceptedTrip.trip.name}</span>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {/* Notifications */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
