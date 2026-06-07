@@ -201,9 +201,10 @@ function CaseCard({ c, i, selectedCase, setSelectedCase, handleResolve }) {
 }
 
 // ── Case Detail Panel ────────────────────────────────────────────────────────
-function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent }) {
+function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent, onAgentApprove }) {
   const [note, setNote] = useState('')
   const [isResolving, setIsResolving] = useState(false)
+  const isFinanceIssue = caseData.typeLabel === 'Finance Issue'
   const priority = PRIORITY_STYLES[caseData.priority] || PRIORITY_STYLES.medium
 
   return (
@@ -216,14 +217,15 @@ function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent }) {
       {/* Header */}
       <div className="p-5 border-b border-border/60 flex items-start justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xl">{TYPE_ICONS[caseData.type]}</span>
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <span className={`px-2 py-0.5 text-[10px] rounded-full border font-bold uppercase ${caseData.typeLabel === 'Technical Issue' ? 'bg-sky-400/10 text-sky-400 border-sky-400/20' : caseData.typeLabel === 'Finance Issue' ? 'bg-gold-400/10 text-gold-400 border-gold-400/20' : 'bg-violet-400/10 text-violet-400 border-violet-400/20'}`}>
+              {caseData.typeLabel}
+            </span>
             <span className="font-mono text-xs text-muted">{caseData.id}</span>
-            <span className={`px-2 py-0.5 text-xs rounded-full border font-medium ${priority.badge}`}>
-              {priority.label} Priority
+            <span className={`px-2 py-0.5 text-[10px] rounded-full border font-bold uppercase ${priority.badge}`}>
+              {priority.label}
             </span>
           </div>
-          <h2 className="font-display text-lg font-bold text-white">{caseData.typeLabel}</h2>
           <p className="text-muted text-xs">{caseData.created}</p>
         </div>
         <button onClick={onClose} className="p-1.5 text-muted hover:text-white transition-colors">
@@ -341,13 +343,19 @@ function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent }) {
                 className="w-full bg-void/50 border border-border rounded-xl p-3 text-white text-sm h-24 focus:border-gold-400 outline-none"
               />
               <div className="flex gap-2">
-                <button onClick={() => onResolve(caseData.id, 'Issue has been resolved')} className="flex-1 py-2 glass border border-sage-400/30 text-sage-400 rounded-lg text-xs font-bold">
-                  Mark Resolved (Simple)
-                </button>
+                {!isFinanceIssue ? (
+                  <button onClick={() => onResolve(caseData.id, 'Issue has been resolved')} className="flex-1 py-2 glass border border-sage-400/30 text-sage-400 rounded-lg text-xs font-bold">
+                    Mark Resolved
+                  </button>
+                ) : (
+                  <button onClick={() => onAgentApprove(caseData.id, note || 'Agent approved.')} className="flex-1 py-2 bg-sage-400 text-void rounded-lg text-xs font-bold flex items-center justify-center gap-1.5">
+                    <CheckCircle className="w-3.5 h-3.5" /> Send to Finance
+                  </button>
+                )}
                 <button
                   disabled={!note.trim()}
                   onClick={() => onInstructionsSent(caseData.id, note)}
-                  className="flex-1 py-2 bg-gold-400 text-void rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-30"
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-30 ${isFinanceIssue ? 'glass border border-border text-white' : 'bg-gold-400 text-void'}`}
                 >
                   <Send className="w-3.5 h-3.5" /> Send Instructions
                 </button>

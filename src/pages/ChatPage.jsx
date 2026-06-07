@@ -7,6 +7,7 @@ import {
   AlertTriangle, CheckCircle, Clock
 } from 'lucide-react'
 import { callVoyageAI, detectTripIntent, generateMultiModalTrip, updateTripWithPreferences } from '../utils/multiModalApi'
+import { useAuth } from '../context/AuthContext'
 import { supabase } from '../utils/supabaseClient'
 import toast from 'react-hot-toast'
 import FlightCard from '../components/features/FlightCard'
@@ -159,6 +160,7 @@ export default function ChatPage() {
   const [searchParams] = useSearchParams()
   const destParam = searchParams.get('dest')
 
+  const { user } = useAuth()
   const [messages, setMessages] = useState(() => [
     {
       role: 'assistant',

@@ -18,6 +18,8 @@ import DashboardPage from './pages/DashboardPage'
 import CorporatePage from './pages/CorporatePage'
 import ItineraryPage from './pages/ItineraryPage'
 import LoginPage from './pages/LoginPage'
+import AuthCallback from './pages/AuthCallback'
+import CompleteProfile from './pages/CompleteProfile'
 
 // Phase 2
 import PostBookingHub from './pages/PostBookingHub'
@@ -71,6 +73,8 @@ export default function App() {
                 <Route path="/corporate" element={<CorporatePage />} />
                 <Route path="/itinerary" element={<ItineraryPage />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/complete-profile" element={<CompleteProfile />} />
                 <Route path="/staff" element={<StaffPage />} />
                 <Route path="/staff-login" element={<StaffLoginPage />} />
 

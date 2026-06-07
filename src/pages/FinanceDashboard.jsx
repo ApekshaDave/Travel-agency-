@@ -68,6 +68,36 @@ export default function FinanceDashboard() {
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
   const [activeChart, setActiveChart] = useState('area')
+  const [pendingEscalations, setPendingEscalations] = useState([])
+
+  useEffect(() => {
+    fetchFinanceEscalations()
+  }, [])
+
+  const fetchFinanceEscalations = async () => {
+    const { data } = await supabase
+      .from('booking_issues')
+      .select('*')
+      .eq('issue_type', 'Finance Issue')
+      .eq('status', 'agent_approved')
+
+    if (data) setPendingEscalations(data)
+  }
+
+  const handleFinalApprove = async (id) => {
+    try {
+      const { error } = await supabase
+        .from('booking_issues')
+        .update({ status: 'resolved', resolution_note: 'Final finance approval completed.' })
+        .eq('id', id)
+
+      if (error) throw error
+      toast.success('Finance approval finalized!')
+      fetchFinanceEscalations()
+    } catch (err) {
+      toast.error('Final approval failed: ' + err.message)
+    }
+  }
 
   const getFilteredLedgerByDate = () => {
     return MOCK_LEDGER.filter(tx => {
@@ -172,8 +202,8 @@ export default function FinanceDashboard() {
                 key={r}
                 onClick={() => setDateRange(r)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${dateRange === r
-                    ? 'bg-gold-400/15 text-gold-400 border border-gold-400/20'
-                    : 'text-muted hover:text-white border border-transparent'
+                  ? 'bg-gold-400/15 text-gold-400 border border-gold-400/20'
+                  : 'text-muted hover:text-white border border-transparent'
                   }`}
               >
                 {r}
@@ -241,8 +271,8 @@ export default function FinanceDashboard() {
                     key={t}
                     onClick={() => setActiveChart(t)}
                     className={`px-3 py-1 rounded-lg text-xs capitalize transition-all ${activeChart === t
-                        ? 'bg-gold-400/15 text-gold-400 border border-gold-400/20'
-                        : 'text-muted hover:text-white'
+                      ? 'bg-gold-400/15 text-gold-400 border border-gold-400/20'
+                      : 'text-muted hover:text-white'
                       }`}
                   >
                     {t}
