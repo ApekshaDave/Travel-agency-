@@ -4,13 +4,13 @@ import { Link } from 'react-router-dom'
 import {
   Sparkles, Plane, Train, Bus, Building2, Trash2, Clock, ChevronRight,
   CheckCircle, DollarSign, Zap, Compass, Landmark, Utensils, Trees, ShoppingBag, MapPin,
-  Edit3, Coffee, Sun, Moon, Calendar as CalendarIcon, HelpCircle, Car, Users, Send, User
+  Edit3, Coffee, Sun, Moon, Calendar as CalendarIcon, HelpCircle, Car, Send, User
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import { generateMultiModalTrip } from '../utils/multiModalApi'
 import { supabase } from '../utils/supabaseClient'
-import { saveTrip, getTripById, updateTripItinerary, syncTripsWithSupabase } from '../utils/tripStore'
+import { saveTrip, getTripById, updateTripItinerary } from '../utils/tripStore'
 
 
 // ── Segment types ─────────────────────────────────────────────────────────────
@@ -315,9 +315,10 @@ export default function TripBuilder() {
 
     // Load passenger details from local storage if coming from PassengerDetailsPage
     const storedPassengers = localStorage.getItem('voyageai_passenger_details')
-    if (storedPassengers) {
-      setPassengerDetails(JSON.parse(storedPassengers))
-    }
+if (storedPassengers) {
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  setPassengerDetails(JSON.parse(storedPassengers))
+}
   }, [user])
 
   // Navigation tabs
@@ -525,7 +526,7 @@ export default function TripBuilder() {
   }
 
   const addManualSegment = (type) => {
-    const newId = `seg-manual-${Date.now()}`
+    const newId = `seg-manual-${crypto.randomUUID()}`
     const newSeg = {
       id: newId,
       type: type,

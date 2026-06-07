@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { MOCK_LEDGER, getLedgerSummary, formatINR } from '../utils/billingEngine'
 import StaffNav from '../components/layout/StaffNav'
-import { supabase } from '../utils/supabaseClient'
+
 
 // ── Recharts for revenue chart ────────────────────────────────────────────────
 import {
@@ -69,36 +69,9 @@ export default function FinanceDashboard() {
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
   const [activeChart, setActiveChart] = useState('area')
-  const [pendingEscalations, setPendingEscalations] = useState([])
+  
 
-  useEffect(() => {
-    fetchFinanceEscalations()
-  }, [])
-
-  const fetchFinanceEscalations = async () => {
-    const { data } = await supabase
-      .from('booking_issues')
-      .select('*')
-      .eq('issue_type', 'Finance Issue')
-      .eq('status', 'agent_approved')
-
-    if (data) setPendingEscalations(data)
-  }
-
-  const handleFinalApprove = async (id) => {
-    try {
-      const { error } = await supabase
-        .from('booking_issues')
-        .update({ status: 'resolved', resolution_note: 'Final finance approval completed.' })
-        .eq('id', id)
-
-      if (error) throw error
-      toast.success('Finance approval finalized!')
-      fetchFinanceEscalations()
-    } catch (err) {
-      toast.error('Final approval failed: ' + err.message)
-    }
-  }
+  
 
   const getFilteredLedgerByDate = () => {
     return MOCK_LEDGER.filter(tx => {

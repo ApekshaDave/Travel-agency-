@@ -207,7 +207,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('all')
   const { user } = useAuth()
   const [customerTrips, setCustomerTrips] = useState(() => user ? getCustomerTrips(user.id) : [])
-  const [loadingSync, setLoadingSync] = useState(false)
+  const [, setLoadingSync] = useState(false)
 
   useEffect(() => {
     if (!user) return

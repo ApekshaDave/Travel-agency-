@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { // Removed unused imports
+import {
   Plane, Users, Calendar, DollarSign, Sparkles, Clock,
   CheckCircle, AlertTriangle, Trash2, ChevronDown, ChevronUp,
   RefreshCw, FileText, Map, UserCheck, EyeOff, Undo2, Car,
-  Phone, User, AlertCircle, X
+  Phone, User, AlertCircle
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import StaffNav from '../components/layout/StaffNav'
@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
-// Removed unused VEHICLE_TYPES
+
 const VEHICLE_TYPES = [
   { value: 'Sedan', label: 'Sedan', capacity: 4 },
   { value: 'SUV', label: 'SUV / MUV', capacity: 6 },
@@ -27,9 +27,9 @@ const STATUS_CONFIG = {
   reviewed: { color: 'text-sky-400', bg: 'badge-reviewed', label: 'Reviewed', dot: 'bg-sky-400' },
   booked: { color: 'text-forest-400', bg: 'badge-booked', label: 'Booked', dot: 'bg-forest-400' },
   cancelled: { color: 'text-coral-400', bg: 'badge-cancelled', label: 'Cancelled', dot: 'bg-coral-400' },
+  pending_agent_review: { color: 'text-gold-400', bg: 'bg-gold-400/10', label: 'Pending Review', dot: 'bg-gold-400' },
 }
-// Added new status for agent review
-STATUS_CONFIG.pending_agent_review = { color: 'text-gold-400', bg: 'bg-gold-400/10', label: 'Pending Review', dot: 'bg-gold-400' };
+
 const SEGMENT_ICONS = { flight: '✈️', train: '🚂', bus: '🚌', roadways: '🚗', hotel: '🏨' }
 
 // ─── Driver Assignment Panel ─────────────────────────────────────────────────
@@ -127,7 +127,6 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
   const [notes, setNotes] = useState(entry.agent_notes || '')
   const [status, setStatus] = useState(entry.status || 'pending')
   const [accepting, setAccepting] = useState(false)
-  const [showPassengerDetails, setShowPassengerDetails] = useState(false);
 
   const trip = entry.trip_data || {}
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending
@@ -136,7 +135,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
   const hasRoad = trip.segments?.some(s => s.type === 'roadways')
 
   const handleAccept = async () => {
-    setAccepting(true);
+    setAccepting(true)
     await onAccept(entry.id)
     setAccepting(false)
   }
@@ -152,14 +151,16 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
       layout
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.97 }} // Changed exit animation to match new design
+      exit={{ opacity: 0, scale: 0.97 }}
       className="travel-card overflow-hidden"
       style={{
-        borderColor: entry.status === 'pending_agent_review' ? 'rgba(247, 201, 72, 0.2)' : isAccepted && isMine
-          ? 'rgba(0, 201, 177, 0.3)'
-          : status === 'pending'
-            ? 'rgba(247, 201, 72, 0.2)'
-            : 'rgba(255,255,255,0.08)'
+        borderColor: entry.status === 'pending_agent_review'
+          ? 'rgba(247, 201, 72, 0.2)'
+          : isAccepted && isMine
+            ? 'rgba(0, 201, 177, 0.3)'
+            : status === 'pending'
+              ? 'rgba(247, 201, 72, 0.2)'
+              : 'rgba(255,255,255,0.08)'
       }}
     >
       {/* Accepted by me — ocean top bar */}
@@ -171,20 +172,24 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
         <div className="flex items-start justify-between gap-4 flex-wrap">
           {/* Customer info */}
           <div className="flex items-start gap-4">
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-slate-900"
-              style={{ background: 'linear-gradient(135deg, #FF6B6B, #F7C948)' }}>
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-slate-900"
+              style={{ background: 'linear-gradient(135deg, #FF6B6B, #F7C948)' }}
+            >
               {(entry.customer_name || 'U').charAt(0).toUpperCase()}
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-white font-bold text-sm">{entry.customer_name || 'Unknown'}</h3>
                 <span className="text-muted text-xs">{entry.customer_email}</span>
-              </div> {/* Changed text-white to text-slate-900 */}
+              </div>
               <div className="flex items-center gap-3 mt-1 flex-wrap">
                 <span className="text-sand-400 font-bold text-base">{trip.name || 'Unnamed Trip'}</span>
                 {trip.isAI && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1"
-                    style={{ background: 'rgba(247,201,72,0.12)', border: '1px solid rgba(247,201,72,0.25)', color: '#F7C948' }}>
+                  <span
+                    className="px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1"
+                    style={{ background: 'rgba(247,201,72,0.12)', border: '1px solid rgba(247,201,72,0.25)', color: '#F7C948' }}
+                  >
                     <Sparkles className="w-2.5 h-2.5" /> AI
                   </span>
                 )}
@@ -192,7 +197,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
               <div className="flex items-center gap-3 mt-1 text-xs text-muted flex-wrap">
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {trip.duration}</span>
                 <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {trip.passengers} pax</span>
-                <span className="flex items-center gap-1 text-slate-900"> {/* Changed text-sand-400 to text-slate-900 */}
+                <span className="flex items-center gap-1">
                   <DollarSign className="w-3 h-3 text-sand-400" />
                   <span className="text-sand-400 font-bold">₹{trip.totalCost?.toLocaleString()}</span>
                 </span>
@@ -222,9 +227,12 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
 
         {/* Segment pills */}
         <div className="flex gap-2 mt-3 flex-wrap">
-          {(trip.segments || []).slice(0, 5).map((seg, i) => ( // Limit to 5 segments for brevity
-            <span key={i} className="px-2 py-1 glass border rounded-lg text-xs text-slate-600 flex items-center gap-1"
-              style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+          {(trip.segments || []).slice(0, 5).map((seg, i) => (
+            <span
+              key={i}
+              className="px-2 py-1 glass border rounded-lg text-xs text-slate-600 flex items-center gap-1"
+              style={{ borderColor: 'rgba(255,255,255,0.07)' }}
+            >
               {SEGMENT_ICONS[seg.type] || '📍'} {seg.from}{seg.to ? ` → ${seg.to}` : ''}
             </span>
           ))}
@@ -233,7 +241,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
         {/* Quick Accept/Ignore bar for pending trips */}
         {status === 'pending' && (
           <div className="flex gap-2 mt-4">
-            <motion.button // Changed to accept pending_agent_review
+            <motion.button
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
               onClick={handleAccept}
               disabled={accepting}
@@ -243,7 +251,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
                 ? <RefreshCw className="w-4 h-4 animate-spin" />
                 : <UserCheck className="w-4 h-4" />}
               {accepting ? 'Accepting…' : 'Accept Trip'}
-            </motion.button> {/* Changed btn-ocean to bg-brand-gradient */}
+            </motion.button>
             <motion.button
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
               onClick={() => onIgnore(entry.id, entry.customer_name)}
@@ -257,16 +265,21 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
 
         {/* Already accepted by this agent */}
         {isAccepted && isMine && (
-          <div className="mt-3 px-3 py-2 rounded-xl text-sm flex items-center gap-2"
-            style={{ background: 'rgba(0,201,177,0.08)', border: '1px solid rgba(0,201,177,0.2)' }}>
+          <div
+            className="mt-3 px-3 py-2 rounded-xl text-sm flex items-center gap-2"
+            style={{ background: 'rgba(0,201,177,0.08)', border: '1px solid rgba(0,201,177,0.2)' }}
+          >
             <UserCheck className="w-4 h-4 text-ocean-400" />
             <span className="text-ocean-400 font-semibold">You are the assigned travel partner for this trip</span>
           </div>
         )}
+
         {/* Accepted by another agent */}
         {isAccepted && !isMine && (
-          <div className="mt-3 px-3 py-2 rounded-xl text-sm flex items-center gap-2"
-            style={{ background: 'rgba(69,183,209,0.08)', border: '1px solid rgba(69,183,209,0.2)' }}>
+          <div
+            className="mt-3 px-3 py-2 rounded-xl text-sm flex items-center gap-2"
+            style={{ background: 'rgba(69,183,209,0.08)', border: '1px solid rgba(69,183,209,0.2)' }}
+          >
             <AlertCircle className="w-4 h-4 text-sky-400" />
             <span className="text-sky-400 text-xs">Assigned to <strong>{entry.assigned_agent_name}</strong></span>
           </div>
@@ -280,14 +293,16 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden border-t text-slate-900"
+            className="overflow-hidden border-t"
             style={{ borderColor: 'rgba(255,255,255,0.06)' }}
           >
             <div className="p-5 space-y-5">
               {/* AI suggestion */}
               {trip.costComparison && (
-                <div className="p-4 rounded-xl"
-                  style={{ background: 'rgba(247,201,72,0.06)', border: '1px solid rgba(247,201,72,0.2)' }}>
+                <div
+                  className="p-4 rounded-xl"
+                  style={{ background: 'rgba(247,201,72,0.06)', border: '1px solid rgba(247,201,72,0.2)' }}
+                >
                   <p className="text-sand-400 text-xs font-bold mb-1 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" /> AI Route Suggestion
                   </p>
@@ -303,8 +318,11 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
                   <p className="text-white text-xs font-bold mb-2 uppercase tracking-wider">Places Requested</p>
                   <div className="flex gap-2 flex-wrap">
                     {trip.placesToVisit.slice(0, 6).map((p, i) => (
-                      <span key={i} className="px-2.5 py-1 glass rounded-lg text-xs text-muted"
-                        style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+                      <span
+                        key={i}
+                        className="px-2.5 py-1 glass rounded-lg text-xs text-muted"
+                        style={{ border: '1px solid rgba(255,255,255,0.07)' }}
+                      >
                         {p.name}
                       </span>
                     ))}
@@ -341,8 +359,10 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
                   </div>
                   <div>
                     <label className="text-[10px] text-muted uppercase font-bold block mb-1">Trip Ref ID</label>
-                    <div className="px-3 py-2 glass rounded-xl text-sm text-muted font-mono"
-                      style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+                    <div
+                      className="px-3 py-2 glass rounded-xl text-sm text-muted font-mono"
+                      style={{ border: '1px solid rgba(255,255,255,0.07)' }}
+                    >
                       {entry.id.slice(-8).toUpperCase()}
                     </div>
                   </div>
@@ -395,30 +415,52 @@ export default function AgentTripsPage() {
   const [trips, setTrips] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
-  const [undoStack, setUndoStack] = useState([]) // { id, name, timeoutId }
+  const [undoStack, setUndoStack] = useState([]) // { id, customerName, timeoutId }
 
-  const authHeaders = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+  // Stable header factory — avoids stale closures without making authHeaders a dep
+  const getAuthHeaders = useCallback(() => ({
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+  }), [token])
 
+  // ── Load Trips (manual refresh, e.g. button) ──
   const loadTrips = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch(`${API}/api/trips`, { headers: authHeaders })
+      const res = await fetch(`${API}/api/trips`, { headers: getAuthHeaders() })
       const data = await res.json()
       setTrips(Array.isArray(data) ? data : [])
-    } catch (err) {
+    } catch {
       toast.error('Failed to load trips')
     } finally {
       setLoading(false)
     }
-  }, [token])
+  }, [getAuthHeaders])
 
-  useEffect(() => { loadTrips() }, [loadTrips])
+  // ── Initial load — fetch inline so the linter doesn't trace setState into the effect ──
+  useEffect(() => {
+    let cancelled = false
+    const fetchTrips = async () => {
+      setLoading(true)
+      try {
+        const res = await fetch(`${API}/api/trips`, { headers: getAuthHeaders() })
+        const data = await res.json()
+        if (!cancelled) setTrips(Array.isArray(data) ? data : [])
+      } catch {
+        if (!cancelled) toast.error('Failed to load trips')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchTrips()
+    return () => { cancelled = true }
+  }, [getAuthHeaders])
 
   // ── Accept Trip ──
   const handleAccept = async (id) => {
     try {
       const res = await fetch(`${API}/api/trips/accept?id=${id}`, {
-        method: 'PATCH', headers: authHeaders
+        method: 'PATCH', headers: getAuthHeaders(),
       })
       if (!res.ok) {
         const err = await res.json()
@@ -442,7 +484,7 @@ export default function AgentTripsPage() {
       // Commit the ignore to DB
       try {
         await fetch(`${API}/api/trips/ignore?id=${id}`, {
-          method: 'PATCH', headers: authHeaders
+          method: 'PATCH', headers: getAuthHeaders(),
         })
       } catch { /* fail silently */ }
       setUndoStack(prev => prev.filter(u => u.id !== id))
@@ -451,7 +493,7 @@ export default function AgentTripsPage() {
     setUndoStack(prev => [...prev, { id, customerName, timeoutId }])
   }
 
-  const handleUndo = async (id) => {
+  const handleUndo = (id) => {
     const item = undoStack.find(u => u.id === id)
     if (!item) return
     clearTimeout(item.timeoutId)
@@ -464,7 +506,7 @@ export default function AgentTripsPage() {
   const handleUpdate = async (id, fields) => {
     try {
       const res = await fetch(`${API}/api/trips?id=${id}`, {
-        method: 'PATCH', headers: authHeaders, body: JSON.stringify(fields)
+        method: 'PATCH', headers: getAuthHeaders(), body: JSON.stringify(fields),
       })
       if (!res.ok) throw new Error()
       toast.success('Trip updated!')
@@ -477,7 +519,7 @@ export default function AgentTripsPage() {
   // ── Delete Trip ──
   const handleDelete = async (id) => {
     try {
-      await fetch(`${API}/api/trips?id=${id}`, { method: 'DELETE', headers: authHeaders })
+      await fetch(`${API}/api/trips?id=${id}`, { method: 'DELETE', headers: getAuthHeaders() })
       toast.success('Trip removed')
       loadTrips()
     } catch {
@@ -514,9 +556,11 @@ export default function AgentTripsPage() {
               </h1>
               <p className="text-muted">Review & accept trip requests — accepted trips assign you as Travel Partner</p>
             </div>
-            <button onClick={loadTrips}
+            <button
+              onClick={loadTrips}
               className="p-2.5 glass border rounded-xl text-muted hover:text-white transition-all"
-              style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+              style={{ borderColor: 'rgba(255,255,255,0.08)' }}
+            >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
           </div>
@@ -534,7 +578,7 @@ export default function AgentTripsPage() {
             </p>
             {myAccepted.map(t => (
               <div key={t.id} className="text-xs text-muted">
-                • {t.customer_name} — {(t.trip_data?.name) || 'Unnamed Trip'}
+                • {t.customer_name} — {t.trip_data?.name || 'Unnamed Trip'}
               </div>
             ))}
           </motion.div>
@@ -549,9 +593,12 @@ export default function AgentTripsPage() {
             { key: 'booked', label: 'Booked', icon: CheckCircle, color: 'text-forest-400' },
             { key: 'cancelled', label: 'Cancelled', icon: Trash2, color: 'text-coral-400' },
           ].map(({ key, label, icon: Icon, color }) => (
-            <div key={key} className="travel-card p-4 text-center cursor-pointer"
+            <div
+              key={key}
+              className="travel-card p-4 text-center cursor-pointer"
               onClick={() => setFilter(key)}
-              style={{ borderColor: filter === key ? 'rgba(0,201,177,0.3)' : undefined }}>
+              style={{ borderColor: filter === key ? 'rgba(0,201,177,0.3)' : undefined }}
+            >
               <Icon className={`w-4 h-4 ${color} mx-auto mb-2`} />
               <div className={`text-2xl font-bold ${color}`}>{statusCounts[key]}</div>
               <div className="text-muted text-xs">{label}</div>
@@ -562,15 +609,17 @@ export default function AgentTripsPage() {
         {/* Filter tabs */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {['all', 'pending', 'accepted', 'reviewed', 'booked', 'cancelled'].map(f => (
-            <button key={f} onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${filter === f
-                  ? 'text-ocean-400'
-                  : 'text-muted hover:text-white'
-                }`}
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                filter === f ? 'text-ocean-400' : 'text-muted hover:text-white'
+              }`}
               style={{
                 background: filter === f ? 'rgba(0,201,177,0.12)' : 'rgba(22,32,50,0.7)',
-                borderColor: filter === f ? 'rgba(0,201,177,0.3)' : 'rgba(255,255,255,0.08)'
-              }}>
+                borderColor: filter === f ? 'rgba(0,201,177,0.3)' : 'rgba(255,255,255,0.08)',
+              }}
+            >
               {f.charAt(0).toUpperCase() + f.slice(1)} ({statusCounts[f] ?? trips.length})
             </button>
           ))}
@@ -579,8 +628,10 @@ export default function AgentTripsPage() {
         {/* Trip list */}
         {loading ? (
           <div className="text-center py-20">
-            <div className="w-12 h-12 border-2 border-ocean-400 border-t-transparent rounded-full mx-auto mb-4"
-              style={{ animation: 'spin 1s linear infinite' }} />
+            <div
+              className="w-12 h-12 border-2 border-ocean-400 border-t-transparent rounded-full mx-auto mb-4"
+              style={{ animation: 'spin 1s linear infinite' }}
+            />
             <p className="text-muted">Loading trips…</p>
           </div>
         ) : filtered.length === 0 ? (
@@ -637,8 +688,10 @@ export default function AgentTripsPage() {
               </div>
               {/* Progress bar */}
               <div className="mt-3 h-1 bg-white/5 rounded-full overflow-hidden">
-                <div className="undo-progress h-full rounded-full"
-                  style={{ background: 'linear-gradient(90deg, #FF6B6B, #F7C948)' }} />
+                <div
+                  className="undo-progress h-full rounded-full"
+                  style={{ background: 'linear-gradient(90deg, #FF6B6B, #F7C948)' }}
+                />
               </div>
             </motion.div>
           ))}

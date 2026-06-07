@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  CheckCircle, Plane, Package, RefreshCw, MessageCircle, Train, Bus, Car, Building2, Map,
+  CheckCircle, Plane, Package, RefreshCw, MessageCircle, Train, Bus, Car, Map,
   Download, Clock, ChevronRight, Sparkles, AlertCircle, FileWarning,
   QrCode, Smartphone, ArrowRight, RotateCcw, Headphones, Bell, Star, Zap
 } from 'lucide-react'

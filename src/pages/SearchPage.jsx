@@ -40,11 +40,7 @@ const MOCK_FLIGHTS = [
   },
 ]
 
-const normalizePrice = (value, fallback = 0) => {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  const parsed = Number(String(value ?? '').replace(/[^\d.]/g, ''))
-  return Number.isFinite(parsed) ? parsed : fallback
-}
+
 
 export default function SearchPage() {
   const [tripType, setTripType] = useState('oneWay')

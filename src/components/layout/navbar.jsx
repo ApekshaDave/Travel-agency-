@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Menu, X,
   Sparkles, RefreshCw,
   ChevronDown, ArrowRight, LogIn,
-  AlertTriangle, DollarSign, Bell, LogOut, Globe2
+  AlertTriangle, DollarSign, Bell, LogOut
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'

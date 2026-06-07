@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState} from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import {
   Sparkles, ArrowRight, Plane, Globe2, Zap,
   MessageSquare, TrendingUp, MapPin, ChevronRight,
-  Clock, Users, Building2, Train, Bus, CheckCircle, Map,
+  Clock, Users, CheckCircle,
   Star, Shield, Headphones
 } from 'lucide-react'
 
@@ -23,14 +23,6 @@ const STATS = [
   { value: '3.2×', label: 'Faster Than Portals', icon: Clock, color: 'text-success' },
   { value: '40%', label: 'Cost Reduction', icon: TrendingUp, color: 'text-info' },
 ]
-
-const CHAT_EXAMPLES = [
-  '"Book me Delhi to Singapore next Friday, economy, under ₹20,000"',
-  '"Find me a 5-day beach trip in December with flexible dates"',
-  '"I need to fly to London on the 15th, check visa requirements"',
-  '"Change my Mumbai flight to the evening departure"',
-]
-
 const HOW_STEPS = [
   {
     step: '01', title: 'Tell AI your plan',
@@ -72,22 +64,10 @@ function DestinationImage({ src, alt }) {
 }
 
 export default function HomePage() {
-  const [chatIdx, setChatIdx] = useState(0)
-  const [chatVisible, setChatVisible] = useState(true)
+  
   const { scrollY } = useScroll()
   const heroY = useTransform(scrollY, [0, 500], [0, 150])
   const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setChatVisible(false)
-      setTimeout(() => {
-        setChatIdx(i => (i + 1) % CHAT_EXAMPLES.length)
-        setChatVisible(true)
-      }, 400)
-    }, 3500)
-    return () => clearInterval(interval)
-  }, [])
 
   return (
     <div className="overflow-hidden">
@@ -304,7 +284,7 @@ export default function HomePage() {
           </motion.div>
 
           <div className="space-y-12">
-            {HOW_STEPS.map(({ step, title, desc, icon: Icon, color, preview }, i) => (
+            {HOW_STEPS.map(({ step, title, desc, icon: Icon, preview }, i) => (
               <motion.div
                 key={step}
                 initial={{ opacity: 0, x: i % 2 === 0 ? -30 : 30 }}
@@ -444,7 +424,7 @@ export default function HomePage() {
               { icon: Shield, title: 'Secure Payments', desc: 'Bank-grade encryption on every transaction', color: 'icon-box-blue' },
               { icon: Star, title: '4.9/5 Rating', desc: 'Based on 12,000+ verified customer reviews', color: 'icon-box-amber' },
               { icon: Headphones, title: '24/7 Support', desc: 'Expert travel agents available around the clock', color: 'icon-box-green' },
-            ].map(({ icon: Icon, title, desc, color }) => (
+            ].map(({ icon: Icon, title, desc }) => (
               <motion.div
                 key={title}
                 initial={{ opacity: 0, y: 20 }}

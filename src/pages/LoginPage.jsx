@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { motion} from 'framer-motion'
+import { Link, useNavigate } from 'react-router-dom'
 import {
-  Mail, Lock, ArrowRight, Globe, Phone,
-  Sparkles, ShieldCheck, Plane, CheckCircle2,
-  Building2, Users, ArrowRight, Globe, ShieldCheck, User, Plane, CheckCircle2
+   
+  ArrowRight,
+  Globe, Sparkles,
+  ShieldCheck,
+  Plane,
+  Building2,
+  Users,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { supabase } from '../utils/supabaseClient'
 import { useAuth } from '../context/AuthContext'
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
-  const location = useLocation()
+  
   const { user, signInWithOAuth } = useAuth()
 
   // Redirect users who are already logged in

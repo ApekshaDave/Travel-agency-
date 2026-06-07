@@ -52,7 +52,7 @@ export function AuthProvider({ children }) {
           setUser(session.user)
           setToken(storedToken)
         }
-      } catch (err) {
+      } catch {
         localStorage.removeItem('voyageai_jwt_token')
         localStorage.removeItem('voyageai_user')
         setUser(null)
@@ -81,11 +81,9 @@ export function AuthProvider({ children }) {
       localStorage.setItem('voyageai_jwt_token', response.token)
       localStorage.setItem('voyageai_user', JSON.stringify(response.user))
       return response.user
-    } catch (err) {
-      throw err
-    } finally {
-      setLoading(false)
-    }
+    }finally {
+  setLoading(false)
+}
   }
 
   const signup = async (email, password, name, options = {}) => {
@@ -100,11 +98,9 @@ export function AuthProvider({ children }) {
       localStorage.setItem('voyageai_jwt_token', response.token)
       localStorage.setItem('voyageai_user', JSON.stringify(response.user))
       return response.user
-    } catch (err) {
-      throw err
-    } finally {
-      setLoading(false)
-    }
+    }finally {
+  setLoading(false)
+}
   }
 
   const completeProfileRegister = async (registrationDetails) => {
@@ -120,11 +116,9 @@ export function AuthProvider({ children }) {
       localStorage.setItem('voyageai_jwt_token', response.token)
       localStorage.setItem('voyageai_user', JSON.stringify(response.user))
       return response.user
-    } catch (err) {
-      throw err
-    } finally {
-      setLoading(false)
-    }
+    }finally {
+  setLoading(false)
+}
   }
 
   const logout = async () => {
