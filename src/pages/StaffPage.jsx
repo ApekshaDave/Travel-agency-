@@ -33,8 +33,8 @@ const STAFF_LINKS = [
     desc: 'Track operational alerts, finance notifications, booking exceptions, and routing rules.',
     to: '/finance/notifications',
     icon: Bell,
-    color: 'text-sky-400',
-    bg: 'bg-sky-400/10 border-sky-400/20',
+    color: 'text-red-400',
+    bg: 'bg-red-500/10 border-red-500/20',
   },
 ]
 
@@ -43,7 +43,6 @@ export default function StaffPage() {
   const canUseStaff = user?.role === 'agent' || user?.role === 'admin'
 
   return (
-
     <div className="min-h-screen pt-36 pb-16 px-4">
       <StaffNav />
       <div className="max-w-6xl mx-auto">

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { 
   Users, Building2, Phone, Briefcase, ArrowRight, 
-  Sparkles, ChevronDown,  User 
+  Sparkles, ChevronDown, User 
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
@@ -14,13 +14,12 @@ export default function CompleteProfile() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
-  const tempToken   = searchParams.get('token')
+  const tempToken    = searchParams.get('token')
   const defaultEmail = searchParams.get('email') || ''
   const defaultName  = searchParams.get('name') || ''
-  // Read intent from URL — 'agent' if they clicked "I am a Travel Agent", else 'user'
   const intentFromUrl = searchParams.get('intent') === 'agent' ? 'agent' : 'user'
 
-  const [role, setRole] = useState(intentFromUrl)  // ← pre-selected from intent
+  const [role, setRole] = useState(intentFromUrl)
   const [name, setName] = useState(defaultName)
   const [phone, setPhone] = useState('')
 
@@ -120,7 +119,7 @@ export default function CompleteProfile() {
         >
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-400/20 to-transparent" />
 
-          {/* Role selector — user can still switch if they want */}
+          {/* Role selector */}
           <div className="grid grid-cols-2 gap-4 mb-8">
             <motion.div
               whileHover={{ scale: 1.02, y: -1 }}
@@ -172,7 +171,7 @@ export default function CompleteProfile() {
             <div className="space-y-1.5">
               <label className="text-[10px] uppercase tracking-widest text-muted font-bold ml-1">Full Name</label>
               <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-gold-400 transition-colors" />
+                <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted transition-colors ${role === 'agent' ? 'group-focus-within:text-red-400' : 'group-focus-within:text-gold-400'}`} />
                 <input
                   type="text"
                   value={name}
@@ -189,7 +188,7 @@ export default function CompleteProfile() {
             <div className="space-y-1.5">
               <label className="text-[10px] uppercase tracking-widest text-muted font-bold ml-1">Phone Number</label>
               <div className="relative group">
-                <Phone className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:${role === 'agent' ? 'text-red-400' : 'text-gold-400'} transition-colors`} />
+                <Phone className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted transition-colors ${role === 'agent' ? 'group-focus-within:text-red-400' : 'group-focus-within:text-gold-400'}`} />
                 <input
                   type="tel"
                   value={phone}

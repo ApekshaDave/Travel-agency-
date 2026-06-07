@@ -65,7 +65,7 @@ function CaseCard({ c, i, selectedCase, setSelectedCase, handleResolve }) {
           <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{c.created}</span>
         </div>
 
-        <p className="mt-3 text-muted/80 text-xs leading-relaxed line-clamp-2 md:line-clamp-none bg-white/5 p-2 rounded-lg border border-white/5 italic">
+        <p className="mt-3 text-white/60 text-xs leading-relaxed line-clamp-2 md:line-clamp-none bg-white/5 p-2 rounded-lg border border-white/5 italic">
           &ldquo;{c.aiSummary}&rdquo;
         </p>
       </div>
@@ -117,7 +117,7 @@ function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent, onAgentA
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className={`px-2 py-0.5 text-[10px] rounded-full border font-bold uppercase ${
               caseData.typeLabel === 'Technical Issue'
-                ? 'bg-sky-400/10 text-sky-400 border-sky-400/20'
+                ? 'bg-red-500/10 text-red-400 border-red-500/20'
                 : caseData.typeLabel === 'Finance Issue'
                   ? 'bg-gold-400/10 text-gold-400 border-gold-400/20'
                   : 'bg-violet-400/10 text-violet-400 border-violet-400/20'
@@ -138,15 +138,15 @@ function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent, onAgentA
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {/* Customer info */}
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
-          <p className="text-muted text-xs uppercase tracking-wider mb-3">Customer</p>
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+          <p className="text-white/50 text-xs uppercase tracking-wider mb-3">Customer</p>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-11 h-11 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-lg">
               {caseData.customer[0]}
             </div>
             <div>
               <div className="text-white font-semibold">{caseData.customer}</div>
-              <div className="text-muted text-xs">{caseData.email}</div>
+              <div className="text-white/50 text-xs">{caseData.email}</div>
             </div>
           </div>
           <div className="flex gap-2">
@@ -163,8 +163,8 @@ function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent, onAgentA
         </div>
 
         {/* Booking info */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-          <p className="text-muted text-xs uppercase tracking-wider mb-3">Booking Details</p>
+        <div className="glass border border-border rounded-2xl p-5">
+          <p className="text-white/50 text-xs uppercase tracking-wider mb-3">Booking Details</p>
           <div className="grid grid-cols-2 gap-2 text-sm">
             {[
               ['Route', caseData.route],
@@ -173,8 +173,8 @@ function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent, onAgentA
               ['Status', caseData.status],
             ].map(([k, v]) => (
               <div key={k}>
-                <div className="text-slate-400 text-[10px] uppercase font-bold">{k}</div>
-                <div className="text-slate-800 font-semibold capitalize">{v}</div>
+                <div className="text-white/40 text-[10px] uppercase font-bold">{k}</div>
+                <div className="text-white font-semibold capitalize">{v}</div>
               </div>
             ))}
           </div>
@@ -198,17 +198,17 @@ function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent, onAgentA
         {/* Chat transcript */}
         {caseData.chatLog?.length > 0 && (
           <div>
-            <p className="text-muted text-xs uppercase tracking-wider mb-3">Chat Transcript</p>
+            <p className="text-white/50 text-xs uppercase tracking-wider mb-3">Chat Transcript</p>
             <div className="space-y-2">
               {caseData.chatLog.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[85%] px-3 py-2 rounded-xl text-xs ${
                     msg.role === 'user'
-                      ? 'bg-sky-500/15 border border-sky-500/20 text-white rounded-tr-sm'
+                      ? 'bg-red-500/15 border border-red-500/20 text-white rounded-tr-sm'
                       : 'glass border border-border text-white/80 rounded-tl-sm'
                   }`}>
                     <p className="leading-relaxed">{msg.msg}</p>
-                    <p className="text-muted/50 text-xs mt-1">{msg.time}</p>
+                    <p className="text-white/30 text-xs mt-1">{msg.time}</p>
                   </div>
                 </div>
               ))}
@@ -218,7 +218,7 @@ function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent, onAgentA
 
         {/* Agent note */}
         <div>
-          <p className="text-muted text-xs uppercase tracking-wider mb-2">Add Resolution Note</p>
+          <p className="text-white/50 text-xs uppercase tracking-wider mb-2">Add Resolution Note</p>
           <textarea
             value={note}
             onChange={e => setNote(e.target.value)}
@@ -329,11 +329,10 @@ export default function AgentDashboard() {
   const [filter] = useState('all')
   const [branch, setBranch] = useState('all')
   const [search, setSearch] = useState('')
-  const [view, setView] = useState('summary') // summary, queue, work
+  const [view, setView] = useState('summary')
   const [loading, setLoading] = useState(true)
   const [aiTip, setAiTip] = useState('')
 
-  // ── Fetch Issues ── defined before any useEffect that references it
   const fetchIssues = useCallback(async () => {
     setLoading(true)
     const { data, error } = await supabase
@@ -358,7 +357,6 @@ export default function AgentDashboard() {
     setLoading(false)
   }, [])
 
-  // ── Initial load — fetch inline to satisfy set-state-in-effect rule ──
   useEffect(() => {
     let cancelled = false
 
@@ -471,12 +469,11 @@ export default function AgentDashboard() {
 
   const stats = [
     { label: 'Open Cases', value: openCasesCount, icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/20' },
-    { label: 'Pending Approval', value: pendingCasesCount, icon: Clock, color: 'text-sky-400', bg: 'bg-sky-400/10 border-sky-400/20' },
+    { label: 'Pending Approval', value: pendingCasesCount, icon: Clock, color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
     { label: 'Resolved Today', value: resolvedCasesCount, icon: CheckCircle, color: 'text-sage-400', bg: 'bg-sage-400/10 border-sage-400/20' },
-    { label: 'Efficiency', value: '94%', icon: Zap, color: 'text-brand-primary', bg: 'bg-brand-primary/5' },
+    { label: 'Efficiency', value: '94%', icon: Zap, color: 'text-brand-primary', bg: 'bg-brand-primary/5 border-brand-primary/10' },
   ]
 
-  // Suppress unused warning — loading drives a future skeleton state
   void loading
 
   return (
@@ -497,16 +494,18 @@ export default function AgentDashboard() {
                   key={v}
                   onClick={() => { setView(v); setSelectedCase(null) }}
                   className={`px-4 py-2 rounded-xl text-sm font-medium capitalize transition-all ${
-                    view === v ? 'text-gold-400 bg-gold-400/5' : 'text-muted hover:text-white'
+                    view === v
+                      ? 'text-white bg-red-500/15 border border-red-500/25'
+                      : 'text-white/40 hover:text-white hover:bg-white/5 border border-transparent'
                   }`}
                 >
                   {v}
                 </button>
               ))}
               {selectedCase && (
-                <div className="flex items-center gap-2 text-gold-400">
+                <div className="flex items-center gap-2 text-red-400">
                   <ChevronRight className="w-4 h-4 text-muted" />
-                  <span className="px-3 py-1 bg-gold-400/10 rounded-lg text-xs font-bold">Active: {selectedCase.id}</span>
+                  <span className="px-3 py-1 bg-red-500/10 rounded-lg text-xs font-bold">Active: {selectedCase.id}</span>
                 </div>
               )}
             </div>
@@ -519,10 +518,11 @@ export default function AgentDashboard() {
           </div>
         </motion.div>
 
+        {/* AI Tip banner */}
         {aiTip && (
-          <div className="flex items-start gap-3 p-4 mb-6 bg-gold-400/8 border border-gold-400/20 rounded-2xl">
-            <Sparkles className="w-4 h-4 text-gold-400 flex-shrink-0 mt-0.5" />
-            <p className="text-gold-200/80 text-sm">{aiTip}</p>
+          <div className="flex items-start gap-3 p-4 mb-6 bg-red-500/10 border border-red-500/20 rounded-2xl">
+            <Sparkles className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+            <p className="text-white text-sm">{aiTip}</p>
           </div>
         )}
 
@@ -532,13 +532,13 @@ export default function AgentDashboard() {
           {/* Branch Sidebar */}
           {(view === 'queue' || view === 'work') && !selectedCase && (
             <div className="w-full md:w-64 flex-shrink-0 space-y-2">
-              <p className="text-[10px] font-bold text-muted uppercase tracking-widest px-4 mb-4">Support Branches</p>
+              <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-4 mb-4">Support Branches</p>
               {BRANCHES.map((b) => (
                 <button
                   key={b.id}
                   onClick={() => setBranch(b.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
-                    branch === b.id ? 'bg-white/10 text-white shadow-xl' : 'text-muted hover:bg-white/5'
+                    branch === b.id ? 'bg-white/10 text-white shadow-xl' : 'text-white/40 hover:text-white hover:bg-white/5'
                   }`}
                 >
                   <b.icon className={`w-4 h-4 ${b.color}`} />
@@ -555,9 +555,9 @@ export default function AgentDashboard() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {stats.map(({ label, value, icon: Icon, color, bg }) => (
                     <div key={label} className={`glass border rounded-2xl p-4 ${bg}`}>
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-3">
                         <Icon className={`w-4 h-4 ${color}`} />
-                        <span className="text-[10px] uppercase font-bold text-white/40 tracking-widest">{label}</span>
+                        <span className="text-[10px] uppercase font-bold text-white/50 tracking-widest text-right">{label}</span>
                       </div>
                       <div className="font-bold text-2xl text-white">{value}</div>
                     </div>
@@ -583,7 +583,7 @@ export default function AgentDashboard() {
                   {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').length > 4 && (
                     <button
                       onClick={() => setView('queue')}
-                      className="mt-6 w-full py-4 glass border border-border rounded-2xl text-muted hover:text-white transition-all text-sm font-medium"
+                      className="mt-6 w-full py-4 glass border border-border rounded-2xl text-white/50 hover:text-white transition-all text-sm font-medium"
                     >
                       View all {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').length} high-priority cases
                     </button>
@@ -597,23 +597,23 @@ export default function AgentDashboard() {
 
                 {/* Sidebar task list */}
                 <div className={`${selectedCase ? 'block' : 'hidden'} space-y-3 max-h-[calc(100vh-180px)] overflow-y-auto pr-2 custom-scrollbar`}>
-                  <div className="text-[10px] font-bold text-muted uppercase tracking-widest px-2 mb-2">Remaining Tasks</div>
+                  <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-2 mb-2">Remaining Tasks</div>
                   {cases.filter(c => c.status !== 'resolved').map((c) => (
                     <div
                       key={c.id}
                       onClick={() => setSelectedCase(c)}
                       className={`p-3 rounded-xl border transition-all cursor-pointer ${
                         selectedCase?.id === c.id
-                          ? 'bg-gold-400/10 border-gold-400/30'
-                          : 'border-border hover:border-white/10 text-muted'
+                          ? 'bg-red-500/10 border-red-500/30'
+                          : 'border-border hover:border-white/10 text-white/40'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] font-mono">{c.id}</span>
+                        <span className="text-[10px] font-mono text-white/50">{c.id}</span>
                         <div className={`w-1.5 h-1.5 rounded-full ${PRIORITY_STYLES[c.priority]?.dot || 'bg-muted'}`} />
                       </div>
                       <div className="text-xs font-bold text-white truncate">{c.customer}</div>
-                      <div className="text-[10px] opacity-60 truncate">{c.typeLabel}</div>
+                      <div className="text-[10px] text-white/40 truncate">{c.typeLabel}</div>
                     </div>
                   ))}
                 </div>
@@ -633,10 +633,10 @@ export default function AgentDashboard() {
                       <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
                         <h2 className="text-white font-bold text-xl uppercase tracking-tighter">Full Queue</h2>
                         <div className="flex items-center gap-2">
-                          <Search className="w-4 h-4 text-muted" />
+                          <Search className="w-4 h-4 text-white/40" />
                           <input
                             placeholder="Search tickets..."
-                            className="bg-surface border border-border text-xs px-4 py-2 rounded-xl outline-none focus:border-gold-400/30 transition-all w-64"
+                            className="bg-surface border border-border text-white text-xs px-4 py-2 rounded-xl outline-none focus:border-red-500/30 transition-all w-64 placeholder:text-white/30"
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                           />
