@@ -4,7 +4,7 @@ import { useSearchParams, Link } from 'react-router-dom'
 import {
   Sparkles, Send, Mic, Plane, Users,
   ArrowRight, RefreshCw,
-  AlertTriangle, CheckCircle, Clock
+  AlertTriangle
 } from 'lucide-react'
 import { callVoyageAI, detectTripIntent, generateMultiModalTrip, updateTripWithPreferences } from '../utils/multiModalApi'
 import { useAuth } from '../context/AuthContext'
@@ -361,7 +361,7 @@ export default function ChatPage() {
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="font-display font-bold text-slate-900 text-lg">VoyageAI Assistant</h1>
+              <h1 className="font-display font-bold text-slate-900 text-lg">VoyageAI Travel Guidet</h1>
               <div className="flex items-center gap-1.5 text-xs text-slate-400">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                 Online · Powered by Groq LPU
