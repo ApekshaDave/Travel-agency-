@@ -8,14 +8,13 @@ import {
   Star, Shield, Headphones
 } from 'lucide-react'
 
-// FIX 3: Replaced with Indian destinations
 const DESTINATIONS = [
   { city: 'Udaipur', country: 'Rajasthan', temp: '32°C', tag: 'Lakes & Palaces', img: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=500&q=80' },
   { city: 'Goa', country: 'India', temp: '30°C', tag: 'Beach & Nightlife', img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=500&q=80' },
   { city: 'Kerala', country: 'India', temp: '27°C', tag: 'Backwaters & Nature', img: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=500&q=80' },
   { city: 'Agra', country: 'Uttar Pradesh', temp: '34°C', tag: 'Heritage & Taj Mahal', img: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=500&q=80' },
   { city: 'Manali', country: 'Himachal Pradesh', temp: '12°C', tag: 'Mountains & Snow', img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=500&q=80' },
-  { city: 'Varanasi', country: 'Uttar Pradesh', temp: '29°C', tag: 'Spiritual & Culture', img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=500&q=80' },
+  { city: 'Darjeeling', country: 'West Bengal', temp: '14°C', tag: 'Tea Gardens & Hills', img: 'https://images.unsplash.com/photo-1544083150-a1e2c2e3b3f1?w=500&q=80' },
 ]
 
 const STATS = [
@@ -42,7 +41,6 @@ const HOW_STEPS = [
   },
 ]
 
-// FIX 2: Only 2 items so using grid-cols-2 to keep them centered and aligned
 const QUICK_LINKS = [
   { label: 'Trip Builder', icon: Sparkles, path: '/trip-builder', color: 'bg-pink-50 text-pink-600' },
   { label: 'AI Chat', icon: MessageSquare, path: '/chat', color: 'bg-orange-50 text-orange-600' },
@@ -73,14 +71,12 @@ export default function HomePage() {
 
   return (
     <div className="overflow-hidden">
-      {/* ─── HERO (light, vibrant) ──────────────────────────────────────────── */}
+      {/* ─── HERO ──────────────────────────────────────────── */}
       <section className="relative min-h-screen flex items-center justify-center pt-24 pb-20 overflow-hidden bg-surface-light">
-        {/* Background layers */}
         <div className="absolute inset-0 bg-gradient-to-br from-white to-surface-subtle pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-tr from-brand/5 to-transparent pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-bl from-accent/5 to-transparent pointer-events-none" />
 
-        {/* Animated orbs */}
         <motion.div
           className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full pointer-events-none"
           style={{ background: 'radial-gradient(circle, rgba(26,110,189,0.15) 0%, transparent 70%)', filter: 'blur(60px)' }}
@@ -94,7 +90,6 @@ export default function HomePage() {
           transition={{ duration: 12, repeat: Infinity, delay: 2 }}
         />
 
-        {/* Orbiting plane */}
         <motion.div
           className="absolute top-1/2 left-1/2 -ml-3 -mt-3 hidden lg:block"
           style={{ originX: '50%', originY: '50%' }}
@@ -110,7 +105,6 @@ export default function HomePage() {
           style={{ y: heroY, opacity: heroOpacity }}
           className="relative z-10 max-w-5xl mx-auto px-6 text-center"
         >
-          {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -122,7 +116,6 @@ export default function HomePage() {
             <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
           </motion.div>
 
-          {/* Headline */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -131,7 +124,6 @@ export default function HomePage() {
           >
             <span>Travel the way</span>
             <br />
-            {/* FIX 1: Changed from text-shimmer (yellow/gold) to blue gradient */}
             <span
               className="italic"
               style={{
@@ -155,7 +147,6 @@ export default function HomePage() {
             books instantly, and manages everything after — all through natural conversation.
           </motion.p>
 
-          {/* CTAs */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -175,17 +166,16 @@ export default function HomePage() {
           </motion.div>
         </motion.div>
 
-        {/* Scroll indicator */}
         <motion.div
           className="hidden md:flex absolute bottom-8 right-8 flex-col items-center gap-2"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2 }}
         >
-          <span className="text-[9px] text-white/30 font-bold tracking-[0.2em] uppercase">Scroll</span>
-          <div className="w-5 h-8 border border-white/20 rounded-full flex justify-center p-1.5">
+          <span className="text-[9px] text-slate-400 font-bold tracking-[0.2em] uppercase">Scroll</span>
+          <div className="w-5 h-8 border border-slate-200 rounded-full flex justify-center p-1.5">
             <motion.div
-              className="w-1 h-1.5 bg-orange-400 rounded-full"
+              className="w-1 h-1.5 bg-blue-400 rounded-full"
               animate={{ y: [0, 8, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             />
@@ -197,7 +187,6 @@ export default function HomePage() {
       <section className="bg-white py-10 border-b border-slate-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <p className="text-xs uppercase tracking-widest text-slate-400 font-bold text-center mb-6">Quick Access</p>
-          {/* FIX 2: Changed to grid-cols-2 with max-w constraint so 2 cards are perfectly centered & equal width */}
           <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
             {QUICK_LINKS.map(({ label, icon: Icon, path, color }) => (
               <Link
@@ -340,7 +329,6 @@ export default function HomePage() {
           >
             <div>
               <span className="section-tag">Trending Destinations</span>
-              {/* FIX 3: Updated heading to reflect India focus */}
               <h2 className="font-display text-4xl font-bold text-slate-900">Explore Incredible India</h2>
             </div>
             <Link to="/search" className="flex items-center gap-1 text-sm text-brand-600 hover:text-brand-700 font-semibold transition-colors">
@@ -378,7 +366,6 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Hover CTA */}
                 <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
                   <Link
                     to={`/chat?dest=${city}`}
@@ -398,9 +385,9 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             {[
-              { icon: Shield, title: 'Secure Payments', desc: 'Bank-grade encryption on every transaction', color: 'icon-box-blue' },
-              { icon: Star, title: '4.9/5 Rating', desc: 'Based on 12,000+ verified customer reviews', color: 'icon-box-amber' },
-              { icon: Headphones, title: '24/7 Support', desc: 'Expert travel agents available around the clock', color: 'icon-box-green' },
+              { icon: Shield, title: 'Secure Payments', desc: 'Bank-grade encryption on every transaction' },
+              { icon: Star, title: '4.9/5 Rating', desc: 'Based on 12,000+ verified customer reviews' },
+              { icon: Headphones, title: '24/7 Support', desc: 'Expert travel agents available around the clock' },
             ].map(({ icon: Icon, title, desc }) => (
               <motion.div
                 key={title}
@@ -432,10 +419,8 @@ export default function HomePage() {
               background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 40%, #EEF2FF 70%, #F0F9FF 100%)'
             }}
           >
-            {/* Soft decorative orbs */}
             <div className="absolute top-0 right-0 w-72 h-72 rounded-full bg-blue-300/20 blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-indigo-300/15 blur-3xl pointer-events-none" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-40 rounded-full bg-sky-200/20 blur-2xl pointer-events-none" />
 
             <div className="relative z-10 p-10 lg:p-16 text-center">
               <h2 className="font-display text-4xl md:text-5xl font-bold text-slate-900 mb-4">
@@ -472,20 +457,25 @@ export default function HomePage() {
       </section>
 
       {/* ─── FOOTER ───────────────────────────────────────────────────────── */}
-      <footer className="bg-slate-900 py-12 px-4 sm:px-6">
+      <footer className="bg-white border-t border-slate-100 py-12 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-accent-gradient flex items-center justify-center shadow-accent-sm">
+            {/* Logo */}
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg, #1A6EBD 0%, #1558A0 100%)' }}
+              >
                 <Plane className="w-4 h-4 text-white" />
               </div>
-              <span className="font-display font-bold text-xl text-white">VoyageAI</span>
+              <span className="font-display font-bold text-lg text-slate-900">VoyageAI</span>
             </div>
-            <p className="text-slate-500 text-sm">© 2025 VoyageAI · AI-First Travel Platform</p>
-            <div className="flex gap-6 text-sm text-slate-500">
-              <a href="#" className="hover:text-white transition-colors">Privacy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms</a>
-              <a href="#" className="hover:text-white transition-colors">Contact</a>
+
+            <p className="text-slate-400 text-sm">© 2025 VoyageAI · AI-First Travel Platform</p>
+
+            <div className="flex gap-6 text-sm text-slate-400">
+              <a href="#" className="hover:text-blue-600 transition-colors">Privacy</a>
+              <a href="#" className="hover:text-blue-600 transition-colors">Terms</a>
+              <a href="#" className="hover:text-blue-600 transition-colors">Contact</a>
             </div>
           </div>
         </div>
