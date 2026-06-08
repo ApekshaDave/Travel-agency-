@@ -15,7 +15,7 @@ import {  getTripById, updateTripItinerary } from '../utils/tripStore'
 
 // ── Segment types ─────────────────────────────────────────────────────────────
 const SEGMENT_TYPES = [
-  { id: 'flight', label: 'Flight', icon: Plane, color: 'text-gold-400', bg: 'bg-gold-400/10 border-gold-400/20' },
+  { id: 'flight', label: 'Flight', icon: Plane, color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/20' },
   { id: 'train', label: 'Train', icon: Train, color: 'text-sky-400', bg: 'bg-sky-400/10 border-sky-400/20' },
   { id: 'bus', label: 'Bus', icon: Bus, color: 'text-violet-400', bg: 'bg-violet-400/10 border-violet-400/20' },
   { id: 'roadways', label: 'Roadways', icon: Car, color: 'text-orange-400', bg: 'bg-orange-400/10 border-orange-400/20' },
@@ -189,26 +189,26 @@ function TripSegment({ segment, onRemove, onEdit, index, isAgent }) {
       </div>
 
       <div className="flex-1 pb-4 min-w-0">
-        <div className="glass border border-border rounded-2xl p-4 transition-all hover:border-border/80">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 transition-all hover:border-slate-200">
           <div className="flex items-start justify-between gap-2 flex-wrap">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <span className={`text-xs font-bold uppercase tracking-wider ${segType.color}`}>
                   {segType.label}
                 </span>
-                <span className="text-muted text-xs font-mono">{segment.date}</span>
+                <span className="text-slate-500 text-xs font-mono">{segment.date}</span>
               </div>
-              <div className="text-white font-semibold text-sm mb-0.5">
+              <div className="text-slate-900 font-semibold text-sm mb-0.5">
                 {segment.from}{segment.to ? ` → ${segment.to}` : ''}
               </div>
-              <div className="text-muted text-xs">{segment.detail}</div>
+              <div className="text-slate-500 text-xs">{segment.detail}</div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-gold-400 font-bold text-sm font-mono">₹{segment.price.toLocaleString()}</span>
+              <span className="text-blue-500 font-bold text-sm font-mono">₹{segment.price.toLocaleString()}</span>
               {isAgent && onEdit && (
                 <button
                   onClick={() => onEdit(segment)}
-                  className="p-1.5 text-muted hover:text-gold-400 transition-colors rounded-lg hover:bg-gold-400/10"
+                  className="p-1.5 text-slate-400 hover:text-blue-500 transition-colors rounded-lg hover:bg-blue-500/10"
                   title="Edit segment details (Agent Only)"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
@@ -217,7 +217,7 @@ function TripSegment({ segment, onRemove, onEdit, index, isAgent }) {
               {onRemove && (
                 <button
                   onClick={() => onRemove(segment.id)}
-                  className="p-1.5 text-muted hover:text-red-400 transition-colors rounded-lg hover:bg-red-400/10"
+                  className="p-1.5 text-slate-400 hover:text-red-400 transition-colors rounded-lg hover:bg-red-400/10"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -737,30 +737,30 @@ export default function TripBuilder() {
   const grandTripTotal = staysCost + transportCost + sightsCost + estFoodCost
 
   return (
-    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6">
+    <div className="min-h-screen pt-20 pb-16 px-4 sm:px-6 bg-white">
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 sm:mb-8 flex items-start justify-between flex-wrap gap-3">
           <div className="min-w-0">
-            <div className="flex items-center gap-2 text-muted text-xs sm:text-sm mb-2 sm:mb-3 flex-wrap">
-              <Link to="/" className="hover:text-gold-400 transition-colors">Home</Link>
+            <div className="flex items-center gap-2 text-slate-400 text-xs sm:text-sm mb-2 sm:mb-3 flex-wrap">
+              <Link to="/" className="hover:text-blue-500 transition-colors">Home</Link>
               <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
-              <span className="text-white">Trip Builder</span>
+              <span className="text-slate-900">Trip Builder</span>
               {activeTrip?.passengers?.length > 0 && (
                 <>
                   <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
-                  <span className="text-white">{activeTrip.passengers.length} Passengers</span>
+                  <span className="text-slate-900">{activeTrip.passengers.length} Passengers</span>
                 </>
               )}
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1">Trip Builder</h1>
-            <p className="text-muted text-sm">Describe your destination and preferences — AI generates a complete itinerary.</p>
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-1">Trip Builder</h1>
+            <p className="text-slate-500 text-sm">Describe your destination and preferences — AI generates a complete itinerary.</p>
           </div>
 
           {/* Sandbox Agent Switcher */}
           {canUseAgentOverride && (
-  <div className="bg-void border border-red-500/20 px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl flex items-center gap-2 sm:gap-3 flex-shrink-0 shadow-sm">
+  <div className="bg-white border border-red-500/20 px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl flex items-center gap-2 sm:gap-3 flex-shrink-0 shadow-sm">
     <span className="text-xs font-semibold text-red-300 hidden sm:block">Agent Override</span>
     <span className="text-xs font-semibold text-red-300 sm:hidden">Agent</span>
     <button
@@ -771,7 +771,7 @@ export default function TripBuilder() {
       className={`w-11 h-6 rounded-full transition-all relative p-0.5 flex-shrink-0 border ${
         isAgent
           ? 'bg-red-500 border-red-400/50'
-          : 'bg-white/10 border-white/10'
+          : 'bg-slate-100 border-slate-200'
       }`}
     >
       <div className={`w-5 h-5 rounded-full shadow-sm transform transition-transform ${
@@ -790,9 +790,9 @@ export default function TripBuilder() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.08 }}
-          className="glass gradient-border rounded-3xl p-6 mb-6"
+          className="bg-white border border-slate-200 rounded-3xl p-6 mb-6"
         >
-          <label className="text-xs text-gold-400 uppercase tracking-wider mb-3 flex items-center gap-1.5 font-bold">
+          <label className="text-xs text-blue-500 uppercase tracking-wider mb-3 flex items-center gap-1.5 font-bold">
             <Sparkles className="w-3.5 h-3.5" /> Enter Destination & Preferences
           </label>
           <div
@@ -814,8 +814,8 @@ export default function TripBuilder() {
               onClick={handleGenerate}
               disabled={generating || !prompt.trim()}
               className={`px-5 py-3 font-bold rounded-xl flex items-center gap-2 self-end transition-all flex-shrink-0 ${!prompt.trim() || generating
-                ? 'bg-surface text-muted cursor-not-allowed'
-                : 'bg-gradient-to-r from-gold-500 to-gold-400 text-void shadow-gold-sm hover:shadow-gold'
+                ? 'bg-slate-100 text-slate-500 cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-blue-500/10 hover:shadow-blue-500/20'
                 }`}
             >
               {generating ? (
@@ -828,7 +828,7 @@ export default function TripBuilder() {
               {generating ? 'Building...' : 'Build Trip'}
             </motion.button>
           </div>
-          <p className="text-muted/50 text-xs mt-3">Powered by VoyageAI Intelligence LPU · Consolidates transport, stays, dining & activities</p>
+          <p className="text-slate-400/60 text-xs mt-3">Powered by VoyageAI Intelligence LPU · Consolidates transport, stays, dining & activities</p>
         </motion.div>
 
         {/* Error */}
@@ -845,7 +845,7 @@ export default function TripBuilder() {
         {/* Presets */}
         {!activeTrip && !generating && (
           <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }}>
-            <h2 className="font-display text-xl font-bold text-white mb-4">Or choose a preset trip</h2>
+            <h2 className="font-display text-xl font-bold text-slate-900 mb-4">Or choose a preset trip</h2>
             <div className="grid sm:grid-cols-2 gap-4 mb-8">
               {PRESET_TRIPS.map(preset => (
                 <motion.button
@@ -853,14 +853,14 @@ export default function TripBuilder() {
                   whileHover={{ y: -3 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handlePreset(preset)}
-                  className="glass border border-border hover:border-gold-400/20 rounded-2xl p-5 text-left transition-all group"
+                  className="bg-white border border-slate-200 hover:border-blue-500/20 rounded-2xl p-5 text-left transition-all group"
                 >
                   <div className="flex items-start gap-3">
                     <span className="text-3xl flex-shrink-0">{preset.icon}</span>
                     <div>
-                      <div className="font-display text-white font-bold group-hover:text-gold-300 transition-colors">{preset.name}</div>
-                      <div className="text-muted text-sm mb-2">{preset.desc}</div>
-                      <div className="flex items-center gap-3 text-xs text-muted">
+                      <div className="font-display text-slate-900 font-bold group-hover:text-blue-600 transition-colors">{preset.name}</div>
+                      <div className="text-slate-500 text-sm mb-2">{preset.desc}</div>
+                      <div className="flex items-center gap-3 text-xs text-slate-500">
                         <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {preset.duration}</span>
                         <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />
                           ₹{preset.segments.reduce((s, seg) => s + seg.price, 0).toLocaleString()}
@@ -886,12 +886,12 @@ export default function TripBuilder() {
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-gold-500 to-gold-400 flex items-center justify-center shadow-gold"
+                className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-500 flex items-center justify-center shadow-lg"
               >
-                <Sparkles className="w-8 h-8 text-void" />
+                <Sparkles className="w-8 h-8 text-white" />
               </motion.div>
-              <h3 className="font-display text-xl text-white mb-2">Analyzing destination and travel routes...</h3>
-              <p className="text-muted text-sm">Combining flight schedules, trains, buses, private cabs, restaurants & stays</p>
+              <h3 className="font-display text-xl text-slate-900 mb-2 font-bold">Analyzing destination and travel routes...</h3>
+              <p className="text-slate-500 text-sm">Combining flight schedules, trains, buses, private cabs, restaurants & stays</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -903,9 +903,9 @@ export default function TripBuilder() {
 
               {/* Agent mode banner */}
               {isAgent && (
-                <div className="mb-6 p-4 bg-gold-400/10 border border-gold-400/20 text-gold-300 text-xs rounded-2xl flex items-center justify-between">
+                <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs rounded-2xl flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-gold-400 animate-pulse" />
+                    <Zap className="w-4 h-4 text-blue-500 animate-pulse" />
                     <span><strong>Travel Agent Override Enabled</strong>: Click the edit icons (📝) next to any component to tweak pricing or titles.</span>
                   </div>
                   <button
@@ -914,7 +914,7 @@ export default function TripBuilder() {
                       desc: activeTrip.desc,
                       duration: activeTrip.duration
                     })}
-                    className="px-3 py-1 bg-gold-400 text-void font-bold rounded-lg flex items-center gap-1 hover:bg-gold-300 transition-colors hover:text-white"
+                    className="px-3 py-1 bg-blue-600 text-white font-bold rounded-lg flex items-center gap-1 hover:bg-blue-700 transition-colors hover:text-white"
                   >
                     <Edit3 className="w-3 h-3" /> Edit Trip Metadata
                   </button>
@@ -935,7 +935,7 @@ export default function TripBuilder() {
                   </div>
                   <Link
                     to="/agent/trips"
-                    className="px-3 py-1.5 glass border border-sky-400/20 text-sky-400 text-xs font-bold rounded-lg hover:bg-sky-400/10 transition-all"
+                    className="px-3 py-1.5 bg-white border border-sky-400/20 text-sky-400 text-xs font-bold rounded-lg hover:bg-sky-400/10 transition-all"
                   >
                     ← Back to Requests
                   </Link>
@@ -946,20 +946,20 @@ export default function TripBuilder() {
               <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <h2 className="font-display text-2xl font-bold text-white">
+                    <h2 className="font-display text-2xl font-bold text-slate-900">
                       {activeTrip.tripName || activeTrip.name}
                     </h2>
                     {activeTrip.isAI && (
-                      <span className="px-2 py-0.5 bg-gold-400/15 border border-gold-400/20 text-gold-400 text-xs rounded-full font-medium flex items-center gap-1">
+                      <span className="px-2 py-0.5 bg-blue-500/15 border border-blue-500/20 text-blue-500 text-xs rounded-full font-medium flex items-center gap-1">
                         <Sparkles className="w-3 h-3" /> VoyageAI LPU
                       </span>
                     )}
                   </div>
-                  <p className="text-muted text-sm">{activeTrip.desc} · {activeTrip.duration}</p>
+                  <p className="text-slate-500 text-sm">{activeTrip.desc} · {activeTrip.duration}</p>
                 </div>
                 <button
                   onClick={() => setActiveTrip(null)}
-                  className="px-3 py-2 glass border border-border rounded-xl text-sm text-muted hover:text-white transition-all"
+                  className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-500 hover:text-slate-900 transition-all"
                 >
                   ← Back to Planner
                 </button>
@@ -967,15 +967,15 @@ export default function TripBuilder() {
 
               {/* Cost Comparison Analyzer Banner */}
               {activeTrip.costComparison && (
-                <div className="mb-8 glass border border-white/5 rounded-3xl p-5 relative overflow-hidden bg-surface/5">
+                <div className="mb-8 glass border border-slate-100 rounded-3xl p-5 relative overflow-hidden bg-slate-50">
                   <div className="flex items-center justify-between mb-4 text-slate-900">
-                    <h3 className="font-display text-base font-bold text-white flex items-center gap-2">
-                      <HelpCircle className="w-4 h-4 text-gold-400" /> AI Transportation Expense Analyzer & Recommendation
+                    <h3 className="font-display text-base font-bold text-slate-900 flex items-center gap-2">
+                      <HelpCircle className="w-4 h-4 text-blue-500" /> AI Transportation Expense Analyzer & Recommendation
                     </h3>
                     {isAgent && (
                       <button
                         onClick={() => openEditModal('costComparison', 'comp', activeTrip.costComparison)}
-                        className="text-muted hover:text-gold-400 transition-colors"
+                        className="text-slate-400 hover:text-blue-500 transition-colors"
                         title="Edit Cost Comparison Suggestion"
                       >
                         <Edit3 className="w-4 h-4" />
@@ -985,30 +985,30 @@ export default function TripBuilder() {
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                     {[
-                      { type: 'Flight', cost: activeTrip.costComparison.flightCost, icon: Plane, color: 'text-gold-400', progress: 85 },
+                      { type: 'Flight', cost: activeTrip.costComparison.flightCost, icon: Plane, color: 'text-blue-500', progress: 85 },
                       { type: 'Train', cost: activeTrip.costComparison.trainCost, icon: Train, color: 'text-sky-400', progress: 30 },
                       { type: 'Bus', cost: activeTrip.costComparison.busCost, icon: Bus, color: 'text-violet-400', progress: 15 },
                       { type: 'Roadways', cost: activeTrip.costComparison.roadwaysCost || '₹2,500', icon: Car, color: 'text-orange-400', progress: 50 }
                     ].map(mode => {
                       const ModeIcon = mode.icon
                       return (
-                        <div key={mode.type} className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                        <div key={mode.type} className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs text-muted font-medium">{mode.type}</span>
+                            <span className="text-xs text-slate-500 font-medium">{mode.type}</span>
                             <ModeIcon className={`w-4 h-4 ${mode.color}`} />
                           </div>
-                          <div className="text-lg font-bold text-white mb-2">{mode.cost}</div>
-                          <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                            <div className="h-full bg-gold-400 rounded-full" style={{ width: `${mode.progress}%` }} />
+                          <div className="text-lg font-bold text-slate-900 mb-2">{mode.cost}</div>
+                          <div className="w-full h-1.5 bg-slate-50 rounded-full overflow-hidden">
+                            <div className="h-full bg-blue-600 rounded-full" style={{ width: `${mode.progress}%` }} />
                           </div>
                         </div>
                       )
                     })}
                   </div>
 
-                  <div className="p-4 rounded-2xl border border-gold-400/20 bg-gold-400/5 text-xs text-gold-200 leading-relaxed">
-                    <p className="mb-2 text-white/70"><strong className="text-white">Route Analysis:</strong> {activeTrip.costComparison.analysis}</p>
-                    <p className="font-semibold flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-gold-400" /> Suggestion: {activeTrip.costComparison.aiSuggestion}</p>
+                  <div className="p-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 text-xs text-blue-300 leading-relaxed">
+                    <p className="mb-2 text-slate-600"><strong className="text-slate-900">Route Analysis:</strong> {activeTrip.costComparison.analysis}</p>
+                    <p className="font-semibold flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-blue-500" /> Suggestion: {activeTrip.costComparison.aiSuggestion}</p>
                   </div>
                 </div>
               )}
@@ -1022,7 +1022,7 @@ export default function TripBuilder() {
                   {/* FIX 7 & 8: Unified nav tab list — removed 'transport_from' orphan,
                       replaced 'buses'/'roadways' (no nav entry) with correct tab ids */}
                   <div className="-mx-1 px-1">
-                    <div className="flex overflow-x-auto gap-0.5 border-b border-white/10 pb-px mb-5 sm:mb-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    <div className="flex overflow-x-auto gap-0.5 border-b border-slate-200 pb-px mb-5 sm:mb-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                       {[
                         { id: 'itinerary', label: '📋 Plan' },
                         { id: 'transport_to', label: '🛫 To Destination' },
@@ -1036,8 +1036,8 @@ export default function TripBuilder() {
                           key={tab.id}
                           onClick={() => setActiveTab(tab.id)}
                           className={`px-3 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-xs font-bold uppercase tracking-wider border-b-2 transition-all whitespace-nowrap -mb-px flex-shrink-0 ${activeTab === tab.id
-                            ? 'border-gold-400 text-gold-400'
-                            : 'border-transparent text-muted hover:text-white'
+                            ? 'border-blue-500 text-blue-500'
+                            : 'border-transparent text-slate-500 hover:text-white'
                             }`}
                         >
                           {tab.label}
@@ -1055,28 +1055,28 @@ export default function TripBuilder() {
 
                         {/* Day-by-Day Detailed Schedule */}
                         <div className="space-y-4">
-                          <h3 className="font-display text-lg font-bold text-white flex items-center gap-2">
-                            <CalendarIcon className="w-4 h-4 text-gold-400" /> Detailed Daily Schedule
+                          <h3 className="font-display text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <CalendarIcon className="w-4 h-4 text-blue-500" /> Detailed Daily Schedule
                           </h3>
 
                           {activeTrip.itineraryDays?.map((day, dIdx) => (
-                            <div key={dIdx} className="glass border border-border rounded-2xl p-5 relative overflow-hidden">
+                            <div key={dIdx} className="bg-white border border-slate-200 rounded-2xl p-5 relative overflow-hidden">
 
                               <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-xl bg-gold-400/15 border border-gold-400/20 flex flex-col items-center justify-center text-gold-400">
+                                  <div className="w-10 h-10 rounded-xl bg-blue-500/15 border border-blue-500/20 flex flex-col items-center justify-center text-blue-500">
                                     <span className="font-bold text-sm leading-none">{day.day}</span>
                                     <span className="text-[9px] uppercase font-bold tracking-tighter">Day</span>
                                   </div>
                                   <div>
-                                    <h4 className="text-white font-bold text-base">{day.title}</h4>
-                                    <span className="text-[10px] text-muted font-bold tracking-widest uppercase">{day.theme} · Budget: {day.estimatedDayBudget}</span>
+                                    <h4 className="text-slate-900 font-bold text-base">{day.title}</h4>
+                                    <span className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">{day.theme} · Budget: {day.estimatedDayBudget}</span>
                                   </div>
                                 </div>
                                 {isAgent && (
                                   <button
                                     onClick={() => openEditModal('itinerary', dIdx, day)}
-                                    className="p-1.5 text-muted hover:text-gold-400 transition-colors rounded-lg hover:bg-white/5"
+                                    className="p-1.5 text-slate-400 hover:text-blue-500 transition-colors rounded-lg hover:bg-slate-50"
                                     title="Edit Day Itinerary"
                                   >
                                     <Edit3 className="w-3.5 h-3.5" />
@@ -1084,11 +1084,11 @@ export default function TripBuilder() {
                                 )}
                               </div>
 
-                              <div className="space-y-4 pl-1 border-l border-white/5">
+                              <div className="space-y-4 pl-1 border-l border-slate-100">
                                 {/* Morning, Afternoon, Evening Slots */}
                                 {[
                                   { slot: 'morning', label: 'Morning Slot', icon: Coffee, color: 'text-amber-400' },
-                                  { slot: 'afternoon', label: 'Afternoon Slot', icon: Sun, color: 'text-gold-400' },
+                                  { slot: 'afternoon', label: 'Afternoon Slot', icon: Sun, color: 'text-blue-500' },
                                   { slot: 'evening', label: 'Evening Slot', icon: Moon, color: 'text-sky-400' }
                                 ].map(time => {
                                   const details = day[time.slot]
@@ -1097,15 +1097,15 @@ export default function TripBuilder() {
                                   return (
                                     <div key={time.slot} className="flex gap-3">
                                       <div className="flex flex-col items-center">
-                                        <div className="w-7 h-7 rounded-lg bg-surface flex items-center justify-center flex-shrink-0">
+                                        <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
                                           <IconComponent className={`w-3.5 h-3.5 ${time.color}`} />
                                         </div>
                                       </div>
                                       <div>
-                                        <div className="text-[10px] uppercase font-bold tracking-wider text-white/40">{time.label}</div>
-                                        <h5 className="font-bold text-sm text-white mt-0.5">{details.activity}</h5>
-                                        <p className="text-muted text-xs leading-relaxed mt-1">{details.description}</p>
-                                        <div className="flex items-center gap-3 text-[10px] font-semibold text-gold-400/80 mt-1">
+                                        <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">{time.label}</div>
+                                        <h5 className="font-bold text-sm text-slate-900 mt-0.5">{details.activity}</h5>
+                                        <p className="text-slate-500 text-xs leading-relaxed mt-1">{details.description}</p>
+                                        <div className="flex items-center gap-3 text-[10px] font-semibold text-blue-500/80 mt-1">
                                           <span>⏱ {details.duration}</span>
                                           <span>💵 Cost: {details.cost}</span>
                                           {details.tip && <span className="text-sky-300/80">💡 Tip: {details.tip}</span>}
@@ -1118,15 +1118,15 @@ export default function TripBuilder() {
 
                               {/* Daily dining recommendations */}
                               {day.meals && (
-                                <div className="mt-4 p-3 bg-white/2 rounded-xl border border-white/5 text-xs">
-                                  <div className="font-semibold text-white/80 mb-2 flex items-center gap-1.5">
+                                <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                                  <div className="font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
                                     <Utensils className="w-3.5 h-3.5 text-sage-400" /> Restaurant Recommendations
                                   </div>
                                   <div className="grid grid-cols-3 gap-2">
                                     {[['Breakfast', day.meals.breakfast], ['Lunch', day.meals.lunch], ['Dinner', day.meals.dinner]].map(([meal, desc]) => (
                                       <div key={meal}>
-                                        <span className="text-muted font-medium text-[10px] uppercase">{meal}</span>
-                                        <p className="text-white/70 truncate mt-0.5" title={desc}>{desc}</p>
+                                        <span className="text-slate-400 font-medium text-[10px] uppercase">{meal}</span>
+                                        <p className="text-slate-700 truncate mt-0.5" title={desc}>{desc}</p>
                                       </div>
                                     ))}
                                   </div>
@@ -1135,7 +1135,7 @@ export default function TripBuilder() {
 
                               {/* Daily transport tips */}
                               {day.transport && (
-                                <div className="mt-3 text-[10px] text-muted flex items-center gap-1.5">
+                                <div className="mt-3 text-[10px] text-slate-500 flex items-center gap-1.5">
                                   <MapPin className="w-3 h-3 text-sky-400" />
                                   <span>Daily travel recommendation: {day.transport}</span>
                                 </div>
@@ -1152,19 +1152,19 @@ export default function TripBuilder() {
                     {activeTab === 'transport_to' && (
                       <motion.div key="transport_to" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-display text-lg font-bold text-white">Compare Flight Options (Price/Individual)</h3>
-                          <span className="text-xs text-muted">Select an option to replace active flight segment</span>
+                          <h3 className="font-display text-lg font-bold text-slate-900">Compare Flight Options (Price/Individual)</h3>
+                          <span className="text-xs text-slate-500">Select an option to replace active flight segment</span>
                         </div>
                         <div className="space-y-3">
                           {activeTrip.flightOptions?.map((fOpt, idx) => {
                             const isActiveFlight = activeTrip.segments.some(s => s.type === 'flight' && s.price === fOpt.price && s.detail.includes(fOpt.flightNo))
                             return (
-                              <div key={fOpt.id || idx} className={`glass border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all ${isActiveFlight ? 'border-gold-400 bg-gold-400/5' : 'border-border'}`}>
+                              <div key={fOpt.id || idx} className={`glass border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all ${isActiveFlight ? 'border-blue-500 bg-blue-500/5' : 'border-slate-200'}`}>
                                 <div className="flex items-center gap-3">
                                   <span className="text-2xl">{fOpt.logo || '✈️'}</span>
                                   <div>
-                                    <h4 className="text-white font-bold text-sm">{fOpt.airline} <span className="text-white/40 text-xs font-normal">({fOpt.flightNo})</span></h4>
-                                    <div className="text-muted text-xs flex items-center gap-3 mt-1 font-mono">
+                                    <h4 className="text-slate-900 font-bold text-sm">{fOpt.airline} <span className="text-slate-400 text-xs font-normal">({fOpt.flightNo})</span></h4>
+                                    <div className="text-slate-500 text-xs flex items-center gap-3 mt-1 font-mono">
                                       <span>🛫 {fOpt.depart} – {fOpt.arrive}</span>
                                       <span>⏱ {fOpt.duration}</span>
                                       <span>💺 {fOpt.stops === 0 ? 'Non-Stop' : `${fOpt.stops} Stops`}</span>
@@ -1172,12 +1172,12 @@ export default function TripBuilder() {
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <span className="text-gold-400 font-bold text-base">₹{fOpt.price.toLocaleString()}</span>
+                                  <span className="text-blue-500 font-bold text-base">₹{fOpt.price.toLocaleString()}</span>
                                   <button
                                     onClick={() => selectFlightOption(fOpt)}
                                     className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${isActiveFlight
-                                      ? 'bg-gold-500/10 text-gold-400 border border-gold-400/20'
-                                      : 'bg-gold-gradient text-void hover:opacity-90 shadow-gold-sm'
+                                      ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                                      : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:opacity-90 shadow-blue-500/10'
                                       }`}
                                   >
                                     {isActiveFlight ? '✓ Selected' : 'Select Flight'}
@@ -1194,10 +1194,10 @@ export default function TripBuilder() {
                     {activeTab === 'stay' && (
                       <motion.div key="stay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
                         <div className="mb-4">
-                          <h3 className="font-display text-lg font-bold text-white flex items-center gap-2">
+                          <h3 className="font-display text-lg font-bold text-slate-900 flex items-center gap-2">
                             🏨 Top 10 Curated Stays in {activeTrip.name}
                           </h3>
-                          <p className="text-xs text-white/40 mt-1">AI has compared 40+ local options. Sorted by value-for-money.</p>
+                          <p className="text-xs text-slate-400 mt-1">AI has compared 40+ local options. Sorted by value-for-money.</p>
                         </div>
                         <div className="space-y-3">
                           {[...activeTrip.hotelOptions]
@@ -1208,30 +1208,30 @@ export default function TripBuilder() {
                               const isActiveHotel = activeTrip.segments.some(s => s.type === 'hotel' && s.from === hOpt.name)
                               return (
                                 // FIX 6: Wrapped both child divs inside a single parent div
-                                <div key={hOpt.id || idx} className={`glass border rounded-2xl p-5 flex items-center justify-between gap-4 transition-all hover:shadow-md ${isActiveHotel ? 'border-gold-400 bg-gold-400/5 ring-1 ring-gold-400' : 'border-border'}`}>
+                                <div key={hOpt.id || idx} className={`glass border rounded-2xl p-5 flex items-center justify-between gap-4 transition-all hover:shadow-md ${isActiveHotel ? 'border-blue-500 bg-blue-500/5 ring-1 ring-blue-500' : 'border-slate-200'}`}>
                                   <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-surface flex items-center justify-center font-mono font-bold text-muted text-sm">
+                                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center font-mono font-bold text-slate-500 text-sm">
                                       {(idx + 1).toString().padStart(2, '0')}
                                     </div>
                                     <div>
-                                      <h4 className="text-white font-bold text-sm">{hOpt.name}</h4>
-                                      <p className="text-muted text-xs mt-1">{hOpt.area} · {hOpt.stars}★ Property</p>
+                                      <h4 className="text-slate-900 font-bold text-sm">{hOpt.name}</h4>
+                                      <p className="text-slate-500 text-xs mt-1">{hOpt.area} · {hOpt.stars}★ Property</p>
                                       <div className="text-[10px] font-bold flex items-center gap-2 mt-1.5 uppercase tracking-tighter">
-                                        <span className="text-gold-400 bg-gold-400/10 px-1.5 py-0.5 rounded border border-gold-400/20">⭐ {hOpt.rating}/5 Rating</span>
+                                        <span className="text-blue-500 bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/20">⭐ {hOpt.rating}/5 Rating</span>
                                         <span className="text-sky-400">Free WiFi & Breakfast</span>
                                       </div>
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-3 flex-shrink-0 text-right">
                                     <div>
-                                      <span className="text-gold-400 font-bold text-base">₹{hOpt.pricePerNight.toLocaleString()}</span>
-                                      <div className="text-[9px] text-muted">₹{(hOpt.pricePerNight * days).toLocaleString()} total ({days} nights)</div>
+                                      <span className="text-blue-500 font-bold text-base">₹{hOpt.pricePerNight.toLocaleString()}</span>
+                                      <div className="text-[9px] text-slate-500">₹{(hOpt.pricePerNight * days).toLocaleString()} total ({days} nights)</div>
                                     </div>
                                     <button
                                       onClick={() => selectHotelOption(hOpt)}
                                       className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${isActiveHotel
-                                        ? 'bg-gold-500/10 text-gold-400 border border-gold-400/20'
-                                        : 'bg-gold-gradient text-void hover:opacity-90 shadow-gold-sm'
+                                        ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                                        : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:opacity-90 shadow-blue-500/10'
                                         }`}
                                     >
                                       {isActiveHotel ? '✓ Selected' : 'Select Stay'}
@@ -1248,31 +1248,31 @@ export default function TripBuilder() {
                     {activeTab === 'transport_within' && (
                       <motion.div key="transport_within" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
                         <div className="flex items-center justify-between mb-2 text-slate-900">
-                          <h3 className="font-display text-lg font-bold text-white">Compare Train Options (Price/Individual)</h3>
-                          <span className="text-xs text-muted">Select an option to replace active train segment</span>
+                          <h3 className="font-display text-lg font-bold text-slate-900">Compare Train Options (Price/Individual)</h3>
+                          <span className="text-xs text-slate-500">Select an option to replace active train segment</span>
                         </div>
                         <div className="space-y-3">
                           {activeTrip.trainOptions?.map((tOpt, idx) => {
                             const isActiveTrain = activeTrip.segments.some(s => s.type === 'train' && s.price === tOpt.price && s.detail.includes(tOpt.trainNo))
                             return (
-                              <div key={tOpt.id || idx} className={`glass border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all ${isActiveTrain ? 'border-gold-400 bg-gold-400/5' : 'border-border'}`}>
+                              <div key={tOpt.id || idx} className={`glass border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all ${isActiveTrain ? 'border-blue-500 bg-blue-500/5' : 'border-slate-200'}`}>
                                 <div className="flex items-center gap-3">
                                   <span className="text-2xl">🚂</span>
                                   <div>
-                                    <h4 className="text-white font-bold text-sm">{tOpt.name} <span className="text-muted text-xs font-normal">({tOpt.trainNo})</span></h4>
-                                    <div className="text-muted text-xs flex items-center gap-3 mt-1 font-mono">
+                                    <h4 className="text-slate-900 font-bold text-sm">{tOpt.name} <span className="text-slate-400 text-xs font-normal">({tOpt.trainNo})</span></h4>
+                                    <div className="text-slate-500 text-xs flex items-center gap-3 mt-1 font-mono">
                                       <span>🛫 {tOpt.depart} – {tOpt.arrive}</span>
                                       <span>⏱ {tOpt.duration}</span>
                                     </div>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <span className="text-gold-400 font-bold text-base">₹{tOpt.price.toLocaleString()}</span>
+                                  <span className="text-blue-500 font-bold text-base">₹{tOpt.price.toLocaleString()}</span>
                                   <button
                                     onClick={() => selectTrainOption(tOpt)}
                                     className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${isActiveTrain
-                                      ? 'bg-gold-500/10 text-gold-400 border border-gold-400/20'
-                                      : 'bg-gold-gradient text-void hover:opacity-90 shadow-gold-sm'
+                                      ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                                      : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:opacity-90 shadow-blue-500/10'
                                       }`}
                                   >
                                     {isActiveTrain ? '✓ Selected' : 'Select Train'}
@@ -1289,31 +1289,31 @@ export default function TripBuilder() {
                     {activeTab === 'buses' && (
                       <motion.div key="buses" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-display text-lg font-bold text-white">Compare Bus Options (Price/Individual)</h3>
-                          <span className="text-xs text-muted">Select an option to replace active bus segment</span>
+                          <h3 className="font-display text-lg font-bold text-slate-900">Compare Bus Options (Price/Individual)</h3>
+                          <span className="text-xs text-slate-500">Select an option to replace active bus segment</span>
                         </div>
                         <div className="space-y-3">
                           {activeTrip.busOptions?.map((bOpt, idx) => {
                             const isActiveBus = activeTrip.segments.some(s => s.type === 'bus' && s.price === bOpt.price && s.detail.includes(bOpt.operator))
                             return (
-                              <div key={bOpt.id || idx} className={`glass border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all ${isActiveBus ? 'border-gold-400 bg-gold-400/5' : 'border-border'}`}>
+                              <div key={bOpt.id || idx} className={`glass border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all ${isActiveBus ? 'border-blue-500 bg-blue-500/5' : 'border-slate-200'}`}>
                                 <div className="flex items-center gap-3">
                                   <span className="text-2xl">🚌</span>
                                   <div>
-                                    <h4 className="text-white font-bold text-sm">{bOpt.operator} <span className="text-muted text-xs font-normal">({bOpt.type})</span></h4>
-                                    <div className="text-muted text-xs flex items-center gap-3 mt-1 font-mono">
+                                    <h4 className="text-slate-900 font-bold text-sm">{bOpt.operator} <span className="text-slate-400 text-xs font-normal">({bOpt.type})</span></h4>
+                                    <div className="text-slate-500 text-xs flex items-center gap-3 mt-1 font-mono">
                                       <span>🛫 {bOpt.depart} – {bOpt.arrive}</span>
                                       <span>⏱ {bOpt.duration}</span>
                                     </div>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <span className="text-gold-400 font-bold text-base">₹{bOpt.price.toLocaleString()}</span>
+                                  <span className="text-blue-500 font-bold text-base">₹{bOpt.price.toLocaleString()}</span>
                                   <button
                                     onClick={() => selectBusOption(bOpt)}
                                     className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${isActiveBus
-                                      ? 'bg-gold-500/10 text-gold-400 border border-gold-400/20'
-                                      : 'bg-gold-gradient text-void hover:opacity-90 shadow-gold-sm'
+                                      ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                                      : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:opacity-90 shadow-blue-500/10'
                                       }`}
                                   >
                                     {isActiveBus ? '✓ Selected' : 'Select Bus'}
@@ -1330,28 +1330,28 @@ export default function TripBuilder() {
                     {activeTab === 'roadways' && (
                       <motion.div key="roadways" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-display text-lg font-bold text-white">Compare Roadways & Cab Hire (Price/Trip Drop)</h3>
-                          <span className="text-xs text-muted">Select an option to replace active roadways segment</span>
+                          <h3 className="font-display text-lg font-bold text-slate-900">Compare Roadways & Cab Hire (Price/Trip Drop)</h3>
+                          <span className="text-xs text-slate-500">Select an option to replace active roadways segment</span>
                         </div>
                         <div className="space-y-3">
                           {activeTrip.roadwaysOptions?.map((rOpt, idx) => {
                             const isActiveRoad = activeTrip.segments.some(s => s.type === 'roadways' && s.price === rOpt.price && s.detail.includes(rOpt.provider))
                             return (
-                              <div key={rOpt.id || idx} className={`glass border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all ${isActiveRoad ? 'border-gold-400 bg-gold-400/5' : 'border-border'}`}>
+                              <div key={rOpt.id || idx} className={`glass border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all ${isActiveRoad ? 'border-blue-500 bg-blue-500/5' : 'border-slate-200'}`}>
                                 <div className="flex items-center gap-3">
                                   <span className="text-2xl">🚗</span>
                                   <div>
-                                    <h4 className="text-white font-bold text-sm">{rOpt.vehicle} <span className="text-muted text-xs font-normal">({rOpt.provider})</span></h4>
-                                    <p className="text-muted text-xs mt-1 leading-relaxed">{rOpt.detail}</p>
+                                    <h4 className="text-slate-900 font-bold text-sm">{rOpt.vehicle} <span className="text-slate-400 text-xs font-normal">({rOpt.provider})</span></h4>
+                                    <p className="text-slate-500 text-xs mt-1 leading-relaxed">{rOpt.detail}</p>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <span className="text-gold-400 font-bold text-base">₹{rOpt.price.toLocaleString()}</span>
+                                  <span className="text-blue-500 font-bold text-base">₹{rOpt.price.toLocaleString()}</span>
                                   <button
                                     onClick={() => selectRoadwaysOption(rOpt)}
                                     className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${isActiveRoad
-                                      ? 'bg-gold-500/10 text-gold-400 border border-gold-400/20'
-                                      : 'bg-gold-gradient text-void hover:opacity-90 shadow-gold-sm'
+                                      ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                                      : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:opacity-90 shadow-blue-500/10'
                                       }`}
                                   >
                                     {isActiveRoad ? '✓ Selected' : 'Select Roadways'}
@@ -1368,18 +1368,18 @@ export default function TripBuilder() {
                     {activeTab === 'attractions' && (
                       <motion.div key="attractions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
                         <div className="mb-2">
-                          <h3 className="font-display text-lg font-bold text-white">Top 10 Attractions to Visit & Enjoy</h3>
-                          <p className="text-xs text-muted">A dedicated countdown of the best points of interest in this city.</p>
+                          <h3 className="font-display text-lg font-bold text-slate-900">Top 10 Attractions to Visit & Enjoy</h3>
+                          <p className="text-xs text-slate-500">A dedicated countdown of the best points of interest in this city.</p>
                         </div>
                         <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
                           {activeTrip.placesToVisit?.map((place, pIdx) => {
                             const cat = getCategoryDetails(place.category)
                             const CatIcon = cat.icon
                             return (
-                              <div key={pIdx} className="glass border border-border rounded-2xl p-5 flex flex-col justify-between transition-all group hover:border-gold-400/20 relative overflow-hidden bg-surface/5">
+                              <div key={pIdx} className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-between transition-all group hover:border-blue-500/20 relative overflow-hidden bg-slate-50">
                                 <div className="flex items-start justify-between gap-2 mb-3">
                                   <div className="flex items-center gap-2">
-                                    <span className="w-7 h-7 rounded-xl bg-gold-400/15 text-gold-400 font-bold text-xs flex items-center justify-center font-mono">
+                                    <span className="w-7 h-7 rounded-xl bg-blue-500/15 text-blue-500 font-bold text-xs flex items-center justify-center font-mono">
                                       {(pIdx + 1).toString().padStart(2, '0')}
                                     </span>
                                     <span className={`px-2.5 py-0.5 rounded-lg border text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${cat.bg} ${cat.color}`}>
@@ -1388,11 +1388,11 @@ export default function TripBuilder() {
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-3">
-                                    <span className="text-[10px] text-muted font-bold flex items-center gap-0.5"><Clock className="w-3 h-3" /> {place.visitDuration}</span>
+                                    <span className="text-[10px] text-slate-500 font-bold flex items-center gap-0.5"><Clock className="w-3 h-3" /> {place.visitDuration}</span>
                                     {isAgent && (
                                       <button
                                         onClick={() => openEditModal('attraction', pIdx, place)}
-                                        className="text-muted hover:text-gold-400 transition-colors"
+                                        className="text-slate-400 hover:text-blue-500 transition-colors"
                                         title="Edit Attraction Details"
                                       >
                                         <Edit3 className="w-3.5 h-3.5" />
@@ -1402,17 +1402,17 @@ export default function TripBuilder() {
                                 </div>
 
                                 <div>
-                                  <h4 className="text-white font-bold text-sm mb-1.5 group-hover:text-brand-primary transition-colors">{place.name}</h4>
-                                  <p className="text-muted text-xs leading-relaxed mb-4">{place.description}</p>
+                                  <h4 className="text-slate-900 font-bold text-sm mb-1.5 group-hover:text-blue-600 transition-colors">{place.name}</h4>
+                                  <p className="text-slate-500 text-xs leading-relaxed mb-4">{place.description}</p>
                                 </div>
 
-                                <div className="mt-auto pt-3 border-t border-white/5 space-y-1.5 text-[10px]">
-                                  <div className="flex items-center justify-between text-white/70">
+                                <div className="mt-auto pt-3 border-t border-slate-100 space-y-1.5 text-[10px]">
+                                  <div className="flex items-center justify-between text-slate-600">
                                     <span>Best Hour: <strong>{place.recommendedTime}</strong></span>
-                                    <span className="text-gold-400 font-bold">Ticket: ₹{place.price || 0}</span>
+                                    <span className="text-blue-500 font-bold">Ticket: ₹{place.price || 0}</span>
                                   </div>
                                   {place.funFact && (
-                                    <div className="p-2 bg-white/5 rounded-lg border border-white/5 text-[9px] text-gold-300/80 italic leading-relaxed">
+                                    <div className="p-2 bg-slate-50 rounded-lg border border-slate-100 text-[9px] text-blue-400/80 italic leading-relaxed">
                                       <strong>Fact:</strong> {place.funFact}
                                     </div>
                                   )}
@@ -1429,8 +1429,8 @@ export default function TripBuilder() {
                       <motion.div key="dining" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
                         <div className="mb-2 flex items-center justify-between">
                           <div>
-                            <h3 className="font-display text-lg font-bold text-white">Top 10 Food Joints & Restaurants</h3>
-                            <p className="text-xs text-muted font-medium">Exactly 10 vegetarian and 10 non-vegetarian/mixed dining hotspots.</p>
+                            <h3 className="font-display text-lg font-bold text-slate-900">Top 10 Food Joints & Restaurants</h3>
+                            <p className="text-xs text-slate-500 font-medium">Exactly 10 vegetarian and 10 non-vegetarian/mixed dining hotspots.</p>
                           </div>
                         </div>
 
@@ -1443,18 +1443,18 @@ export default function TripBuilder() {
                             </h4>
                             <div className="space-y-3 max-h-[80vh] overflow-y-auto pr-1 scrollbar-thin">
                               {activeTrip.restaurants?.veg?.map((rest, rIdx) => (
-                                <div key={rIdx} className="glass border border-emerald-500/10 rounded-2xl p-4 relative bg-emerald-500/2 hover:border-emerald-500/30 transition-all">
+                                <div key={rIdx} className="bg-white border border-emerald-500/20 rounded-2xl p-4 relative bg-emerald-50 hover:border-emerald-500/30 transition-all">
                                   <div className="flex items-start justify-between mb-2">
                                     <div className="flex items-center gap-2">
                                       <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 w-5 h-5 rounded flex items-center justify-center">{(rIdx + 1)}</span>
-                                      <h5 className="font-bold text-sm text-white">{rest.name}</h5>
+                                      <h5 className="font-bold text-sm text-slate-900">{rest.name}</h5>
                                     </div>
                                     <div className="flex items-center gap-2 flex-shrink-0">
                                       <span className="text-[9px] bg-emerald-400/10 text-emerald-400 border border-emerald-400/20 px-2 py-0.5 rounded font-bold">{rest.cuisine}</span>
                                       {isAgent && (
                                         <button
                                           onClick={() => openEditModal('dining', rIdx, rest, { category: 'veg' })}
-                                          className="text-muted hover:text-gold-400 transition-colors"
+                                          className="text-slate-400 hover:text-blue-500 transition-colors"
                                           title="Edit Restaurant"
                                         >
                                           <Edit3 className="w-3 h-3" />
@@ -1462,8 +1462,8 @@ export default function TripBuilder() {
                                       )}
                                     </div>
                                   </div>
-                                  <p className="text-muted text-xs leading-relaxed mb-3">{rest.description}</p>
-                                  <div className="flex items-center justify-between text-[10px] font-semibold pt-2 border-t border-white/5 text-emerald-300/80">
+                                  <p className="text-slate-500 text-xs leading-relaxed mb-3">{rest.description}</p>
+                                  <div className="flex items-center justify-between text-[10px] font-semibold pt-2 border-t border-slate-100 text-emerald-300/80">
                                     <span>🌟 Specialty: {rest.specialty}</span>
                                     <span>💰 Budget: {rest.costForTwo} for 2</span>
                                   </div>
@@ -1479,18 +1479,18 @@ export default function TripBuilder() {
                             </h4>
                             <div className="space-y-3 max-h-[80vh] overflow-y-auto pr-1 scrollbar-thin">
                               {activeTrip.restaurants?.nonVeg?.map((rest, rIdx) => (
-                                <div key={rIdx} className="glass border border-rose-500/10 rounded-2xl p-4 relative bg-rose-500/2 hover:border-rose-500/30 transition-all">
+                                <div key={rIdx} className="bg-white border border-rose-500/20 rounded-2xl p-4 relative bg-rose-50 hover:border-rose-500/30 transition-all">
                                   <div className="flex items-start justify-between mb-2">
                                     <div className="flex items-center gap-2">
                                       <span className="text-[10px] font-mono font-bold text-rose-400 bg-rose-500/10 w-5 h-5 rounded flex items-center justify-center">{(rIdx + 1)}</span>
-                                      <h5 className="font-bold text-sm text-white">{rest.name}</h5>
+                                      <h5 className="font-bold text-sm text-slate-900">{rest.name}</h5>
                                     </div>
                                     <div className="flex items-center gap-2 flex-shrink-0">
                                       <span className="text-[9px] bg-rose-400/10 text-rose-400 border border-rose-400/20 px-2 py-0.5 rounded font-bold">{rest.cuisine}</span>
                                       {isAgent && (
                                         <button
                                           onClick={() => openEditModal('dining', rIdx, rest, { category: 'nonVeg' })}
-                                          className="text-muted hover:text-gold-400 transition-colors"
+                                          className="text-slate-400 hover:text-blue-500 transition-colors"
                                           title="Edit Restaurant"
                                         >
                                           <Edit3 className="w-3 h-3" />
@@ -1498,8 +1498,8 @@ export default function TripBuilder() {
                                       )}
                                     </div>
                                   </div>
-                                  <p className="text-muted text-xs leading-relaxed mb-3">{rest.description}</p>
-                                  <div className="flex items-center justify-between text-[10px] font-semibold pt-2 border-t border-white/5 text-rose-300/80">
+                                  <p className="text-slate-500 text-xs leading-relaxed mb-3">{rest.description}</p>
+                                  <div className="flex items-center justify-between text-[10px] font-semibold pt-2 border-t border-slate-100 text-rose-300/80">
                                     <span>🍗 Specialty: {rest.specialty}</span>
                                     <span>💰 Budget: {rest.costForTwo} for 2</span>
                                   </div>
@@ -1519,12 +1519,12 @@ export default function TripBuilder() {
                 <div className="space-y-4 xl:sticky xl:top-24">
 
                   {/* Comprehensive Summary card */}
-                  <div className="glass border border-border rounded-2xl p-5 bg-surface/5">
+                  <div className="bg-white border border-slate-200 rounded-2xl p-5 bg-slate-50">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-white text-sm flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-gold-400" /> Full Trip Cost Breakdown
+                      <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-blue-500" /> Full Trip Cost Breakdown
                       </h3>
-                      <span className="text-[8px] uppercase bg-gold-400/20 border border-gold-400/30 text-gold-400 px-2 py-0.5 rounded-full font-bold">
+                      <span className="text-[8px] uppercase bg-blue-500/20 border border-blue-500/30 text-blue-500 px-2 py-0.5 rounded-full font-bold">
                         All-Inclusive
                       </span>
                     </div>
@@ -1533,12 +1533,12 @@ export default function TripBuilder() {
                     <div className="space-y-2.5 mb-4 text-xs">
 
                       {/* 1. Stays */}
-                      <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                         <div className="flex items-center gap-2">
                           <Building2 className="w-3.5 h-3.5 text-sage-400" />
-                          <span className="text-muted">Stays & Hotels</span>
+                          <span className="text-slate-500">Stays & Hotels</span>
                         </div>
-                        <span className="text-white font-mono">₹{staysCost.toLocaleString()}</span>
+                        <span className="text-slate-900 font-mono">₹{staysCost.toLocaleString()}</span>
                       </div>
 
                       {/* 2. Transportation — broken out per mode */}
@@ -1547,24 +1547,24 @@ export default function TripBuilder() {
                         if (modeSegs.length === 0) return null
                         const modeCost = modeSegs.reduce((sum, s) => sum + (s.price || 0), 0)
                         const modeIcons = { flight: Plane, train: Train, bus: Bus, roadways: Car }
-                        const modeColors = { flight: 'text-gold-400', train: 'text-sky-400', bus: 'text-violet-400', roadways: 'text-orange-400' }
+                        const modeColors = { flight: 'text-blue-500', train: 'text-sky-400', bus: 'text-violet-400', roadways: 'text-orange-400' }
                         const MIcon = modeIcons[mode]
                         return (
-                          <div key={mode} className="flex items-center justify-between border-b border-white/5 pb-2">
+                          <div key={mode} className="flex items-center justify-between border-b border-slate-100 pb-2">
                             <div className="flex items-center gap-2">
                               <MIcon className={`w-3.5 h-3.5 ${modeColors[mode]}`} />
-                              <span className="text-muted capitalize">{mode === 'roadways' ? 'Roadways/Cab' : mode.charAt(0).toUpperCase() + mode.slice(1)}</span>
+                              <span className="text-slate-500 capitalize">{mode === 'roadways' ? 'Roadways/Cab' : mode.charAt(0).toUpperCase() + mode.slice(1)}</span>
                             </div>
-                            <span className="text-white font-mono">₹{modeCost.toLocaleString()}</span>
+                            <span className="text-slate-900 font-mono">₹{modeCost.toLocaleString()}</span>
                           </div>
                         )
                       })}
 
                       {/* 3. Selected transport detail lines */}
                       {selectedTransportSegments.length > 0 && (
-                        <div className="border-b border-white/5 pb-2 pl-5 -mt-1 space-y-1">
+                        <div className="border-b border-slate-100 pb-2 pl-5 -mt-1 space-y-1">
                           {selectedTransportSegments.map(seg => (
-                            <div key={seg.id} className="text-[9px] text-muted/70 truncate" title={seg.detail}>
+                            <div key={seg.id} className="text-[9px] text-slate-400 truncate" title={seg.detail}>
                               Selected: {seg.detail}
                             </div>
                           ))}
@@ -1572,29 +1572,29 @@ export default function TripBuilder() {
                       )}
 
                       {selectedTransportSegments.length === 0 && (
-                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                           <div className="flex items-center gap-2">
-                            <Plane className="w-3.5 h-3.5 text-muted/60" />
-                            <span className="text-muted">Transportation</span>
+                            <Plane className="w-3.5 h-3.5 text-slate-400" />
+                            <span className="text-slate-500">Transportation</span>
                           </div>
-                          <span className="text-muted/70 font-mono">Not selected</span>
+                          <span className="text-slate-400 font-mono">Not selected</span>
                         </div>
                       )}
 
-                      <div className="border-b border-white/5 pb-2">
+                      <div className="border-b border-slate-100 pb-2">
                         <div className="flex items-center justify-between mb-1.5">
                           <div className="flex items-center gap-2">
                             <Landmark className="w-3.5 h-3.5 text-amber-400" />
-                            <span className="text-muted">Sightseeing Admissions</span>
+                            <span className="text-slate-500">Sightseeing Admissions</span>
                           </div>
-                          <span className="text-white font-mono">₹{sightsCost.toLocaleString()}</span>
+                          <span className="text-slate-900 font-mono">₹{sightsCost.toLocaleString()}</span>
                         </div>
                         {activeTrip?.placesToVisit?.length > 0 && (
                           <div className="space-y-1 pl-5 max-h-32 overflow-y-auto scrollbar-thin">
                             {activeTrip.placesToVisit.map((p, i) => (
                               <div key={i} className="flex items-center justify-between text-[9px]">
-                                <span className="text-muted/70 truncate pr-2" title={p.name}>{i + 1}. {p.name}</span>
-                                <span className={`flex-shrink-0 font-mono ${Number(p.price) > 0 ? 'text-amber-300/80' : 'text-muted/50'}`}>
+                                <span className="text-slate-400 truncate pr-2" title={p.name}>{i + 1}. {p.name}</span>
+                                <span className={`flex-shrink-0 font-mono ${Number(p.price) > 0 ? 'text-amber-300/80' : 'text-slate-400/60'}`}>
                                   {Number(p.price) > 0 ? `₹${Number(p.price).toLocaleString()}` : 'Free'}
                                 </span>
                               </div>
@@ -1604,25 +1604,25 @@ export default function TripBuilder() {
                       </div>
 
                       {/* 4. Food & Dining Estimate — ₹1,200/day */}
-                      <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                         <div className="flex items-center gap-2">
                           <Utensils className="w-3.5 h-3.5 text-rose-400" />
                           <div>
-                            <span className="text-muted">Est. Food & Dining</span>
-                            <div className="text-[9px] text-muted/50">{daysCount} days × ₹1,200/day</div>
+                            <span className="text-slate-500">Est. Food & Dining</span>
+                            <div className="text-[9px] text-slate-400/60">{daysCount} days × ₹1,200/day</div>
                           </div>
                         </div>
-                        <span className="text-white font-mono">₹{estFoodCost.toLocaleString()}</span>
+                        <span className="text-slate-900 font-mono">₹{estFoodCost.toLocaleString()}</span>
                       </div>
 
                     </div>
 
-                    <div className="pt-3 border-t border-border flex items-center justify-between mb-4">
+                    <div className="pt-3 border-t border-slate-200 flex items-center justify-between mb-4">
                       <div>
-                        <span className="text-white font-bold text-sm block">Trip Grand Total</span>
-                        <span className="text-[10px] text-muted italic">Stays + Transport + Sights + Food</span>
+                        <span className="text-slate-900 font-bold text-sm block">Trip Grand Total</span>
+                        <span className="text-[10px] text-slate-500 italic">Stays + Transport + Sights + Food</span>
                       </div>
-                      <span className="text-gold-400 font-bold text-xl font-mono">₹{grandTripTotal.toLocaleString()}</span>
+                      <span className="text-blue-500 font-bold text-xl font-mono">₹{grandTripTotal.toLocaleString()}</span>
                     </div>
 
                     {/* Proceed to Review */}
@@ -1669,16 +1669,16 @@ export default function TripBuilder() {
 
                     <Link
                       to="/chat"
-                      className="mt-3 w-full py-2.5 glass border border-border rounded-xl text-xs text-muted hover:text-white transition-all flex items-center justify-center gap-2"
+                      className="mt-3 w-full py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-500 hover:text-slate-900 transition-all flex items-center justify-center gap-2"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-gold-400" /> Refine details with AI
+                      <Sparkles className="w-3.5 h-3.5 text-blue-500" /> Refine details with AI
                     </Link>
                   </div>
 
                   {/* Selected Package Components Timeline */}
-                  <div className="glass border border-border rounded-2xl p-4 space-y-3">
+                  <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-white text-xs font-semibold uppercase tracking-wider block">Package Components</span>
+                      <span className="text-slate-700 text-xs font-semibold uppercase tracking-wider block">Package Components</span>
                       <button
                         onClick={() => { if (window.confirm('Clear current workspace?')) setActiveTrip(null) }}
                         className="text-[10px] text-red-400 hover:underline uppercase font-bold tracking-tighter"
@@ -1700,13 +1700,13 @@ export default function TripBuilder() {
                         ))}
                       </AnimatePresence>
                       {(!activeTrip.segments || activeTrip.segments.length === 0) && (
-                        <p className="text-center py-4 text-muted text-[10px] italic">No segments added yet.</p>
+                        <p className="text-center py-4 text-slate-500 text-[10px] italic">No segments added yet.</p>
                       )}
                     </div>
 
                     {/* Manual Add Buttons */}
-                    <div className="pt-3 border-t border-white/5">
-                      <p className="text-[9px] text-muted uppercase font-bold mb-2 tracking-widest">Quick Add Segment</p>
+                    <div className="pt-3 border-t border-slate-100">
+                      <p className="text-[9px] text-slate-500 uppercase font-bold mb-2 tracking-widest">Quick Add Segment</p>
                       <div className="flex flex-wrap gap-2">
                         {SEGMENT_TYPES.map(t => (
                           <button
@@ -1724,15 +1724,15 @@ export default function TripBuilder() {
 
                   {/* Highlights section */}
                   {activeTrip.highlights?.length > 0 && (
-                    <div className="glass border border-gold-400/20 rounded-2xl p-4 bg-gold-400/5">
+                    <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
                       <div className="flex items-center gap-2 mb-3">
-                        <Sparkles className="w-4 h-4 text-gold-400" />
-                        <span className="text-gold-300 font-semibold text-xs uppercase tracking-wider">Highlights</span>
+                        <Sparkles className="w-4 h-4 text-blue-500" />
+                        <span className="text-blue-400 font-semibold text-xs uppercase tracking-wider">Highlights</span>
                       </div>
                       <ul className="space-y-1.5">
                         {activeTrip.highlights.map((h, i) => (
-                          <li key={i} className="text-gold-200/70 text-xs flex items-start gap-1.5">
-                            <span className="text-gold-400 mt-0.5">→</span> {h}
+                          <li key={i} className="text-blue-300/70 text-xs flex items-start gap-1.5">
+                            <span className="text-blue-500 mt-0.5">→</span> {h}
                           </li>
                         ))}
                       </ul>
@@ -1748,18 +1748,18 @@ export default function TripBuilder() {
 
       {/* TRAVEL AGENT INLINE EDIT MODAL OVERLAY */}
       {editingItem && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-void/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="glass border border-gold-400/20 max-w-lg w-full rounded-3xl p-6 shadow-gold-lg max-h-[85vh] overflow-y-auto"
+            className="bg-white border border-slate-200 max-w-lg w-full rounded-3xl p-6 shadow-blue-500/30 max-h-[85vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
-              <h3 className="font-display text-lg font-bold text-white flex items-center gap-1.5">
-                <Edit3 className="w-4 h-4 text-gold-400" />
+            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
+              <h3 className="font-display text-lg font-bold text-slate-900 flex items-center gap-1.5">
+                <Edit3 className="w-4 h-4 text-blue-500" />
                 Agent Edit Control ({editingItem.type.toUpperCase()})
               </h3>
-              <span className="text-[10px] text-gold-300 font-bold bg-gold-400/10 px-2 py-0.5 rounded border border-gold-400/20">Agent Control</span>
+              <span className="text-[10px] text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">Agent Control</span>
             </div>
 
             <div className="space-y-4">
@@ -1767,30 +1767,30 @@ export default function TripBuilder() {
               {editingItem.type === 'metadata' && (
                 <>
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Trip Itinerary Title</label>
+                    <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Trip Itinerary Title</label>
                     <input
                       type="text"
                       value={editForm.tripName || ''}
                       onChange={e => setEditForm({ ...editForm, tripName: e.target.value })}
-                      className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Trip Short Description</label>
+                    <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Trip Short Description</label>
                     <textarea
                       value={editForm.desc || ''}
                       onChange={e => setEditForm({ ...editForm, desc: e.target.value })}
                       rows={3}
-                      className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none resize-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none resize-none"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Duration Description</label>
+                    <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Duration Description</label>
                     <input
                       type="text"
                       value={editForm.duration || ''}
                       onChange={e => setEditForm({ ...editForm, duration: e.target.value })}
-                      className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                     />
                   </div>
                 </>
@@ -1801,50 +1801,50 @@ export default function TripBuilder() {
                 <>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">From Destination</label>
+                      <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">From Destination</label>
                       <input
                         type="text"
                         value={editForm.from || ''}
                         onChange={e => setEditForm({ ...editForm, from: e.target.value })}
-                        className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">To Destination</label>
+                      <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">To Destination</label>
                       <input
                         type="text"
                         value={editForm.to || ''}
                         onChange={e => setEditForm({ ...editForm, to: e.target.value })}
-                        className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Booking/Departure Details</label>
+                    <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Booking/Departure Details</label>
                     <input
                       type="text"
                       value={editForm.detail || ''}
                       onChange={e => setEditForm({ ...editForm, detail: e.target.value })}
-                      className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Travel Date</label>
+                      <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Travel Date</label>
                       <input
                         type="text"
                         value={editForm.date || ''}
                         onChange={e => setEditForm({ ...editForm, date: e.target.value })}
-                        className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Cost / Price (₹)</label>
+                      <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Cost / Price (₹)</label>
                       <input
                         type="number"
                         value={editForm.price || 0}
                         onChange={e => setEditForm({ ...editForm, price: Number(e.target.value) || 0 })}
-                        className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                       />
                     </div>
                   </div>
@@ -1856,21 +1856,21 @@ export default function TripBuilder() {
                 <>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Day Heading</label>
+                      <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Day Heading</label>
                       <input
                         type="text"
                         value={editForm.title || ''}
                         onChange={e => setEditForm({ ...editForm, title: e.target.value })}
-                        className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Theme / Focus Tag</label>
+                      <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Theme / Focus Tag</label>
                       <input
                         type="text"
                         value={editForm.theme || ''}
                         onChange={e => setEditForm({ ...editForm, theme: e.target.value })}
-                        className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                       />
                     </div>
                   </div>
@@ -1879,21 +1879,21 @@ export default function TripBuilder() {
                   {['morning', 'afternoon', 'evening'].map(slotKey => {
                     const slotData = editForm[slotKey] || {}
                     return (
-                      <div key={slotKey} className="p-3 bg-white/2 rounded-xl border border-white/5 space-y-2">
-                        <span className="text-[10px] text-gold-400 font-bold uppercase block">{slotKey} Schedule</span>
+                      <div key={slotKey} className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+                        <span className="text-[10px] text-blue-500 font-bold uppercase block">{slotKey} Schedule</span>
                         <input
                           type="text"
                           placeholder="Activity Title"
                           value={slotData.activity || ''}
                           onChange={e => setEditForm({ ...editForm, [slotKey]: { ...slotData, activity: e.target.value } })}
-                          className="w-full bg-white/5 border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-gold-400"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 outline-none focus:border-blue-500"
                         />
                         <textarea
                           placeholder="Activity Description"
                           value={slotData.description || ''}
                           onChange={e => setEditForm({ ...editForm, [slotKey]: { ...slotData, description: e.target.value } })}
                           rows={2}
-                          className="w-full bg-white/5 border border-border/80 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none resize-none focus:border-gold-400"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 outline-none resize-none focus:border-blue-500"
                         />
                         <div className="grid grid-cols-3 gap-2">
                           <input
@@ -1901,21 +1901,21 @@ export default function TripBuilder() {
                             placeholder="Duration (e.g. 2h)"
                             value={slotData.duration || ''}
                             onChange={e => setEditForm({ ...editForm, [slotKey]: { ...slotData, duration: e.target.value } })}
-                            className="w-full bg-white/5 border border-border/60 rounded px-2 py-1 text-[10px] text-white focus:border-gold-400 outline-none"
+                            className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[10px] text-slate-900 focus:border-blue-500 outline-none"
                           />
                           <input
                             type="text"
                             placeholder="Cost (e.g. ₹500)"
                             value={slotData.cost || ''}
                             onChange={e => setEditForm({ ...editForm, [slotKey]: { ...slotData, cost: e.target.value } })}
-                            className="w-full bg-white/5 border border-border/60 rounded px-2 py-1 text-[10px] text-white focus:border-gold-400 outline-none"
+                            className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[10px] text-slate-900 focus:border-blue-500 outline-none"
                           />
                           <input
                             type="text"
                             placeholder="Local Tip"
                             value={slotData.tip || ''}
                             onChange={e => setEditForm({ ...editForm, [slotKey]: { ...slotData, tip: e.target.value } })}
-                            className="w-full bg-white/5 border border-border/60 rounded px-2 py-1 text-[10px] text-white focus:border-gold-400 outline-none"
+                            className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[10px] text-slate-900 focus:border-blue-500 outline-none"
                           />
                         </div>
                       </div>
@@ -1925,7 +1925,7 @@ export default function TripBuilder() {
                   {/* Meals & transport */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Meals Overview</label>
+                      <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Meals Overview</label>
                       <input
                         type="text"
                         value={editForm.meals ? `${editForm.meals.breakfast || ''} / ${editForm.meals.lunch || ''} / ${editForm.meals.dinner || ''}` : ''}
@@ -1941,16 +1941,16 @@ export default function TripBuilder() {
                           })
                         }}
                         placeholder="Bfast / Lunch / Dinner"
-                        className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Local Transit Mode</label>
+                      <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Local Transit Mode</label>
                       <input
                         type="text"
                         value={editForm.transport || ''}
                         onChange={e => setEditForm({ ...editForm, transport: e.target.value })}
-                        className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                       />
                     </div>
                   </div>
@@ -1961,50 +1961,50 @@ export default function TripBuilder() {
               {editingItem.type === 'dining' && (
                 <>
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Restaurant Name</label>
+                    <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Restaurant Name</label>
                     <input
                       type="text"
                       value={editForm.name || ''}
                       onChange={e => setEditForm({ ...editForm, name: e.target.value })}
-                      className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Cuisine / Diet Type</label>
+                      <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Cuisine / Diet Type</label>
                       <input
                         type="text"
                         value={editForm.cuisine || ''}
                         onChange={e => setEditForm({ ...editForm, cuisine: e.target.value })}
-                        className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Specialty Dish</label>
+                      <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Specialty Dish</label>
                       <input
                         type="text"
                         value={editForm.specialty || ''}
                         onChange={e => setEditForm({ ...editForm, specialty: e.target.value })}
-                        className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Estimated Cost For Two</label>
+                    <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Estimated Cost For Two</label>
                     <input
                       type="text"
                       value={editForm.costForTwo || ''}
                       onChange={e => setEditForm({ ...editForm, costForTwo: e.target.value })}
-                      className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Restaurant Description</label>
+                    <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Restaurant Description</label>
                     <textarea
                       value={editForm.description || ''}
                       onChange={e => setEditForm({ ...editForm, description: e.target.value })}
                       rows={2}
-                      className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none resize-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none resize-none"
                     />
                   </div>
                 </>
@@ -2015,69 +2015,69 @@ export default function TripBuilder() {
                 <>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Attraction Name</label>
+                      <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Attraction Name</label>
                       <input
                         type="text"
                         value={editForm.name || ''}
                         onChange={e => setEditForm({ ...editForm, name: e.target.value })}
-                        className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Sight Category</label>
+                      <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Sight Category</label>
                       <input
                         type="text"
                         value={editForm.category || ''}
                         onChange={e => setEditForm({ ...editForm, category: e.target.value })}
-                        className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Description of Sight</label>
+                    <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Description of Sight</label>
                     <textarea
                       value={editForm.description || ''}
                       onChange={e => setEditForm({ ...editForm, description: e.target.value })}
                       rows={3}
-                      className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none resize-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none resize-none"
                     />
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <label className="text-[9px] text-muted uppercase font-bold block mb-1">Visit Duration</label>
+                      <label className="text-[9px] text-slate-500 uppercase font-bold block mb-1">Visit Duration</label>
                       <input
                         type="text"
                         value={editForm.visitDuration || ''}
                         onChange={e => setEditForm({ ...editForm, visitDuration: e.target.value })}
-                        className="w-full bg-white/5 border border-border/60 rounded px-2 py-1.5 text-xs text-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-xs text-slate-900"
                       />
                     </div>
                     <div>
-                      <label className="text-[9px] text-muted uppercase font-bold block mb-1">Best Time</label>
+                      <label className="text-[9px] text-slate-500 uppercase font-bold block mb-1">Best Time</label>
                       <input
                         type="text"
                         value={editForm.recommendedTime || ''}
                         onChange={e => setEditForm({ ...editForm, recommendedTime: e.target.value })}
-                        className="w-full bg-white/5 border border-border/60 rounded px-2 py-1.5 text-xs text-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-xs text-slate-900"
                       />
                     </div>
                     <div>
-                      <label className="text-[9px] text-muted uppercase font-bold block mb-1">Entry Fee (₹)</label>
+                      <label className="text-[9px] text-slate-500 uppercase font-bold block mb-1">Entry Fee (₹)</label>
                       <input
                         type="number"
                         value={editForm.price || 0}
                         onChange={e => setEditForm({ ...editForm, price: Number(e.target.value) || 0 })}
-                        className="w-full bg-white/5 border border-border/60 rounded px-2 py-1.5 text-xs text-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-xs text-slate-900"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">💡 Local Insight / Trivia</label>
+                    <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">💡 Local Insight / Trivia</label>
                     <textarea
                       value={editForm.funFact || ''}
                       onChange={e => setEditForm({ ...editForm, funFact: e.target.value })}
                       rows={2}
-                      className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none resize-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none resize-none"
                     />
                   </div>
                 </>
@@ -2088,74 +2088,74 @@ export default function TripBuilder() {
                 <>
                   <div className="grid grid-cols-4 gap-2">
                     <div>
-                      <label className="text-[9px] text-muted uppercase font-bold block mb-1">Flight Price</label>
+                      <label className="text-[9px] text-slate-500 uppercase font-bold block mb-1">Flight Price</label>
                       <input
                         type="text"
                         value={editForm.flightCost || ''}
                         onChange={e => setEditForm({ ...editForm, flightCost: e.target.value })}
-                        className="w-full bg-white/5 border border-border/60 rounded px-2 py-1.5 text-xs text-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-xs text-slate-900"
                       />
                     </div>
                     <div>
-                      <label className="text-[9px] text-muted uppercase font-bold block mb-1">Train Price</label>
+                      <label className="text-[9px] text-slate-500 uppercase font-bold block mb-1">Train Price</label>
                       <input
                         type="text"
                         value={editForm.trainCost || ''}
                         onChange={e => setEditForm({ ...editForm, trainCost: e.target.value })}
-                        className="w-full bg-white/5 border border-border/60 rounded px-2 py-1.5 text-xs text-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-xs text-slate-900"
                       />
                     </div>
                     <div>
-                      <label className="text-[9px] text-muted uppercase font-bold block mb-1">Bus Price</label>
+                      <label className="text-[9px] text-slate-500 uppercase font-bold block mb-1">Bus Price</label>
                       <input
                         type="text"
                         value={editForm.busCost || ''}
                         onChange={e => setEditForm({ ...editForm, busCost: e.target.value })}
-                        className="w-full bg-white/5 border border-border/60 rounded px-2 py-1.5 text-xs text-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-xs text-slate-900"
                       />
                     </div>
                     <div>
-                      <label className="text-[9px] text-muted uppercase font-bold block mb-1">Road Price</label>
+                      <label className="text-[9px] text-slate-500 uppercase font-bold block mb-1">Road Price</label>
                       <input
                         type="text"
                         value={editForm.roadwaysCost || ''}
                         onChange={e => setEditForm({ ...editForm, roadwaysCost: e.target.value })}
-                        className="w-full bg-white/5 border border-border/60 rounded px-2 py-1.5 text-xs text-white"
+                        className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-xs text-slate-900"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">Cost Analysis Explanation</label>
+                    <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Cost Analysis Explanation</label>
                     <textarea
                       value={editForm.analysis || ''}
                       onChange={e => setEditForm({ ...editForm, analysis: e.target.value })}
                       rows={2}
-                      className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none resize-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none resize-none"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold tracking-wider block mb-1">AI Recommendation Suggestion</label>
+                    <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wider block mb-1">AI Recommendation Suggestion</label>
                     <input
                       type="text"
                       value={editForm.aiSuggestion || ''}
                       onChange={e => setEditForm({ ...editForm, aiSuggestion: e.target.value })}
-                      className="w-full bg-white/5 border border-border/80 rounded-xl px-3 py-2 text-sm text-white focus:border-gold-400 outline-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:border-blue-500 outline-none"
                     />
                   </div>
                 </>
               )}
             </div>
 
-            <div className="flex justify-end gap-3 mt-6 border-t border-white/10 pt-4">
+            <div className="flex justify-end gap-3 mt-6 border-t border-slate-200 pt-4">
               <button
                 onClick={() => setEditingItem(null)}
-                className="px-4 py-2 border border-border rounded-xl text-xs text-muted hover:text-white transition-colors"
+                className="px-4 py-2 border border-slate-200 rounded-xl text-xs text-slate-500 hover:text-white transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={saveAgentEdits}
-                className="px-5 py-2 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold rounded-xl text-xs shadow-gold-sm hover:opacity-90 transition-opacity"
+                className="px-5 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold rounded-xl text-xs shadow-blue-500/10 hover:opacity-90 transition-opacity"
               >
                 Save Edits
               </button>
@@ -2186,5 +2186,5 @@ const getCategoryDetails = (category) => {
   if (normalized.includes('shopping') || normalized.includes('market') || normalized.includes('bazaar')) {
     return { icon: ShoppingBag, color: 'text-violet-400', bg: 'bg-violet-400/10 border-violet-400/20', label: 'Shopping' }
   }
-  return { icon: MapPin, color: 'text-gold-400', bg: 'bg-gold-400/10 border-gold-400/20', label: category || 'Attraction' }
+  return { icon: MapPin, color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/20', label: category || 'Attraction' }
 }
