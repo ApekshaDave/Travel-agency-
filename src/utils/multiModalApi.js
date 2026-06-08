@@ -20,6 +20,31 @@ const HOTEL_SYSTEM = `You are VoyageAI's hotel search AI.
 Respond ONLY with a single valid JSON object — no markdown, no extra text.
 Generate realistic hotel options with accurate pricing in INR.`
 
+// ─── JSON repair helper ───────────────────────────────────────────────────────
+// Attempts to recover a truncated / slightly malformed JSON string
+function repairJSON(raw) {
+  if (!raw || typeof raw !== 'string') return null
+  let s = raw.trim()
+
+  // Strip markdown fences
+  s = s.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '')
+
+  // Already valid?
+  try { return JSON.parse(s) } catch { /* fall through */ }
+
+  // Try to close unclosed structures by counting brackets
+  const opens  = (s.match(/\{/g) || []).length - (s.match(/\}/g) || []).length
+  const aopens = (s.match(/\[/g) || []).length - (s.match(/\]/g) || []).length
+
+  // Remove trailing incomplete key-value (last comma or partial token)
+  s = s.replace(/,\s*$/, '').replace(/,\s*"[^"]*$/, '')
+
+  // Close arrays first, then objects
+  s += ']'.repeat(Math.max(0, aopens)) + '}'.repeat(Math.max(0, opens))
+
+  try { return JSON.parse(s) } catch { return null }
+}
+
 // ─── Visa requirements ────────────────────────────────────────────────────────
 
 export async function getVisaRequirements(nationality, destination) {
@@ -54,102 +79,55 @@ Replace all placeholder names with real hotels in ${city}.`
 
 // ─── Multi-modal trip builder ─────────────────────────────────────────────────
 
-export async function generateMultiModalTrip(prompt) {
+export async function generateMultiModalTrip(userPrompt) {
   const system = `You are VoyageAI's multi-modal trip planner for India.
 Generate practical travel itineraries combining flights, trains, buses, roadways, stays, and sightseeing.
-RULES:
-1. Respond ONLY with a single valid raw JSON object — no markdown, no extra text.
-2. All restaurant and attraction names MUST be real, well-known places in the destination.
-3. Keep ALL string values short (1 sentence max).
-4. "placesToVisit" must have exactly 6 items.
-5. "restaurants.veg" must have exactly 5 real vegetarian restaurants.
-6. "restaurants.nonVeg" must have exactly 5 real non-vegetarian restaurants.
-7. "itineraryDays" must have one entry per day.`
+STRICT RULES:
+1. Respond ONLY with a single valid raw JSON object — no markdown, no backticks, no explanation.
+2. All restaurant and attraction names MUST be real, well-known places at the destination.
+3. Keep ALL string values to 1 sentence maximum — brevity is critical.
+4. "placesToVisit" must have EXACTLY 6 items.
+5. "restaurants.veg" must have EXACTLY 5 items.
+6. "restaurants.nonVeg" must have EXACTLY 5 items.
+7. "itineraryDays" must have one entry per day of the trip.
+8. Do NOT include any text before or after the JSON object.`
 
-  const userPrompt = `Generate a multi-modal Indian travel itinerary for: "${prompt}"
+  // Compact schema — avoid sending a large filled-in example that eats tokens
+  const schema = `{"tripName":"","desc":"","duration":"X days","totalBudget":0,"costComparison":{"flightCost":"","trainCost":"","busCost":"","roadwaysCost":"","analysis":"","aiSuggestion":""},"segments":[{"id":"","type":"flight|train|bus|roadways|hotel","from":"","to":"","date":"","detail":"","price":0,"icon":""}],"flightOptions":[{"id":"","airline":"","flightNo":"","price":0,"depart":"","arrive":"","duration":"","stops":0,"logo":"✈️"}],"hotelOptions":[{"id":"","name":"","pricePerNight":0,"rating":0,"stars":0,"area":"","image":""}],"trainOptions":[{"id":"","name":"","trainNo":"","price":0,"depart":"","arrive":"","duration":""}],"busOptions":[{"id":"","operator":"","type":"","price":0,"depart":"","arrive":"","duration":""}],"roadwaysOptions":[{"id":"","vehicle":"","provider":"","price":0,"detail":""}],"placesToVisit":[{"name":"","description":"","funFact":"","recommendedTime":"","visitDuration":"","category":"","price":0}],"restaurants":{"veg":[{"name":"","cuisine":"","specialty":"","costForTwo":"","description":""}],"nonVeg":[{"name":"","cuisine":"","specialty":"","costForTwo":"","description":""}]},"itineraryDays":[{"day":1,"title":"","theme":"","morning":{"activity":"","description":"","duration":"","cost":"","tip":""},"afternoon":{"activity":"","description":"","duration":"","cost":"","tip":""},"evening":{"activity":"","description":"","duration":"","cost":"","tip":""},"meals":{"breakfast":"","lunch":"","dinner":""},"transport":"","estimatedDayBudget":""}],"highlights":["",""],"tips":["",""]}`
 
-Return ONLY this JSON (replace ALL placeholders with real destination-specific data):
-{
-  "tripName": "Trip name",
-  "desc": "Short route description",
-  "duration": "X days",
-  "totalBudget": 35000,
-  "costComparison": {
-    "flightCost": "₹5,500",
-    "trainCost": "₹1,400",
-    "busCost": "₹850",
-    "roadwaysCost": "₹2,500",
-    "analysis": "One sentence comparing modes.",
-    "aiSuggestion": "One sentence best recommendation."
-  },
-  "segments": [
-    {"id":"seg-1","type":"flight","from":"City A","to":"City B","date":"20 Mar","detail":"IndiGo 6E-241","price":4500,"icon":"✈️"},
-    {"id":"seg-2","type":"hotel","from":"City B","to":"","date":"20-22 Mar","detail":"Hotel name, 2 nights","price":7000,"icon":"🏨"}
-  ],
-  "flightOptions": [
-    {"id":"f-1","airline":"IndiGo","flightNo":"6E-241","price":4999,"depart":"06:15","arrive":"08:30","duration":"2h 15m","stops":0,"logo":"✈️"},
-    {"id":"f-2","airline":"Air India","flightNo":"AI-402","price":5800,"depart":"14:00","arrive":"16:10","duration":"2h 10m","stops":0,"logo":"✈️"}
-  ],
-  "hotelOptions": [
-    {"id":"h-1","name":"Real Hotel Name","pricePerNight":3500,"rating":4.5,"stars":4,"area":"Area in destination","image":"Hotel description"},
-    {"id":"h-2","name":"Another Real Hotel","pricePerNight":2200,"rating":4.1,"stars":3,"area":"Near Station","image":"Budget option"}
-  ],
-  "trainOptions": [
-    {"id":"t-1","name":"Train Name","trainNo":"12002","price":1200,"depart":"06:00","arrive":"14:20","duration":"8h 20m"},
-    {"id":"t-2","name":"Express Train","trainNo":"12909","price":850,"depart":"16:30","arrive":"02:15","duration":"9h 45m"}
-  ],
-  "busOptions": [
-    {"id":"b-1","operator":"VRL Travels","type":"AC Sleeper (2+1)","price":950,"depart":"21:00","arrive":"08:30","duration":"11h 30m"},
-    {"id":"b-2","operator":"SRS Travels","type":"Volvo Semi-Sleeper","price":750,"depart":"22:00","arrive":"09:45","duration":"11h 45m"}
-  ],
-  "roadwaysOptions": [
-    {"id":"r-1","vehicle":"Dzire Sedan (AC)","provider":"Ola Outstation","price":2800,"detail":"Private cab with toll"},
-    {"id":"r-2","vehicle":"Ertiga SUV (AC)","provider":"MakeMyTrip Cabs","price":4200,"detail":"Spacious family car"}
-  ],
-  "placesToVisit": [
-    {"name":"Real Attraction 1","description":"One sentence.","funFact":"One fact.","recommendedTime":"Morning","visitDuration":"2 hours","category":"History","price":50},
-    {"name":"Real Attraction 2","description":"One sentence.","funFact":"One fact.","recommendedTime":"Sunset","visitDuration":"1 hour","category":"Nature","price":0},
-    {"name":"Real Attraction 3","description":"One sentence.","funFact":"One fact.","recommendedTime":"Afternoon","visitDuration":"2 hours","category":"Adventure","price":200},
-    {"name":"Real Attraction 4","description":"One sentence.","funFact":"One fact.","recommendedTime":"Morning","visitDuration":"1.5 hours","category":"Shopping","price":0},
-    {"name":"Real Attraction 5","description":"One sentence.","funFact":"One fact.","recommendedTime":"Evening","visitDuration":"1 hour","category":"Food","price":0},
-    {"name":"Real Attraction 6","description":"One sentence.","funFact":"One fact.","recommendedTime":"Morning","visitDuration":"2 hours","category":"History","price":30}
-  ],
-  "restaurants": {
-    "veg": [
-      {"name":"Real Veg Restaurant 1","cuisine":"South Indian","specialty":"Dosa","costForTwo":"₹400","description":"One sentence."},
-      {"name":"Real Veg Restaurant 2","cuisine":"North Indian","specialty":"Paneer Dish","costForTwo":"₹500","description":"One sentence."},
-      {"name":"Real Veg Restaurant 3","cuisine":"Gujarati","specialty":"Thali","costForTwo":"₹350","description":"One sentence."},
-      {"name":"Real Veg Restaurant 4","cuisine":"Chinese","specialty":"Noodles","costForTwo":"₹450","description":"One sentence."},
-      {"name":"Real Veg Restaurant 5","cuisine":"Street Food","specialty":"Chaat","costForTwo":"₹200","description":"One sentence."}
-    ],
-    "nonVeg": [
-      {"name":"Real NonVeg Restaurant 1","cuisine":"Mughlai","specialty":"Biryani","costForTwo":"₹800","description":"One sentence."},
-      {"name":"Real NonVeg Restaurant 2","cuisine":"Coastal","specialty":"Fish Curry","costForTwo":"₹700","description":"One sentence."},
-      {"name":"Real NonVeg Restaurant 3","cuisine":"BBQ","specialty":"Tandoori","costForTwo":"₹900","description":"One sentence."},
-      {"name":"Real NonVeg Restaurant 4","cuisine":"Chinese","specialty":"Chicken dishes","costForTwo":"₹600","description":"One sentence."},
-      {"name":"Real NonVeg Restaurant 5","cuisine":"Continental","specialty":"Grilled items","costForTwo":"₹1000","description":"One sentence."}
-    ]
-  },
-  "itineraryDays": [
-    {
-      "day": 1,
-      "title": "Arrival & Exploration",
-      "theme": "Exploration",
-      "morning": {"activity":"Arrive & Check-in","description":"Settle in.","duration":"2h","cost":"Free","tip":"Keep ID handy."},
-      "afternoon": {"activity":"Local Walk","description":"Explore streets.","duration":"2h","cost":"Free","tip":"Comfortable shoes."},
-      "evening": {"activity":"Sunset Viewpoint","description":"Catch sunset.","duration":"1h","cost":"₹50","tip":"Carry camera."},
-      "meals": {"breakfast":"Hotel breakfast","lunch":"Local cafe","dinner":"Traditional dinner"},
-      "transport":"Cab / Auto Rickshaw",
-      "estimatedDayBudget":"₹1500"
-    }
-  ],
-  "highlights": ["Highlight 1","Highlight 2","Highlight 3"],
-  "tips": ["Tip 1","Tip 2"]
+  const fullPrompt = `Generate a complete multi-modal Indian travel itinerary for: "${userPrompt}"
+
+Fill in this JSON schema with REAL, destination-specific data. Output ONLY the completed JSON, nothing else:
+${schema}`
+
+  // Use higher token limit and add repair fallback
+  const raw = await generateRawTrip(fullPrompt, system)
+
+  const parsed = repairJSON(raw)
+  if (!parsed) {
+    throw new Error(`AI returned invalid JSON: Could not parse Groq response as JSON. Raw: ${raw?.slice(0, 200)}`)
+  }
+  return parsed
 }
 
-CRITICAL: Replace ALL placeholder text with real places, real restaurants, and real attractions specific to the destination. Output ONLY raw JSON.`
+// Internal: calls Groq and returns raw string so we can repair before parsing
+async function generateRawTrip(prompt, system) {
+  const { callGroq } = await import('./groq.js')
 
-  return askGroqJSON(userPrompt, system, { maxTokens: 3500, temperature: 0.55 })
+  // callGroq returns the assistant message string
+  const result = await callGroq(
+    [{ role: 'user', content: prompt }],
+    system,
+    { maxTokens: 6000, temperature: 0.5 }
+  )
+
+  // result may be a string or an object with a content field
+  if (typeof result === 'string') return result
+  if (result?.content) return result.content
+  if (Array.isArray(result?.content)) {
+    return result.content.map(b => b.text || '').join('')
+  }
+  return JSON.stringify(result)
 }
 
 // ─── Chat (VoyageAI assistant) ────────────────────────────────────────────────
@@ -174,7 +152,6 @@ Return ONLY valid JSON:
 export async function updateTripWithPreferences(currentTrip, userText) {
   const system = `You are an expert trip editor. Apply the user's update request to the trip JSON and return the updated JSON. Keep the exact same schema. Return ONLY raw JSON.`
 
-  // Send a trimmed version of the trip to avoid token overflow
   const trimmedTrip = {
     tripName: currentTrip.tripName,
     duration: currentTrip.duration,
@@ -204,7 +181,6 @@ Help users with flights, hotels, visa info, itineraries, and bookings.
 - Mention transit visa requirements proactively
 - End with a clear next step or question`
 
-  // Keep system message + last 6 turns to stay under the 6000 TPM limit
   const trimmed = messages.slice(-6)
 
   const { callGroq } = await import('./groq.js')

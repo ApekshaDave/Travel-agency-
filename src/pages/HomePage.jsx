@@ -2,19 +2,20 @@ import { useState} from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import {
-  Sparkles, ArrowRight, Plane, Globe2, Zap,
+  Sparkles, ArrowRight, Plane, Zap,
   MessageSquare, TrendingUp, MapPin, ChevronRight,
   Clock, Users, CheckCircle,
   Star, Shield, Headphones
 } from 'lucide-react'
 
+// FIX 3: Replaced with Indian destinations
 const DESTINATIONS = [
-  { city: 'Bali', country: 'Indonesia', temp: '28°C', tag: 'Beach & Culture', img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=500&q=80' },
-  { city: 'Paris', country: 'France', temp: '18°C', tag: 'Romance & Art', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=500&q=80' },
-  { city: 'Tokyo', country: 'Japan', temp: '22°C', tag: 'Culture & Tech', img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=500&q=80' },
-  { city: 'Dubai', country: 'UAE', temp: '35°C', tag: 'Luxury & Sky', img: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=500&q=80' },
-  { city: 'New York', country: 'USA', temp: '20°C', tag: 'Business & Life', img: 'https://images.unsplash.com/photo-1518235506717-e1ed3306a89b?w=500&q=80' },
-  { city: 'Maldives', country: 'Maldives', temp: '30°C', tag: 'Paradise & Reefs', img: 'https://images.unsplash.com/photo-1573843981267-be1999ff37cd?w=500&q=80' },
+  { city: 'Udaipur', country: 'Rajasthan', temp: '32°C', tag: 'Lakes & Palaces', img: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=500&q=80' },
+  { city: 'Goa', country: 'India', temp: '30°C', tag: 'Beach & Nightlife', img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=500&q=80' },
+  { city: 'Kerala', country: 'India', temp: '27°C', tag: 'Backwaters & Nature', img: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=500&q=80' },
+  { city: 'Agra', country: 'Uttar Pradesh', temp: '34°C', tag: 'Heritage & Taj Mahal', img: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=500&q=80' },
+  { city: 'Manali', country: 'Himachal Pradesh', temp: '12°C', tag: 'Mountains & Snow', img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=500&q=80' },
+  { city: 'Varanasi', country: 'Uttar Pradesh', temp: '29°C', tag: 'Spiritual & Culture', img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=500&q=80' },
 ]
 
 const STATS = [
@@ -27,20 +28,21 @@ const HOW_STEPS = [
   {
     step: '01', title: 'Tell AI your plan',
     desc: 'Type naturally — "I want to visit Thailand next month, budget ₹50K, 7 nights." No forms, no filters.',
-    icon: MessageSquare, color: 'text-accent', preview: 'Book me a trip to Bali...',
+    icon: MessageSquare, preview: 'Book me a trip to Bali...',
   },
   {
     step: '02', title: 'AI curates options',
     desc: 'VoyageAI searches live inventory, checks visa rules, and presents the best options for you.',
-    icon: Sparkles, color: 'text-brand', preview: '3 Best Flights Found',
+    icon: Sparkles, preview: '3 Best Flights Found',
   },
   {
-    step: '03', title: 'Confirm and fly',
+    step: '03', title: 'Confirm and travel',
     desc: 'Confirm with one click. AI handles check-in, seat selection, and changes after you book.',
-    icon: Plane, color: 'icon-box-green', preview: 'Ticket Confirmed! ✓',
+    icon: Plane, preview: 'Ticket Confirmed! ✓',
   },
 ]
 
+// FIX 2: Only 2 items so using grid-cols-2 to keep them centered and aligned
 const QUICK_LINKS = [
   { label: 'Trip Builder', icon: Sparkles, path: '/trip-builder', color: 'bg-pink-50 text-pink-600' },
   { label: 'AI Chat', icon: MessageSquare, path: '/chat', color: 'bg-orange-50 text-orange-600' },
@@ -92,7 +94,7 @@ export default function HomePage() {
           transition={{ duration: 12, repeat: Infinity, delay: 2 }}
         />
 
-        {/* Orbiting plane (now a subtle background element) */}
+        {/* Orbiting plane */}
         <motion.div
           className="absolute top-1/2 left-1/2 -ml-3 -mt-3 hidden lg:block"
           style={{ originX: '50%', originY: '50%' }}
@@ -129,7 +131,18 @@ export default function HomePage() {
           >
             <span>Travel the way</span>
             <br />
-            <span className="text-shimmer italic">you imagine it.</span>
+            {/* FIX 1: Changed from text-shimmer (yellow/gold) to blue gradient */}
+            <span
+              className="italic"
+              style={{
+                background: 'linear-gradient(135deg, #1A6EBD 0%, #1558A0 40%, #3B82F6 70%, #1A6EBD 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              you imagine it.
+            </span>
           </motion.h1>
 
           <motion.p
@@ -141,34 +154,6 @@ export default function HomePage() {
             Just describe your trip. VoyageAI understands you, finds the best flights,
             books instantly, and manages everything after — all through natural conversation.
           </motion.p>
-
-          {/* Chat demo */}
-          {/* <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="max-w-2xl mx-auto mb-10"
-          >
-            <div className="glass-dark rounded-2xl p-4 flex items-center gap-4 border border-white/10">
-              <div className="w-9 h-9 rounded-xl bg-accent-gradient flex items-center justify-center flex-shrink-0 shadow-accent-sm">
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
-              <motion.p
-                key={chatIdx}
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: chatVisible ? 1 : 0, x: 0 }}
-                transition={{ duration: 0.3 }}
-                className="text-sm md:text-base text-white/70 italic flex-1 text-left"
-              >
-                {CHAT_EXAMPLES[chatIdx]}
-              </motion.p>
-              <div className="flex gap-1">
-                {[0,1,2].map(i => (
-                  <span key={i} className="typing-dot w-1.5 h-1.5 bg-orange-400 rounded-full" style={{ animationDelay: `${i * 0.2}s` }} />
-                ))}
-              </div>
-            </div>
-          </motion.div> */}
 
           {/* CTAs */}
           <motion.div
@@ -187,15 +172,6 @@ export default function HomePage() {
                 <ArrowRight className="w-5 h-5" />
               </Link>
             </motion.div>
-            {/* <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-              <Link
-                to="/search"
-                className="inline-flex items-center gap-3 px-8 py-4 bg-white/10 border border-white/20 hover:bg-white/15 text-white font-semibold text-lg rounded-2xl transition-all duration-300"
-              >
-                <Plane className="w-5 h-5 text-blue-300" />
-                Search Flights
-              </Link>
-            </motion.div> */}
           </motion.div>
         </motion.div>
 
@@ -217,26 +193,24 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* ─── QUICK LINKS (now on white bg) ────────────────────────────────── */}
+      {/* ─── QUICK LINKS ─────────────────────────────────────────────────── */}
       <section className="bg-white py-10 border-b border-slate-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <p className="text-xs uppercase tracking-widest text-slate-400 font-bold text-center mb-6">Quick Access</p>
-          <div className="grid grid-cols-3 gap-3">
-            {QUICK_LINKS.map(({ label, icon: Icon, path, color }) => {
-              const IconComponent = Icon; // Renamed to avoid conflict with JSX element
-              return (
-                <Link
-                  key={label}
-                  to={path}
-                  className="flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-slate-50 border border-slate-100 hover:border-slate-200 transition-all group hover:-translate-y-1 hover:shadow-sm"
-                >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color} group-hover:scale-110 transition-transform`}>
-                    <IconComponent className="w-5 h-5" />
-                  </div>
-                  <span className="text-xs font-semibold text-slate-700">{label}</span>
-                </Link>
-              );
-            })}
+          {/* FIX 2: Changed to grid-cols-2 with max-w constraint so 2 cards are perfectly centered & equal width */}
+          <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
+            {QUICK_LINKS.map(({ label, icon: Icon, path, color }) => (
+              <Link
+                key={label}
+                to={path}
+                className="flex flex-col items-center gap-2 p-5 rounded-2xl hover:bg-slate-50 border border-slate-100 hover:border-slate-200 transition-all group hover:-translate-y-1 hover:shadow-sm"
+              >
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color} group-hover:scale-110 transition-transform`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className="text-xs font-semibold text-slate-700 text-center">{label}</span>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
@@ -294,8 +268,10 @@ export default function HomePage() {
                 className={`flex flex-col md:flex-row items-center gap-8 ${i % 2 !== 0 ? 'md:flex-row-reverse' : ''}`}
               >
                 <div className="flex-shrink-0">
-                  <div className={`w-24 h-24 rounded-3xl flex flex-col items-center justify-center bg-surface-subtle shadow-sm`}>
-                    <Icon className="w-10 h-10" />
+                  <div className="w-24 h-24 rounded-3xl flex flex-col items-center justify-center shadow-md"
+                    style={{ background: 'linear-gradient(135deg, #1A6EBD 0%, #1558A0 100%)' }}
+                  >
+                    <Icon className="w-10 h-10 text-white" />
                   </div>
                 </div>
                 <div className="flex-1 max-w-md">
@@ -364,7 +340,8 @@ export default function HomePage() {
           >
             <div>
               <span className="section-tag">Trending Destinations</span>
-              <h2 className="font-display text-4xl font-bold text-slate-900">Where will you go?</h2>
+              {/* FIX 3: Updated heading to reflect India focus */}
+              <h2 className="font-display text-4xl font-bold text-slate-900">Explore Incredible India</h2>
             </div>
             <Link to="/search" className="flex items-center gap-1 text-sm text-brand-600 hover:text-brand-700 font-semibold transition-colors">
               View all <ChevronRight className="w-4 h-4" />
@@ -432,7 +409,7 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 className="flex flex-col items-center gap-3"
               >
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-surface-subtle`}>
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-surface-subtle">
                   <Icon className="w-7 h-7" />
                 </div>
                 <h3 className="font-bold text-slate-900">{title}</h3>
@@ -444,41 +421,48 @@ export default function HomePage() {
       </section>
 
       {/* ─── CTA BANNER ───────────────────────────────────────────────────── */}
-      <section className="bg-white py-24 px-4 sm:px-6">
+      <section className="bg-slate-50 py-24 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="relative rounded-3xl overflow-hidden"
+            className="relative rounded-3xl overflow-hidden border border-blue-100"
             style={{
-              background: 'linear-gradient(135deg, #0E2042 0%, #1558A0 40%, #112D56 70%, #1A0E28 100%)'
+              background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 40%, #EEF2FF 70%, #F0F9FF 100%)'
             }}
           >
-            {/* Decorative orbs */}
-            <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-orange-500/15 blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-blue-500/20 blur-3xl" />
+            {/* Soft decorative orbs */}
+            <div className="absolute top-0 right-0 w-72 h-72 rounded-full bg-blue-300/20 blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-indigo-300/15 blur-3xl pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-40 rounded-full bg-sky-200/20 blur-2xl pointer-events-none" />
 
             <div className="relative z-10 p-10 lg:p-16 text-center">
-              <Globe2 className="w-14 h-14 text-orange-400 mx-auto mb-6" />
-              <h2 className="font-display text-4xl md:text-5xl font-bold text-white mb-4">
-                Your next adventure<br />starts with a sentence.
+              <h2 className="font-display text-4xl md:text-5xl font-bold text-slate-900 mb-4">
+                Your next adventure<br />
+                <span className="italic" style={{
+                  background: 'linear-gradient(135deg, #1A6EBD 0%, #1558A0 50%, #3B82F6 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}>starts with a sentence.</span>
               </h2>
-              <p className="text-blue-200 text-lg mb-8 max-w-xl mx-auto">
+              <p className="text-slate-500 text-lg mb-8 max-w-xl mx-auto">
                 No more travel portals. No more phone calls. Just tell VoyageAI what you want.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                   <Link
                     to="/chat"
-                    className="inline-flex items-center gap-3 px-8 py-4 bg-brand-gradient text-white font-bold text-base rounded-2xl shadow-brand hover:shadow-[0_0_40px_rgba(26,110,189,0.5)] transition-all duration-300"
+                    className="inline-flex items-center gap-3 px-8 py-4 text-white font-bold text-base rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl"
+                    style={{ background: 'linear-gradient(135deg, #1A6EBD 0%, #1558A0 100%)' }}
                   >
                     <Sparkles className="w-5 h-5" />
                     Try VoyageAI Free
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </motion.div>
-                <Link to="/corporate" className="text-sm text-blue-300 hover:text-white transition-colors font-medium flex items-center gap-1">
+                <Link to="/corporate" className="text-sm text-slate-500 hover:text-blue-600 transition-colors font-medium flex items-center gap-1">
                   For agencies & corporates <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
               </div>

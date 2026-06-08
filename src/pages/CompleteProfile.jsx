@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { 
-  Users, Building2, Phone, Briefcase, ArrowRight, 
-  Sparkles, ChevronDown, User 
+import {
+  Users, Building2, Phone, Briefcase, ArrowRight,
+  ChevronDown, User, Plane
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../utils/apiClient'
+import { Link } from 'react-router-dom'
 
 export default function CompleteProfile() {
   const { completeProfileRegister } = useAuth()
@@ -22,14 +23,11 @@ export default function CompleteProfile() {
   const [role, setRole] = useState(intentFromUrl)
   const [name, setName] = useState(defaultName)
   const [phone, setPhone] = useState('')
-
-  // Agent specific
   const [position, setPosition] = useState('Agent')
   const [isAgencyRegistered, setIsAgencyRegistered] = useState(true)
   const [selectedAgency, setSelectedAgency] = useState('')
   const [agencyName, setAgencyName] = useState('')
   const [agencyRegId, setAgencyRegId] = useState('')
-
   const [registeredAgencies, setRegisteredAgencies] = useState([])
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
@@ -40,7 +38,6 @@ export default function CompleteProfile() {
       navigate('/login')
       return
     }
-
     const fetchAgencies = async () => {
       try {
         const agencies = await api.request('/api/agencies')
@@ -55,15 +52,12 @@ export default function CompleteProfile() {
 
   const validate = () => {
     const newErrors = {}
-
     if (!name.trim()) newErrors.name = 'Full name is required'
     if (!phone.trim()) newErrors.phone = 'Phone number is required'
-
     if (role === 'agent' && !isAgencyRegistered) {
       if (!agencyName.trim()) newErrors.agencyName = 'Agency name is required'
       if (!agencyRegId.trim()) newErrors.agencyRegId = 'Agency registration ID is required'
     }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -71,7 +65,6 @@ export default function CompleteProfile() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) return
-
     setLoading(true)
     try {
       const details = {
@@ -84,10 +77,8 @@ export default function CompleteProfile() {
         agencyRegId: role === 'agent' && !isAgencyRegistered ? agencyRegId : undefined,
         isNewAgency: role === 'agent' && !isAgencyRegistered
       }
-
       const user = await completeProfileRegister(details)
       toast.success(`Welcome to VoyageAI, ${user.name}!`)
-
       const isStaff = ['agent', 'admin', 'finance'].includes(user.role)
       navigate(isStaff ? '/staff' : '/dashboard', { replace: true })
     } catch (err) {
@@ -97,215 +88,221 @@ export default function CompleteProfile() {
     }
   }
 
+  const inputClass = "w-full pl-11 pr-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+  const inputClassPlain = "w-full px-4 py-3 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+
   return (
-    <div className="min-h-screen relative flex items-center justify-center py-20 px-4 bg-void">
-      <div className="absolute inset-0 starfield pointer-events-none" />
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gold-400/5 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="relative z-10 w-full max-w-xl">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass border border-gold-400/20 text-gold-400 text-xs font-bold uppercase tracking-widest mb-4">
-            <Sparkles className="w-3.5 h-3.5" />
-            Complete Profile Setup
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Top bar */}
+      <div className="border-b border-slate-100 px-6 py-4 flex items-center gap-3">
+        <Link to="/" className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-sm">
+            <Plane className="w-4 h-4 text-white" />
           </div>
-          <h1 className="text-white text-3xl font-bold tracking-tight">Tell us about yourself</h1>
-          <p className="text-muted text-sm mt-2">Just a few quick details to configure your customizable workspaces.</p>
-        </motion.div>
+          <span className="font-bold text-xl text-slate-900">VoyageAI</span>
+        </Link>
+      </div>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="glass border border-white/10 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl relative overflow-hidden"
-        >
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-400/20 to-transparent" />
+      <div className="flex-1 flex items-center justify-center py-12 px-4">
+        <div className="w-full max-w-lg">
 
-          {/* Role selector */}
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            <motion.div
-              whileHover={{ scale: 1.02, y: -1 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => { setRole('user'); setErrors({}) }}
-              className={`p-5 rounded-2xl border cursor-pointer transition-all text-center flex flex-col items-center gap-2.5 ${
-                role === 'user'
-                  ? 'border-gold-400/30 bg-gold-400/5 text-white'
-                  : 'border-white/5 hover:border-white/10 text-muted'
-              }`}
-            >
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${role === 'user' ? 'bg-gold-400/10 text-gold-400' : 'bg-white/5'}`}>
-                <Users className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="font-bold text-sm">Traveler Account</div>
-                <div className="text-[10px] opacity-70 mt-0.5">Plan and book AI-first trips</div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              whileHover={{ scale: 1.02, y: -1 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => { setRole('agent'); setErrors({}) }}
-              className={`p-5 rounded-2xl border cursor-pointer transition-all text-center flex flex-col items-center gap-2.5 ${
-                role === 'agent'
-                  ? 'border-red-400/30 bg-red-400/5 text-white'
-                  : 'border-white/5 hover:border-white/10 text-muted'
-              }`}
-            >
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${role === 'agent' ? 'bg-red-400/10 text-red-400' : 'bg-white/5'}`}>
-                <Building2 className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="font-bold text-sm">Travel Agent</div>
-                <div className="text-[10px] opacity-70 mt-0.5">Manage staff portals and queries</div>
-              </div>
-            </motion.div>
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-bold uppercase tracking-widest mb-4">
+              Complete Profile Setup
+            </div>
+            <h1 className="text-slate-900 text-3xl font-bold tracking-tight">Tell us about yourself</h1>
+            <p className="text-slate-500 text-sm mt-2">Just a few quick details to configure your workspace.</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Verified email display */}
-            <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-xs flex justify-between items-center">
-              <span className="text-muted">Verified Google Account</span>
-              <span className="text-white font-semibold font-mono bg-white/5 px-2.5 py-1 rounded-lg">{defaultEmail}</span>
-            </div>
+          <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
 
-            {/* Full Name */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-widest text-muted font-bold ml-1">Full Name</label>
-              <div className="relative group">
-                <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted transition-colors ${role === 'agent' ? 'group-focus-within:text-red-400' : 'group-focus-within:text-gold-400'}`} />
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => { setName(e.target.value); if (errors.name) setErrors(p => ({ ...p, name: '' })) }}
-                  placeholder="John Doe"
-                  className="ai-input w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm"
-                  required
-                />
-              </div>
-              {errors.name && <p className="text-red-400 text-xs mt-1 ml-1 font-medium">{errors.name}</p>}
-            </div>
-
-            {/* Phone */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-widest text-muted font-bold ml-1">Phone Number</label>
-              <div className="relative group">
-                <Phone className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted transition-colors ${role === 'agent' ? 'group-focus-within:text-red-400' : 'group-focus-within:text-gold-400'}`} />
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => { setPhone(e.target.value); if (errors.phone) setErrors(p => ({ ...p, phone: '' })) }}
-                  placeholder="+91 98765 43210"
-                  className="ai-input w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm"
-                  required
-                />
-              </div>
-              {errors.phone && <p className="text-red-400 text-xs mt-1 ml-1 font-medium">{errors.phone}</p>}
-            </div>
-
-            {/* Agent-only fields */}
-            {role === 'agent' && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-6">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase tracking-widest text-muted font-bold ml-1">Your Position/Role</label>
-                  <div className="relative group">
-                    <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted group-focus-within:text-red-400 transition-colors" />
-                    <input
-                      type="text"
-                      value={position}
-                      onChange={(e) => setPosition(e.target.value)}
-                      placeholder="Manager, Agent, etc."
-                      className="ai-input w-full pl-12 pr-4 py-3.5 rounded-2xl text-sm"
-                      required
-                    />
-                  </div>
+            {/* Role selector */}
+            <div className="grid grid-cols-2 gap-3 mb-8">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => { setRole('user'); setErrors({}) }}
+                className={`p-5 rounded-2xl border-2 cursor-pointer transition-all text-center flex flex-col items-center gap-2.5 ${
+                  role === 'user'
+                    ? 'border-blue-600 bg-blue-50'
+                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${role === 'user' ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'}`}>
+                  <Users className="w-5 h-5" />
                 </div>
-
-                <div className="space-y-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                  <span className="text-[10px] text-red-300 font-bold uppercase tracking-wider block">Agency Registry Options</span>
-                  <div className="flex gap-4">
-                    <label className="flex items-center gap-2 text-xs text-muted cursor-pointer hover:text-white transition-colors">
-                      <input type="radio" name="agencyRegisterType" checked={isAgencyRegistered} onChange={() => setIsAgencyRegistered(true)} className="accent-red-500" />
-                      Join Registered Agency
-                    </label>
-                    <label className="flex items-center gap-2 text-xs text-muted cursor-pointer hover:text-white transition-colors">
-                      <input type="radio" name="agencyRegisterType" checked={!isAgencyRegistered} onChange={() => setIsAgencyRegistered(false)} className="accent-red-500" />
-                      Register New Agency
-                    </label>
-                  </div>
-
-                  {isAgencyRegistered ? (
-                    <div className="space-y-1.5 pt-2">
-                      <label className="text-[10px] uppercase tracking-widest text-muted font-bold block ml-1">Select Registered Agency</label>
-                      <div className="relative">
-                        <select
-                          value={selectedAgency}
-                          onChange={(e) => setSelectedAgency(e.target.value)}
-                          className="ai-input w-full px-4 py-3.5 rounded-2xl text-sm bg-surface text-white border border-border appearance-none cursor-pointer"
-                        >
-                          {registeredAgencies.map((a) => (
-                            <option key={a.name} value={a.name}>{a.name} ({a.reg_id})</option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4 pt-2">
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest text-muted font-bold ml-1">New Agency Name</label>
-                        <input
-                          type="text"
-                          value={agencyName}
-                          onChange={(e) => { setAgencyName(e.target.value); if (errors.agencyName) setErrors(p => ({ ...p, agencyName: '' })) }}
-                          placeholder="Zen Travel"
-                          className="ai-input w-full px-4 py-3 rounded-2xl text-sm"
-                          required
-                        />
-                        {errors.agencyName && <p className="text-red-400 text-xs mt-1 ml-1 font-medium">{errors.agencyName}</p>}
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest text-muted font-bold ml-1">New Agency Registration ID</label>
-                        <input
-                          type="text"
-                          value={agencyRegId}
-                          onChange={(e) => { setAgencyRegId(e.target.value); if (errors.agencyRegId) setErrors(p => ({ ...p, agencyRegId: '' })) }}
-                          placeholder="ZEN-99"
-                          className="ai-input w-full px-4 py-3 rounded-2xl text-sm"
-                          required
-                        />
-                        {errors.agencyRegId && <p className="text-red-400 text-xs mt-1 ml-1 font-medium">{errors.agencyRegId}</p>}
-                      </div>
-                    </div>
-                  )}
+                <div>
+                  <div className={`font-bold text-sm ${role === 'user' ? 'text-blue-700' : 'text-slate-700'}`}>Traveler Account</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">Plan and book AI-first trips</div>
                 </div>
               </motion.div>
-            )}
 
-            <motion.button
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-              type="submit"
-              disabled={loading}
-              className={`w-full py-4 mt-6 font-bold rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                role === 'agent'
-                  ? 'bg-gradient-to-r from-red-500 to-red-400 text-white shadow-red-500/20'
-                  : 'bg-gold-gradient text-void shadow-gold'
-              }`}
-            >
-              {loading ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  className="w-5 h-5 border-2 border-void/30 border-t-void rounded-full"
-                />
-              ) : (
-                <>
-                  <span>Create Account & Log In</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => { setRole('agent'); setErrors({}) }}
+                className={`p-5 rounded-2xl border-2 cursor-pointer transition-all text-center flex flex-col items-center gap-2.5 ${
+                  role === 'agent'
+                    ? 'border-blue-600 bg-blue-50'
+                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${role === 'agent' ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'}`}>
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className={`font-bold text-sm ${role === 'agent' ? 'text-blue-700' : 'text-slate-700'}`}>Travel Agent</div>
+                  <div className="text-[10px] text-slate-400 mt-0.5">Manage staff portals and queries</div>
+                </div>
+              </motion.div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+
+              {/* Verified email */}
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs flex justify-between items-center">
+                <span className="text-slate-500 font-medium">Verified Google Account</span>
+                <span className="text-slate-800 font-semibold font-mono bg-white px-2.5 py-1 rounded-lg border border-slate-200">{defaultEmail}</span>
+              </div>
+
+              {/* Full Name */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Full Name</label>
+                <div className="relative">
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => { setName(e.target.value); if (errors.name) setErrors(p => ({ ...p, name: '' })) }}
+                    placeholder="John Doe"
+                    className={inputClass}
+                    required
+                  />
+                </div>
+                {errors.name && <p className="text-red-500 text-xs mt-1 font-medium">{errors.name}</p>}
+              </div>
+
+              {/* Phone */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Phone Number</label>
+                <div className="relative">
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => { setPhone(e.target.value); if (errors.phone) setErrors(p => ({ ...p, phone: '' })) }}
+                    placeholder="+91 98765 43210"
+                    className={inputClass}
+                    required
+                  />
+                </div>
+                {errors.phone && <p className="text-red-500 text-xs mt-1 font-medium">{errors.phone}</p>}
+              </div>
+
+              {/* Agent-only fields */}
+              {role === 'agent' && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-5">
+                  {/* Position */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Your Position / Role</label>
+                    <div className="relative">
+                      <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="text"
+                        value={position}
+                        onChange={(e) => setPosition(e.target.value)}
+                        placeholder="Manager, Agent, etc."
+                        className={inputClass}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Agency options */}
+                  <div className="space-y-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                    <span className="text-xs text-blue-600 font-bold uppercase tracking-wider block">Agency Registry Options</span>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-slate-900 transition-colors">
+                        <input type="radio" name="agencyRegisterType" checked={isAgencyRegistered} onChange={() => setIsAgencyRegistered(true)} className="accent-blue-600" />
+                        Join Registered Agency
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-slate-900 transition-colors">
+                        <input type="radio" name="agencyRegisterType" checked={!isAgencyRegistered} onChange={() => setIsAgencyRegistered(false)} className="accent-blue-600" />
+                        Register New Agency
+                      </label>
+                    </div>
+
+                    {isAgencyRegistered ? (
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Select Registered Agency</label>
+                        <div className="relative">
+                          <select
+                            value={selectedAgency}
+                            onChange={(e) => setSelectedAgency(e.target.value)}
+                            className={`${inputClassPlain} appearance-none cursor-pointer`}
+                          >
+                            {registeredAgencies.length === 0 && (
+                              <option value="">No agencies registered yet</option>
+                            )}
+                            {registeredAgencies.map((a) => (
+                              <option key={a.name} value={a.name}>{a.name} ({a.reg_id})</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">New Agency Name</label>
+                          <input
+                            type="text"
+                            value={agencyName}
+                            onChange={(e) => { setAgencyName(e.target.value); if (errors.agencyName) setErrors(p => ({ ...p, agencyName: '' })) }}
+                            placeholder="Zen Travel"
+                            className={inputClassPlain}
+                            required
+                          />
+                          {errors.agencyName && <p className="text-red-500 text-xs mt-1 font-medium">{errors.agencyName}</p>}
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Agency Registration ID</label>
+                          <input
+                            type="text"
+                            value={agencyRegId}
+                            onChange={(e) => { setAgencyRegId(e.target.value); if (errors.agencyRegId) setErrors(p => ({ ...p, agencyRegId: '' })) }}
+                            placeholder="ZEN-99"
+                            className={inputClassPlain}
+                            required
+                          />
+                          {errors.agencyRegId && <p className="text-red-500 text-xs mt-1 font-medium">{errors.agencyRegId}</p>}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
               )}
-            </motion.button>
-          </form>
-        </motion.div>
+
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                type="submit"
+                disabled={loading}
+                className="w-full py-3.5 mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 text-sm"
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <span>Create Account & Log In</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </motion.button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   )

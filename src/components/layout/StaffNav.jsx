@@ -1,8 +1,6 @@
+
 import { Link, useLocation } from 'react-router-dom'
-import {
-  ShieldCheck, AlertTriangle, Map, DollarSign,
-  Bell, Home
-} from 'lucide-react'
+import { ShieldCheck, AlertTriangle, Map, DollarSign, Bell, Home } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 const STAFF_NAV = [
@@ -18,13 +16,11 @@ export default function StaffNav() {
   const { user } = useAuth()
 
   return (
-    <div className="fixed top-16 left-0 right-0 z-40 bg-void/95 backdrop-blur border-b border-red-500/15">
+    <div className="fixed top-16 left-0 right-0 z-40 bg-white border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-11">
-
-        {/* Staff nav links */}
         <div className="flex items-center gap-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-          <span className="text-[10px] text-red-400/80 font-bold uppercase tracking-wider mr-3 flex-shrink-0 flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-red-400" /> Staff Portal
+          <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider mr-3 flex-shrink-0 flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-600" /> Staff Portal
           </span>
           {STAFF_NAV.map(({ to, label, icon: Icon, badge }) => {
             const isActive = pathname === to || pathname.startsWith(to + '/')
@@ -34,14 +30,16 @@ export default function StaffNav() {
                 to={to}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                   isActive
-                    ? 'bg-red-500/10 text-red-400 border border-red-500/25 shadow-sm shadow-red-500/5'
-                    : 'text-muted hover:text-white hover:bg-white/5'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-blue-600 hover:bg-blue-50'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
                 {label}
                 {badge && (
-                  <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-500/20 text-red-400">
+                  <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                    isActive ? 'bg-white/20 text-white' : 'bg-red-100 text-red-600'
+                  }`}>
                     {badge}
                   </span>
                 )}
@@ -49,11 +47,9 @@ export default function StaffNav() {
             )
           })}
         </div>
-
-        {/* Right — user context */}
         <div className="flex items-center gap-3 flex-shrink-0 ml-4">
-          <span className="text-muted text-xs hidden sm:block">
-            {user?.name} · <span className="text-red-400 capitalize font-semibold">{user?.role}</span>
+          <span className="text-slate-500 text-xs hidden sm:block">
+            {user?.name} · <span className="text-blue-600 capitalize font-semibold">{user?.role}</span>
           </span>
         </div>
       </div>

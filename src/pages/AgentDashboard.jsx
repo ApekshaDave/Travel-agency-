@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react'
 import { getAIRecommendation } from '../utils/multiModalApi'
 import { motion } from 'framer-motion'
@@ -10,27 +11,18 @@ import { supabase } from '../utils/supabaseClient'
 import StaffNav from '../components/layout/StaffNav'
 
 const PRIORITY_STYLES = {
-  high: { badge: 'bg-red-500/15 text-red-400 border-red-500/20', dot: 'bg-red-400', label: 'High' },
-  medium: { badge: 'bg-amber-500/15 text-amber-400 border-amber-500/20', dot: 'bg-amber-400', label: 'Medium' },
-  low: { badge: 'bg-sage-400/15 text-sage-400 border-sage-400/20', dot: 'bg-sage-400', label: 'Low' },
+  high: { badge: 'bg-red-100 text-red-600 border-red-200', dot: 'bg-red-500', label: 'High' },
+  medium: { badge: 'bg-amber-100 text-amber-600 border-amber-200', dot: 'bg-amber-500', label: 'Medium' },
+  low: { badge: 'bg-green-100 text-green-600 border-green-200', dot: 'bg-green-500', label: 'Low' },
 }
 
 const TYPE_ICONS = {
-  payment_fail: '💳',
-  visa_risk: '🛂',
-  corporate_policy: '🏢',
-  refund: '↩️',
-  technical: '⚙️',
+  payment_fail: '💳', visa_risk: '🛂', corporate_policy: '🏢', refund: '↩️', technical: '⚙️',
 }
 
-// ── Case Card Component ──────────────────────────────────────────────────────
 function CaseCard({ c, i, selectedCase, setSelectedCase, handleResolve }) {
-  const priority = PRIORITY_STYLES[c.priority]
-  const priorityBorder = {
-    high: 'border-l-red-400',
-    medium: 'border-l-amber-400',
-    low: 'border-l-sage-400',
-  }[c.priority]
+  const priority = PRIORITY_STYLES[c.priority] || PRIORITY_STYLES.medium
+  const borderColor = { high: 'border-l-red-500', medium: 'border-l-amber-500', low: 'border-l-green-500' }[c.priority] || 'border-l-slate-300'
 
   return (
     <motion.div
@@ -38,49 +30,44 @@ function CaseCard({ c, i, selectedCase, setSelectedCase, handleResolve }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: i * 0.05 }}
       onClick={() => setSelectedCase(selectedCase?.id === c.id ? null : c)}
-      className={`glass border-l-4 rounded-2xl p-4 cursor-pointer transition-all duration-200 group flex items-start gap-4 ${
-        selectedCase?.id === c.id
-          ? 'border-gold-400/30 bg-gold-400/5'
-          : `border-border border-l-border/50 hover:border-gold-400/30 ${priorityBorder}`
+      className={`bg-white border-l-4 border border-slate-200 rounded-2xl p-4 cursor-pointer transition-all duration-200 group flex items-start gap-4 hover:shadow-md ${
+        selectedCase?.id === c.id ? 'border-blue-500 bg-blue-50' : borderColor
       }`}
     >
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap mb-1.5">
           <span className="text-lg">{TYPE_ICONS[c.type] || '📋'}</span>
-          <span className="font-semibold text-white text-sm group-hover:text-gold-300 transition-colors">{c.typeLabel}</span>
+          <span className="font-semibold text-slate-900 text-sm">{c.typeLabel}</span>
           <span className={`px-2 py-0.5 text-xs rounded-full border font-medium ${priority.badge}`}>
             {priority.label}
           </span>
           {c.sla && c.status !== 'resolved' && (
-            <span className="flex items-center gap-1 text-[10px] font-mono text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded-lg border border-red-400/20">
+            <span className="flex items-center gap-1 text-[10px] font-mono text-red-600 bg-red-50 px-1.5 py-0.5 rounded-lg border border-red-200">
               <Clock className="w-2.5 h-2.5" /> SLA: {c.sla}
             </span>
           )}
         </div>
-
-        <div className="flex items-center gap-x-3 gap-y-1 text-[11px] text-muted flex-wrap">
-          <span className="flex items-center gap-1 font-medium text-white/70"><User className="w-3 h-3" />{c.customer}</span>
+        <div className="flex items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 flex-wrap">
+          <span className="flex items-center gap-1 font-medium text-slate-700"><User className="w-3 h-3" />{c.customer}</span>
           <span className="flex items-center gap-1"><Plane className="w-3 h-3" />{c.route}</span>
           <span>{c.amount}</span>
           <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{c.created}</span>
         </div>
-
-        <p className="mt-3 text-white/60 text-xs leading-relaxed line-clamp-2 md:line-clamp-none bg-white/5 p-2 rounded-lg border border-white/5 italic">
+        <p className="mt-3 text-slate-500 text-xs leading-relaxed line-clamp-2 bg-slate-50 p-2 rounded-lg border border-slate-100 italic">
           &ldquo;{c.aiSummary}&rdquo;
         </p>
       </div>
-
       <div className="flex flex-col items-end gap-3 self-center">
         {c.status !== 'resolved' && (
           <motion.button
             whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
             onClick={(e) => { e.stopPropagation(); handleResolve(c.id, 'Resolved by agent') }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-sage-400 text-void text-[10px] rounded-lg font-bold shadow-lg"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white text-[10px] rounded-lg font-bold"
           >
             <CheckCircle className="w-3 h-3" /> Resolve
           </motion.button>
         )}
-        <div className="flex items-center gap-2 text-muted group-hover:text-gold-400 transition-colors">
+        <div className="flex items-center gap-2 text-slate-400 group-hover:text-blue-600 transition-colors">
           <span className="text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-opacity">View Details</span>
           <ArrowRight className="w-4 h-4" />
         </div>
@@ -89,13 +76,12 @@ function CaseCard({ c, i, selectedCase, setSelectedCase, handleResolve }) {
   )
 }
 
-// ── Case Detail Panel ────────────────────────────────────────────────────────
 const BRANCHES = [
-  { id: 'all', label: 'All Issues', icon: MessageCircle, color: 'text-white' },
-  { id: 'trip', label: 'Trip Operations', icon: Plane, color: 'text-brand-primary' },
-  { id: 'payment', label: 'Payments', icon: DollarSign, color: 'text-emerald-500' },
-  { id: 'technical', label: 'Technical', icon: Zap, color: 'text-violet-400' },
-  { id: 'cancellation', label: 'Cancellations', icon: XCircle, color: 'text-rose-500' },
+  { id: 'all', label: 'All Issues', icon: MessageCircle },
+  { id: 'trip', label: 'Trip Operations', icon: Plane },
+  { id: 'payment', label: 'Payments', icon: DollarSign },
+  { id: 'technical', label: 'Technical', icon: Zap },
+  { id: 'cancellation', label: 'Cancellations', icon: XCircle },
 ]
 
 function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent, onAgentApprove }) {
@@ -109,163 +95,125 @@ function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent, onAgentA
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 40 }}
-      className="glass border border-border rounded-2xl overflow-hidden flex flex-col h-full"
+      className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col h-full shadow-sm"
     >
       {/* Header */}
-      <div className="p-5 border-b border-border/60 flex items-start justify-between">
+      <div className="p-5 border-b border-slate-100 flex items-start justify-between bg-slate-50">
         <div>
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className={`px-2 py-0.5 text-[10px] rounded-full border font-bold uppercase ${
-              caseData.typeLabel === 'Technical Issue'
-                ? 'bg-red-500/10 text-red-400 border-red-500/20'
-                : caseData.typeLabel === 'Finance Issue'
-                  ? 'bg-gold-400/10 text-gold-400 border-gold-400/20'
-                  : 'bg-violet-400/10 text-violet-400 border-violet-400/20'
-            }`}>
+            <span className={`px-2 py-0.5 text-[10px] rounded-full border font-bold uppercase bg-blue-100 text-blue-700 border-blue-200`}>
               {caseData.typeLabel}
             </span>
-            <span className="font-mono text-xs text-muted">{caseData.id}</span>
+            <span className="font-mono text-xs text-slate-400">{caseData.id}</span>
             <span className={`px-2 py-0.5 text-[10px] rounded-full border font-bold uppercase ${priority.badge}`}>
               {priority.label}
             </span>
           </div>
-          <p className="text-muted text-xs">{caseData.created}</p>
+          <p className="text-slate-400 text-xs">{caseData.created}</p>
         </div>
-        <button onClick={onClose} className="p-1.5 text-muted hover:text-white transition-colors">
+        <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-700 transition-colors">
           <XCircle className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto p-6 space-y-5">
         {/* Customer info */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-          <p className="text-white/50 text-xs uppercase tracking-wider mb-3">Customer</p>
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+          <p className="text-slate-400 text-xs uppercase tracking-wider mb-3 font-semibold">Customer</p>
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-11 h-11 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-lg">
-              {caseData.customer[0]}
+            <div className="w-11 h-11 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg">
+              {caseData.customer?.[0] || '?'}
             </div>
             <div>
-              <div className="text-white font-semibold">{caseData.customer}</div>
-              <div className="text-white/50 text-xs">{caseData.email}</div>
+              <div className="text-slate-900 font-semibold">{caseData.customer}</div>
+              <div className="text-slate-500 text-xs">{caseData.email}</div>
             </div>
           </div>
           <div className="flex gap-2">
-            <a href={`tel:${caseData.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 glass border border-border rounded-lg text-xs text-muted hover:text-white transition-all">
+            <a href={`tel:${caseData.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-all">
               <Phone className="w-3 h-3" /> Call
             </a>
-            <a href={`mailto:${caseData.email}`} className="flex items-center gap-1.5 px-3 py-1.5 glass border border-border rounded-lg text-xs text-muted hover:text-white transition-all">
+            <a href={`mailto:${caseData.email}`} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-all">
               <Mail className="w-3 h-3" /> Email
             </a>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 glass border border-border rounded-lg text-xs text-muted hover:text-white transition-all">
+            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-all">
               <MessageCircle className="w-3 h-3" /> Chat
             </button>
           </div>
         </div>
 
         {/* Booking info */}
-        <div className="glass border border-border rounded-2xl p-5">
-          <p className="text-white/50 text-xs uppercase tracking-wider mb-3">Booking Details</p>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            {[
-              ['Route', caseData.route],
-              ['Date', caseData.date],
-              ['Amount', caseData.amount],
-              ['Status', caseData.status],
-            ].map(([k, v]) => (
+        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <p className="text-slate-400 text-xs uppercase tracking-wider mb-3 font-semibold">Booking Details</p>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            {[['Route', caseData.route], ['Date', caseData.date], ['Amount', caseData.amount], ['Status', caseData.status]].map(([k, v]) => (
               <div key={k}>
-                <div className="text-white/40 text-[10px] uppercase font-bold">{k}</div>
-                <div className="text-white font-semibold capitalize">{v}</div>
+                <div className="text-slate-400 text-[10px] uppercase font-bold">{k}</div>
+                <div className="text-slate-900 font-semibold capitalize mt-0.5">{v}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* AI Summary */}
-        <div className="p-5 bg-brand-primary/5 border border-brand-primary/10 rounded-2xl">
+        <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl">
           <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-5 h-5 text-brand-primary" />
-            <span className="text-gold-300 text-sm font-semibold">AI Case Summary</span>
+            <Sparkles className="w-4 h-4 text-blue-600" />
+            <span className="text-blue-700 text-sm font-semibold">AI Case Summary</span>
           </div>
-          <p className="text-gold-200/70 text-xs leading-relaxed mb-3">{caseData.aiSummary}</p>
+          <p className="text-slate-600 text-xs leading-relaxed">{caseData.aiSummary}</p>
           {caseData.aiAction && (
-            <div className="flex items-start gap-2 pt-2 border-t border-gold-400/15">
-              <ArrowRight className="w-3.5 h-3.5 text-gold-400 flex-shrink-0 mt-0.5" />
-              <p className="text-gold-300 text-xs font-medium">{caseData.aiAction}</p>
+            <div className="flex items-start gap-2 pt-2 mt-2 border-t border-blue-100">
+              <ArrowRight className="w-3.5 h-3.5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <p className="text-blue-700 text-xs font-medium">{caseData.aiAction}</p>
             </div>
           )}
         </div>
 
-        {/* Chat transcript */}
-        {caseData.chatLog?.length > 0 && (
-          <div>
-            <p className="text-white/50 text-xs uppercase tracking-wider mb-3">Chat Transcript</p>
-            <div className="space-y-2">
-              {caseData.chatLog.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] px-3 py-2 rounded-xl text-xs ${
-                    msg.role === 'user'
-                      ? 'bg-red-500/15 border border-red-500/20 text-white rounded-tr-sm'
-                      : 'glass border border-border text-white/80 rounded-tl-sm'
-                  }`}>
-                    <p className="leading-relaxed">{msg.msg}</p>
-                    <p className="text-white/30 text-xs mt-1">{msg.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Agent note */}
         <div>
-          <p className="text-white/50 text-xs uppercase tracking-wider mb-2">Add Resolution Note</p>
+          <p className="text-slate-500 text-xs uppercase tracking-wider mb-2 font-semibold">Add Resolution Note</p>
           <textarea
             value={note}
             onChange={e => setNote(e.target.value)}
             placeholder="Describe action taken..."
-            className="ai-input w-full px-4 py-3 rounded-xl text-white text-sm resize-none h-20"
+            className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-900 text-sm resize-none h-20 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           />
         </div>
       </div>
 
       {/* Actions footer */}
       {caseData.status !== 'resolved' && (
-        <div className="p-4 border-t border-border/60 space-y-4">
+        <div className="p-4 border-t border-slate-100 space-y-3 bg-slate-50">
           {!isResolving ? (
-            <div className="flex flex-col gap-2">
-              <motion.button
-                whileHover={{ scale: 1.01 }}
-                onClick={() => setIsResolving(true)}
-                className="w-full py-3 bg-gold-gradient text-void font-bold rounded-xl text-sm flex items-center justify-center gap-2"
-              >
-                <CheckCircle className="w-4 h-4" /> Resolve Case
-              </motion.button>
-            </div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-3 bg-white/5 p-4 rounded-2xl border border-gold-400/20"
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              onClick={() => setIsResolving(true)}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 transition-all"
             >
-              <p className="text-white text-xs font-bold uppercase tracking-wider">Resolution Center</p>
+              <CheckCircle className="w-4 h-4" /> Resolve Case
+            </motion.button>
+          ) : (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3 bg-white p-4 rounded-2xl border border-slate-200">
+              <p className="text-slate-700 text-xs font-bold uppercase tracking-wider">Resolution Center</p>
               <textarea
                 value={note}
                 onChange={e => setNote(e.target.value)}
-                placeholder="Type instructions or resolution details for the customer..."
-                className="w-full bg-void/50 border border-border rounded-xl p-3 text-white text-sm h-24 focus:border-gold-400 outline-none"
+                placeholder="Type instructions or resolution details..."
+                className="w-full border border-slate-200 rounded-xl p-3 text-slate-900 text-sm h-20 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none"
               />
               <div className="flex gap-2">
                 {!isFinanceIssue ? (
                   <button
                     onClick={() => onResolve(caseData.id, 'Issue has been resolved')}
-                    className="flex-1 py-2 glass border border-sage-400/30 text-sage-400 rounded-lg text-xs font-bold"
+                    className="flex-1 py-2 bg-green-600 text-white rounded-lg text-xs font-bold"
                   >
                     Mark Resolved
                   </button>
                 ) : (
                   <button
                     onClick={() => onAgentApprove(caseData.id, note || 'Agent approved.')}
-                    className="flex-1 py-2 bg-sage-400 text-void rounded-lg text-xs font-bold flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2 bg-green-600 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5"
                   >
                     <CheckCircle className="w-3.5 h-3.5" /> Send to Finance
                   </button>
@@ -273,45 +221,35 @@ function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent, onAgentA
                 <button
                   disabled={!note.trim()}
                   onClick={() => onInstructionsSent(caseData.id, note)}
-                  className={`flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-30 ${
-                    isFinanceIssue ? 'glass border border-border text-white' : 'bg-gold-400 text-void'
-                  }`}
+                  className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-40"
                 >
                   <Send className="w-3.5 h-3.5" /> Send Instructions
                 </button>
               </div>
-              <button
-                onClick={() => setIsResolving(false)}
-                className="w-full text-[10px] text-muted hover:underline uppercase"
-              >
+              <button onClick={() => setIsResolving(false)} className="w-full text-[10px] text-slate-400 hover:underline uppercase">
                 Go Back
               </button>
             </motion.div>
           )}
 
           {!isResolving && caseData.aiAction && (
-            <motion.button
-              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                onResolve(caseData.id, `AI Action Applied: ${caseData.aiAction}`)
-                toast.success('Action performed: ' + caseData.aiAction)
-              }}
-              className="w-full py-3 glass border border-gold-400/20 text-gold-400 font-bold rounded-xl text-sm flex flex-col items-center justify-center leading-tight shadow-gold"
+            <button
+              onClick={() => { onResolve(caseData.id, `AI Action Applied: ${caseData.aiAction}`); toast.success('Action: ' + caseData.aiAction) }}
+              className="w-full py-2.5 bg-blue-50 border border-blue-200 text-blue-700 font-bold rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition-all"
             >
-              <span>{caseData.aiAction}</span>
-              <span className="text-[10px] opacity-70 font-medium mt-0.5">AI Recommended Action</span>
-            </motion.button>
+              <Sparkles className="w-3.5 h-3.5" /> {caseData.aiAction}
+            </button>
           )}
 
           {!isResolving && (
             <div className="flex gap-2">
-              <button className="flex-1 py-2 glass border border-border rounded-lg text-xs text-muted hover:text-white transition-all flex items-center justify-center gap-1.5">
+              <button className="flex-1 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-1.5">
                 <Phone className="w-3.5 h-3.5" /> Call
               </button>
-              <button className="flex-1 py-2 glass border border-border rounded-lg text-xs text-muted hover:text-white transition-all flex items-center justify-center gap-1.5">
+              <button className="flex-1 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-1.5">
                 <Mail className="w-3.5 h-3.5" /> Email
               </button>
-              <button className="flex-1 py-2 glass border border-border rounded-lg text-xs text-muted hover:text-white transition-all flex items-center justify-center gap-1.5">
+              <button className="flex-1 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-1.5">
                 <MessageCircle className="w-3.5 h-3.5" /> Chat
               </button>
             </div>
@@ -322,7 +260,6 @@ function CaseDetail({ caseData, onClose, onResolve, onInstructionsSent, onAgentA
   )
 }
 
-// ── Main Dashboard ───────────────────────────────────────────────────────────
 export default function AgentDashboard() {
   const [cases, setCases] = useState([])
   const [selectedCase, setSelectedCase] = useState(null)
@@ -334,14 +271,10 @@ export default function AgentDashboard() {
   const [aiTip, setAiTip] = useState('')
 
   const fetchIssues = useCallback(async () => {
-    setLoading(true)
     const { data, error } = await supabase
-      .from('booking_issues')
-      .select('*')
-      .order('created_at', { ascending: false })
-
+      .from('booking_issues').select('*').order('created_at', { ascending: false })
     if (!error) {
-      const mapped = (data || []).map(item => ({
+      setCases((data || []).map(item => ({
         ...item,
         customer: item.customer_name,
         email: item.customer_email,
@@ -351,26 +284,19 @@ export default function AgentDashboard() {
         priority: item.priority || 'high',
         aiSummary: item.description,
         chatLog: [],
-      }))
-      setCases(mapped)
+      })))
     }
-    setLoading(false)
   }, [])
 
   useEffect(() => {
     let cancelled = false
-
     const load = async () => {
       setLoading(true)
       const { data, error } = await supabase
-        .from('booking_issues')
-        .select('*')
-        .order('created_at', { ascending: false })
-
+        .from('booking_issues').select('*').order('created_at', { ascending: false })
       if (cancelled) return
-
       if (!error) {
-        const mapped = (data || []).map(item => ({
+        setCases((data || []).map(item => ({
           ...item,
           customer: item.customer_name,
           email: item.customer_email,
@@ -380,20 +306,17 @@ export default function AgentDashboard() {
           priority: item.priority || 'high',
           aiSummary: item.description,
           chatLog: [],
-        }))
-        setCases(mapped)
+        })))
       }
       setLoading(false)
     }
-
     load()
     return () => { cancelled = true }
   }, [])
 
   useEffect(() => {
     getAIRecommendation('Give a concise one-line tip for travel agents handling escalated cases today.')
-      .then(result => setAiTip(result))
-      .catch(() => {})
+      .then(result => setAiTip(result)).catch(() => {})
   }, [])
 
   const filtered = cases.filter(c => {
@@ -406,143 +329,115 @@ export default function AgentDashboard() {
     }
     if (search) {
       const q = search.toLowerCase()
-      if (
-        !c.customer?.toLowerCase().includes(q) &&
-        !c.route?.toLowerCase().includes(q) &&
-        !String(c.id).toLowerCase().includes(q)
-      ) return false
+      if (!c.customer?.toLowerCase().includes(q) && !c.route?.toLowerCase().includes(q) && !String(c.id).toLowerCase().includes(q)) return false
     }
     return true
   })
 
   const handleResolve = async (id, message) => {
     try {
-      const { error } = await supabase
-        .from('booking_issues')
-        .update({ status: 'resolved', resolution_note: message })
-        .eq('id', id)
-
+      const { error } = await supabase.from('booking_issues').update({ status: 'resolved', resolution_note: message }).eq('id', id)
       if (error) throw error
       toast.success('Issue marked as resolved!')
       fetchIssues()
       if (selectedCase?.id === id) setSelectedCase(null)
-    } catch (err) {
-      toast.error('Update failed: ' + err.message)
-    }
+    } catch (err) { toast.error('Update failed: ' + err.message) }
   }
 
   const handleInstructionsSent = async (id, note) => {
     try {
-      const { error } = await supabase
-        .from('booking_issues')
-        .update({ status: 'pending', resolution_note: note })
-        .eq('id', id)
-
+      const { error } = await supabase.from('booking_issues').update({ status: 'pending', resolution_note: note }).eq('id', id)
       if (error) throw error
-      toast.success('Instructions sent to customer!')
+      toast.success('Instructions sent!')
       fetchIssues()
       if (selectedCase?.id === id) setSelectedCase(null)
-    } catch (err) {
-      toast.error('Update failed: ' + err.message)
-    }
+    } catch (err) { toast.error('Update failed: ' + err.message) }
   }
 
   const handleAgentApprove = async (id, note) => {
     try {
-      const { error } = await supabase
-        .from('booking_issues')
-        .update({ status: 'pending', resolution_note: note, escalated_to_finance: true })
-        .eq('id', id)
-
+      const { error } = await supabase.from('booking_issues').update({ status: 'pending', resolution_note: note, escalated_to_finance: true }).eq('id', id)
       if (error) throw error
-      toast.success('Sent to Finance team for approval!')
+      toast.success('Sent to Finance team!')
       fetchIssues()
       if (selectedCase?.id === id) setSelectedCase(null)
-    } catch (err) {
-      toast.error('Update failed: ' + err.message)
-    }
+    } catch (err) { toast.error('Update failed: ' + err.message) }
   }
 
-  const openCasesCount = cases.filter(c => c.status === 'open').length
-  const pendingCasesCount = cases.filter(c => c.status === 'pending').length
-  const resolvedCasesCount = 7 + cases.filter(c => c.status === 'resolved').length
+  const openCases = cases.filter(c => c.status === 'open').length
+  const pendingCases = cases.filter(c => c.status === 'pending').length
+  const resolvedCases = 7 + cases.filter(c => c.status === 'resolved').length
 
   const stats = [
-    { label: 'Open Cases', value: openCasesCount, icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/20' },
-    { label: 'Pending Approval', value: pendingCasesCount, icon: Clock, color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
-    { label: 'Resolved Today', value: resolvedCasesCount, icon: CheckCircle, color: 'text-sage-400', bg: 'bg-sage-400/10 border-sage-400/20' },
-    { label: 'Efficiency', value: '94%', icon: Zap, color: 'text-brand-primary', bg: 'bg-brand-primary/5 border-brand-primary/10' },
+    { label: 'Open Cases', value: openCases, icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
+    { label: 'Pending', value: pendingCases, icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+    { label: 'Resolved Today', value: resolvedCases, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
+    { label: 'Efficiency', value: '94%', icon: Zap, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
   ]
 
   void loading
 
   return (
-    <div className="min-h-screen pt-28 pb-8 px-4">
+    <div className="min-h-screen bg-slate-50 pt-28 pb-8 px-4">
       <StaffNav />
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          className="py-6 flex items-end justify-between border-b border-border/40 mb-8"
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          className="py-6 flex items-end justify-between border-b border-slate-200 mb-8"
         >
           <div>
-            <h1 className="font-display text-4xl font-bold text-white mb-2">Agent Control</h1>
+            <h1 className="font-display text-4xl font-bold text-slate-900 mb-2">Agent Control</h1>
             <div className="flex items-center gap-1">
               {['summary', 'queue'].map(v => (
                 <button
                   key={v}
                   onClick={() => { setView(v); setSelectedCase(null) }}
                   className={`px-4 py-2 rounded-xl text-sm font-medium capitalize transition-all ${
-                    view === v
-                      ? 'text-white bg-red-500/15 border border-red-500/25'
-                      : 'text-white/40 hover:text-white hover:bg-white/5 border border-transparent'
+                    view === v ? 'text-blue-600 bg-blue-50 border border-blue-200' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
                   {v}
                 </button>
               ))}
               {selectedCase && (
-                <div className="flex items-center gap-2 text-red-400">
-                  <ChevronRight className="w-4 h-4 text-muted" />
-                  <span className="px-3 py-1 bg-red-500/10 rounded-lg text-xs font-bold">Active: {selectedCase.id}</span>
+                <div className="flex items-center gap-2 text-blue-600">
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                  <span className="px-3 py-1 bg-blue-50 border border-blue-200 rounded-lg text-xs font-bold">Active: {selectedCase.id}</span>
                 </div>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1.5 bg-red-500/10 text-red-400 text-xs rounded-full font-bold animate-pulse flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
-              {cases.filter(c => c.status === 'open').length} High Priority
-            </span>
-          </div>
+          <span className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 text-xs rounded-full font-bold flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            {openCases} High Priority
+          </span>
         </motion.div>
 
-        {/* AI Tip banner */}
+        {/* AI Tip */}
         {aiTip && (
-          <div className="flex items-start gap-3 p-4 mb-6 bg-red-500/10 border border-red-500/20 rounded-2xl">
-            <Sparkles className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-            <p className="text-white text-sm">{aiTip}</p>
+          <div className="flex items-start gap-3 p-4 mb-6 bg-blue-50 border border-blue-100 rounded-2xl">
+            <Sparkles className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+            <p className="text-slate-700 text-sm">{aiTip}</p>
           </div>
         )}
 
-        {/* Dynamic Views */}
         <div className="min-h-[600px] flex flex-col md:flex-row gap-8">
 
           {/* Branch Sidebar */}
           {(view === 'queue' || view === 'work') && !selectedCase && (
-            <div className="w-full md:w-64 flex-shrink-0 space-y-2">
-              <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-4 mb-4">Support Branches</p>
+            <div className="w-full md:w-56 flex-shrink-0 space-y-1">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-3">Support Branches</p>
               {BRANCHES.map((b) => (
                 <button
                   key={b.id}
                   onClick={() => setBranch(b.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${
-                    branch === b.id ? 'bg-white/10 text-white shadow-xl' : 'text-white/40 hover:text-white hover:bg-white/5'
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
+                    branch === b.id ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
-                  <b.icon className={`w-4 h-4 ${b.color}`} />
-                  <span className="text-sm font-semibold">{b.label}</span>
+                  <b.icon className="w-4 h-4" />
+                  <span className="text-sm font-medium">{b.label}</span>
                 </button>
               ))}
             </div>
@@ -550,70 +445,63 @@ export default function AgentDashboard() {
 
           <div className="flex-1">
             {view === 'summary' && !selectedCase && (
-              <div className="space-y-12">
+              <div className="space-y-10">
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {stats.map(({ label, value, icon: Icon, color, bg }) => (
-                    <div key={label} className={`glass border rounded-2xl p-4 ${bg}`}>
+                    <div key={label} className={`bg-white border rounded-2xl p-4 ${bg}`}>
                       <div className="flex items-center justify-between mb-3">
                         <Icon className={`w-4 h-4 ${color}`} />
-                        <span className="text-[10px] uppercase font-bold text-white/50 tracking-widest text-right">{label}</span>
+                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest text-right">{label}</span>
                       </div>
-                      <div className="font-bold text-2xl text-white">{value}</div>
+                      <div className={`font-bold text-2xl ${color}`}>{value}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Urgent cases */}
                 <div>
-                  <h2 className="text-white font-bold text-xl mb-6 flex items-center gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
-                    Needs Your Immediate Focus
+                  <h2 className="text-slate-900 font-bold text-xl mb-5 flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                    Needs Immediate Focus
                   </h2>
                   <div className="grid md:grid-cols-2 gap-4">
                     {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').slice(0, 4).map((c, i) => (
-                      <CaseCard
-                        key={c.id} c={c} i={i}
-                        handleResolve={handleResolve}
-                        selectedCase={selectedCase}
-                        setSelectedCase={(caseItem) => { setSelectedCase(caseItem); setView('work') }}
-                      />
+                      <CaseCard key={c.id} c={c} i={i} handleResolve={handleResolve} selectedCase={selectedCase}
+                        setSelectedCase={(item) => { setSelectedCase(item); setView('work') }} />
                     ))}
                   </div>
-                  {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').length > 4 && (
-                    <button
-                      onClick={() => setView('queue')}
-                      className="mt-6 w-full py-4 glass border border-border rounded-2xl text-white/50 hover:text-white transition-all text-sm font-medium"
-                    >
-                      View all {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').length} high-priority cases
-                    </button>
+                  {cases.filter(c => c.priority === 'high' && c.status !== 'resolved').length === 0 && (
+                    <div className="text-center py-12 bg-white border border-slate-200 rounded-2xl">
+                      <CheckCircle className="w-10 h-10 text-green-500 mx-auto mb-3" />
+                      <p className="text-slate-600 font-medium">No high-priority cases right now</p>
+                      <p className="text-slate-400 text-sm mt-1">Great work keeping up with the queue!</p>
+                    </div>
                   )}
                 </div>
               </div>
             )}
 
             {(view === 'queue' || view === 'work') && (
-              <div className={`grid gap-6 ${selectedCase ? 'lg:grid-cols-[320px_1fr]' : 'grid-cols-1'}`}>
+              <div className={`grid gap-6 ${selectedCase ? 'lg:grid-cols-[300px_1fr]' : 'grid-cols-1'}`}>
 
-                {/* Sidebar task list */}
-                <div className={`${selectedCase ? 'block' : 'hidden'} space-y-3 max-h-[calc(100vh-180px)] overflow-y-auto pr-2 custom-scrollbar`}>
-                  <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest px-2 mb-2">Remaining Tasks</div>
+                {/* Task sidebar */}
+                <div className={`${selectedCase ? 'block' : 'hidden'} space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto pr-1`}>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-2">Remaining Tasks</div>
                   {cases.filter(c => c.status !== 'resolved').map((c) => (
                     <div
                       key={c.id}
                       onClick={() => setSelectedCase(c)}
                       className={`p-3 rounded-xl border transition-all cursor-pointer ${
-                        selectedCase?.id === c.id
-                          ? 'bg-red-500/10 border-red-500/30'
-                          : 'border-border hover:border-white/10 text-white/40'
+                        selectedCase?.id === c.id ? 'bg-blue-50 border-blue-300' : 'bg-white border-slate-200 hover:border-slate-300'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] font-mono text-white/50">{c.id}</span>
-                        <div className={`w-1.5 h-1.5 rounded-full ${PRIORITY_STYLES[c.priority]?.dot || 'bg-muted'}`} />
+                        <span className="text-[10px] font-mono text-slate-400">{c.id}</span>
+                        <div className={`w-1.5 h-1.5 rounded-full ${PRIORITY_STYLES[c.priority]?.dot || 'bg-slate-300'}`} />
                       </div>
-                      <div className="text-xs font-bold text-white truncate">{c.customer}</div>
-                      <div className="text-[10px] text-white/40 truncate">{c.typeLabel}</div>
+                      <div className="text-xs font-bold text-slate-900 truncate">{c.customer}</div>
+                      <div className="text-[10px] text-slate-400 truncate">{c.typeLabel}</div>
                     </div>
                   ))}
                 </div>
@@ -630,28 +518,31 @@ export default function AgentDashboard() {
                     />
                   ) : (
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-                        <h2 className="text-white font-bold text-xl uppercase tracking-tighter">Full Queue</h2>
+                      <div className="flex items-center justify-between mb-5 flex-wrap gap-4">
+                        <h2 className="text-slate-900 font-bold text-xl">Full Queue</h2>
                         <div className="flex items-center gap-2">
-                          <Search className="w-4 h-4 text-white/40" />
+                          <Search className="w-4 h-4 text-slate-400" />
                           <input
                             placeholder="Search tickets..."
-                            className="bg-surface border border-border text-white text-xs px-4 py-2 rounded-xl outline-none focus:border-red-500/30 transition-all w-64 placeholder:text-white/30"
+                            className="bg-white border border-slate-200 text-slate-900 text-xs px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 w-56 placeholder:text-slate-400"
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                           />
                         </div>
                       </div>
-                      <div className="space-y-3">
-                        {filtered.map((c, i) => (
-                          <CaseCard
-                            key={c.id} c={c} i={i}
-                            handleResolve={handleResolve}
-                            selectedCase={selectedCase}
-                            setSelectedCase={(caseItem) => { setSelectedCase(caseItem); setView('work') }}
-                          />
-                        ))}
-                      </div>
+                      {filtered.length === 0 ? (
+                        <div className="text-center py-16 bg-white border border-slate-200 rounded-2xl">
+                          <Plane className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                          <p className="text-slate-500 font-medium">No cases found</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {filtered.map((c, i) => (
+                            <CaseCard key={c.id} c={c} i={i} handleResolve={handleResolve} selectedCase={selectedCase}
+                              setSelectedCase={(item) => { setSelectedCase(item); setView('work') }} />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
