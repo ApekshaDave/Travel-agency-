@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Plane, Building2, Map,
+  Plane, Building2,
   LayoutDashboard, Menu, X,
   Sparkles, RefreshCw,
   ChevronDown, ArrowRight, LogIn,
