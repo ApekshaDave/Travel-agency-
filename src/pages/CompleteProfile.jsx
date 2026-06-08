@@ -21,6 +21,7 @@ export default function CompleteProfile() {
   const intentFromUrl = searchParams.get('intent') === 'agent' ? 'agent' : 'user'
 
   const [role, setRole] = useState(intentFromUrl)
+  const isRoleFixed = !!searchParams.get('intent')
   const [name, setName] = useState(defaultName)
   const [phone, setPhone] = useState('')
   const [position, setPosition] = useState('Agent')
@@ -175,8 +176,8 @@ export default function CompleteProfile() {
               <p className="text-slate-500 text-sm mt-1">Just a few details to personalise your workspace.</p>
             </div>
 
-            {/* Role selector */}
-            <div className="grid grid-cols-2 gap-3 mb-7">
+            {/* Role selector — only shown when no intent was passed in the URL */}
+            {!isRoleFixed && <div className="grid grid-cols-2 gap-3 mb-7">
               {[
                 { value: 'user', label: 'Traveler', sub: 'Plan & book AI-first trips', icon: Users },
                 { value: 'agent', label: 'Travel Agent', sub: 'Manage staff & queries', icon: Building2 },
@@ -203,7 +204,7 @@ export default function CompleteProfile() {
                   </div>
                 </motion.div>
               ))}
-            </div>
+            </div>}
 
             <div className="bg-white border border-slate-200 rounded-3xl p-7 shadow-sm space-y-5">
 
