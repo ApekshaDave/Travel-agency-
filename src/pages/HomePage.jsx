@@ -14,7 +14,7 @@ const DESTINATIONS = [
   { city: 'Kerala', country: 'India', temp: '27°C', tag: 'Backwaters & Nature', img: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=500&q=80' },
   { city: 'Agra', country: 'Uttar Pradesh', temp: '34°C', tag: 'Heritage & Taj Mahal', img: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=500&q=80' },
   { city: 'Manali', country: 'Himachal Pradesh', temp: '12°C', tag: 'Mountains & Snow', img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=500&q=80' },
-  { city: 'Darjeeling', country: 'West Bengal', temp: '14°C', tag: 'Tea Gardens & Hills', img: 'https://images.unsplash.com/photo-1544083150-a1e2c2e3b3f1?w=500&q=80' },
+  { city: 'Darjeeling', country: 'West Bengal', temp: '14°C', tag: 'Tea Gardens & Hills', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500&q=80' },
 ]
 
 const STATS = [
