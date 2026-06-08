@@ -152,10 +152,18 @@ function IssueReportModal({ onClose, user }) {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-[10px] uppercase text-slate-400 font-bold block mb-1.5 tracking-wider">Issue Category</label>
+            <label 
+              htmlFor="issueCategorySelect" 
+              className="text-[10px] uppercase text-slate-400 font-bold block mb-1.5 tracking-wider"
+            >
+              Issue Category
+            </label>
             <select
+              id="issueCategorySelect"
+              name="issueCategory"
               value={issueType}
               onChange={e => setIssueType(e.target.value)}
+              autoComplete="off"
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 text-sm outline-none focus:border-blue-500 transition-colors"
             >
               {['Seat Preference', 'Meal Choice', 'Baggage Allowance', 'Payment Discrepancy', 'Name Correction', 'Other'].map(opt => (
@@ -164,11 +172,22 @@ function IssueReportModal({ onClose, user }) {
             </select>
           </div>
           <div>
-            <label className="text-[10px] uppercase text-slate-400 font-bold block mb-1.5 tracking-wider">Details</label>
+            <label 
+              htmlFor="issueDescriptionTextArea" 
+              className="text-[10px] uppercase text-slate-400 font-bold block mb-1.5 tracking-wider"
+            >
+              Details
+            </label>
             <textarea
-              required value={desc} onChange={e => setDesc(e.target.value)}
+              id="issueDescriptionTextArea"
+              name="issueDescription"
+              required 
+              value={desc} 
+              onChange={e => setDesc(e.target.value)}
               placeholder="Please describe your issue in detail..."
-              rows={4} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 text-sm outline-none focus:border-blue-500 resize-none transition-colors"
+              rows={4} 
+              autoComplete="off"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 text-sm outline-none focus:border-blue-500 resize-none transition-colors"
             />
           </div>
           <div className="flex gap-3 pt-2">
@@ -226,7 +245,10 @@ export default function PostBookingHub() {
           className="mb-8 flex items-center gap-3 p-4 bg-white border border-blue-100 rounded-2xl shadow-sm focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-500/5 transition-all hover:border-blue-200 group"
         >
           <Sparkles className="w-5 h-5 text-blue-500 flex-shrink-0 animate-pulse" />
+          <label htmlFor="aiQuickQuestionInput" className="sr-only">Ask a quick question about your booking</label>
           <input
+            id="aiQuickQuestionInput"
+            name="aiQuickQuestion"
             placeholder="Quick Question? Try: 'Can I change my seat?' or 'Check my refund value'"
             className="flex-1 bg-transparent text-slate-800 text-sm placeholder-slate-400 outline-none"
             onKeyDown={e => e.key === 'Enter' && navigate(`/chat?prompt=${e.target.value}`)}
