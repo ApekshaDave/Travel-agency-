@@ -2,13 +2,107 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import {
-  Plane, Calendar, Clock, CheckCircle, AlertCircle,
+  Plane, Calendar, Clock, CheckCircle,
   Download, RefreshCw, MessageCircle, ChevronRight,
   MapPin, Star, TrendingUp, Sparkles, Package,
-  ArrowRight, Bell, MoreHorizontal, Shield, Map
+  ArrowRight, Bell, MoreHorizontal, Shield, Map,
+  XCircle, UserCheck, Ban, Wifi, Phone, Mail,
+  Building2, Briefcase, MessageSquare
 } from 'lucide-react'
 import { getCustomerTrips, syncTripsWithSupabase } from '../utils/tripStore'
 import { useAuth } from '../context/AuthContext'
+
+// Derives live notifications from customerTrips data
+function buildDynamicNotifications(customerTrips) {
+  const notes = []
+
+  customerTrips.forEach((entry) => {
+    const tripName = entry.trip?.name || 'Your trip'
+    const agentName = entry.assignedAgentName || entry.agentName || 'An agent'
+    const time = entry.updatedAt
+      ? new Date(entry.updatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+      : ''
+
+    // Agent accepted / assigned
+    if (entry.status === 'accepted' && entry.assignedAgentName) {
+      notes.push({
+        id: `accepted-${entry.id}`,
+        type: 'success',
+        icon: UserCheck,
+        text: `${agentName} has accepted and is managing "${tripName}".`,
+        time,
+      })
+    }
+
+    // Agent sent back / updated the itinerary
+    if (entry.agentSentBack) {
+      notes.push({
+        id: `sentback-${entry.id}`,
+        type: 'info',
+        icon: RefreshCw,
+        text: `Agent updated your itinerary for "${tripName}". Review the changes.`,
+        time,
+      })
+    }
+
+    // Trip cancelled by user or agent
+    if (entry.status === 'cancelled') {
+      notes.push({
+        id: `cancelled-${entry.id}`,
+        type: 'error',
+        icon: Ban,
+        text: `"${tripName}" has been cancelled.${entry.cancelReason ? ` Reason: ${entry.cancelReason}` : ''}`,
+        time,
+      })
+    }
+
+    // Trip rejected by agent
+    if (entry.status === 'rejected') {
+      notes.push({
+        id: `rejected-${entry.id}`,
+        type: 'error',
+        icon: XCircle,
+        text: `Your request for "${tripName}" was declined by the agent.${entry.rejectReason ? ` Reason: ${entry.rejectReason}` : ''}`,
+        time,
+      })
+    }
+
+    // Payment or booking error
+    if (entry.status === 'error' || entry.bookingError) {
+      notes.push({
+        id: `error-${entry.id}`,
+        type: 'error',
+        icon: Wifi,
+        text: `A technical error occurred with "${tripName}". Please retry or contact support.`,
+        time,
+      })
+    }
+
+    // Approved / confirmed
+    if (entry.status === 'approved' || entry.status === 'confirmed') {
+      notes.push({
+        id: `approved-${entry.id}`,
+        type: 'success',
+        icon: CheckCircle,
+        text: `"${tripName}" is confirmed! Your booking is all set.`,
+        time,
+      })
+    }
+
+    // Pending — waiting for agent response
+    if (entry.status === 'pending' && !entry.agentSentBack && !entry.assignedAgentName) {
+      notes.push({
+        id: `pending-${entry.id}`,
+        type: 'info',
+        icon: Bell,
+        text: `Waiting for an agent to pick up "${tripName}".`,
+        time,
+      })
+    }
+  })
+
+  return notes
+}
 
 const TRIPS = [
   {
@@ -64,15 +158,18 @@ const TRIPS = [
   },
 ]
 
-const NOTIFICATIONS = [
-  { id: 1, type: 'info', icon: Bell, text: 'Web check-in for AI 619 (DEL→BOM) opens in 2 days', time: '2h ago' },
-  { id: 2, type: 'success', icon: CheckCircle, text: 'Boarding pass ready for 6E 5317. Download now.', time: '1d ago' },
-  { id: 3, type: 'warning', icon: AlertCircle, text: 'Price drop alert: DEL→SIN fares dropped 18% this week', time: '3d ago' },
-]
 
-function TripCard({ trip }) {
+function TripCard({ trip, agentInfo }) {
   const [expanded, setExpanded] = useState(false)
   const isUpcoming = trip.status === 'upcoming'
+
+  // Agent fields come from the matched customerTrip entry
+  const agentName     = agentInfo?.assignedAgentName
+  const agentPhone    = agentInfo?.assignedAgentPhone
+  const agentEmail    = agentInfo?.assignedAgentEmail
+  const agentPosition = agentInfo?.position
+  const agentAgency   = agentInfo?.agencyName
+  const hasAgent      = isUpcoming && agentName
 
   return (
     <motion.div
@@ -167,6 +264,54 @@ function TripCard({ trip }) {
           <span className="mx-1">·</span>
           <span className="font-mono">PNR: {trip.pnr}</span>
         </div>
+
+        {/* Agent details — shown only for upcoming trips with an assigned agent */}
+        {hasAgent && (
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <div className="flex items-center gap-1.5 mb-3">
+              <UserCheck className="w-3.5 h-3.5 text-blue-500" />
+              <span className="text-[11px] font-bold text-blue-600 uppercase tracking-wider">Your Assigned Agent</span>
+            </div>
+            <div className="bg-gradient-to-r from-blue-50 to-slate-50 border border-blue-100 rounded-xl p-3 grid grid-cols-2 gap-x-4 gap-y-2.5">
+              <div>
+                <div className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider mb-0.5">Name</div>
+                <div className="text-slate-900 font-semibold text-sm">{agentName}</div>
+              </div>
+              {agentPosition && (
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider mb-0.5 flex items-center gap-1">
+                    <Briefcase className="w-3 h-3" /> Position
+                  </div>
+                  <div className="text-slate-700 text-sm">{agentPosition}</div>
+                </div>
+              )}
+              {agentAgency && (
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider mb-0.5 flex items-center gap-1">
+                    <Building2 className="w-3 h-3" /> Agency
+                  </div>
+                  <div className="text-slate-700 text-sm">{agentAgency}</div>
+                </div>
+              )}
+              {agentPhone && (
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider mb-0.5">Phone</div>
+                  <a href={`tel:${agentPhone}`} className="text-blue-600 hover:underline text-sm font-medium flex items-center gap-1">
+                    <Phone className="w-3 h-3" /> {agentPhone}
+                  </a>
+                </div>
+              )}
+              {agentEmail && (
+                <div className="col-span-2">
+                  <div className="text-[10px] text-slate-400 uppercase font-semibold tracking-wider mb-0.5">Email</div>
+                  <a href={`mailto:${agentEmail}`} className="text-blue-600 hover:underline text-sm font-medium flex items-center gap-1">
+                    <Mail className="w-3 h-3" /> {agentEmail}
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Expanded actions */}
@@ -232,6 +377,36 @@ export default function DashboardPage() {
   const agentUpdatedTrips = customerTrips.filter(t => t.agentSentBack)
   const pendingTrips = customerTrips.filter(t => !t.agentSentBack)
   const acceptedTrip = customerTrips.find(t => t.status === 'accepted' && t.assignedAgentName)
+  const dynamicNotifications = buildDynamicNotifications(customerTrips)
+
+  // All agent messages across trips, newest first
+  const agentMessages = customerTrips
+    .filter(t => t.agentMessage)
+    .map(t => ({
+      id: t.id,
+      tripName: t.trip?.name || 'Your trip',
+      agentName: t.assignedAgentName || t.agentName || 'Your Agent',
+      message: t.agentMessage,
+      time: t.updatedAt
+        ? new Date(t.updatedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+        : '',
+    }))
+    .reverse()
+
+  // Map customerTrip entries by a matching field so TripCard can show agent info
+  // Matches on pnr or flightCode present in the customerTrip's trip data
+  const agentInfoByPnr = {}
+  customerTrips.forEach(entry => {
+    if (entry.assignedAgentName) {
+      // Store by trip id, pnr and flight codes found in the trip flights array
+      const flights = entry.trip?.flights || []
+      flights.forEach(f => {
+        if (f.pnr) agentInfoByPnr[f.pnr] = entry
+      })
+      // Also index by entry id for direct lookup
+      agentInfoByPnr[entry.id] = entry
+    }
+  })
 
   const filtered = TRIPS.filter(t =>
     activeTab === 'all' ? true :
@@ -261,7 +436,7 @@ export default function DashboardPage() {
               <Sparkles className="w-4 h-4 text-blue-500" /> AI Assistant
             </Link>
             <Link
-              to="/search"
+              to="/passenger-details"
               className="flex items-center gap-2 px-4 py-2.5 font-semibold text-sm rounded-xl shadow-sm text-white transition-all hover:shadow-md"
               style={{ background: 'linear-gradient(135deg, #1A6EBD 0%, #1558A0 100%)' }}
             >
@@ -389,7 +564,7 @@ export default function DashboardPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.07 }}
                   >
-                    <TripCard trip={trip} />
+                    <TripCard trip={trip} agentInfo={agentInfoByPnr[trip.pnr] || null} />
                   </motion.div>
                 ))}
                 {filtered.length === 0 && (
@@ -446,6 +621,58 @@ export default function DashboardPage() {
               </motion.div>
             )}
 
+            {/* Agent Messages */}
+            {agentMessages.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm"
+              >
+                <h3 className="font-semibold text-slate-900 mb-4 flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-blue-500" />
+                    Agent Messages
+                  </span>
+                  <span className="text-xs font-bold bg-orange-50 text-orange-500 border border-orange-100 px-2 py-0.5 rounded-full">
+                    {agentMessages.length} new
+                  </span>
+                </h3>
+                <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                  {agentMessages.map(({ id, tripName, agentName, message, time }) => (
+                    <div key={id} className="rounded-xl border border-slate-100 overflow-hidden">
+                      {/* Header row */}
+                      <div className="flex items-center justify-between px-3 py-2 bg-slate-50 border-b border-slate-100">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <UserCheck className="w-3 h-3 text-blue-500" />
+                          </div>
+                          <span className="text-xs font-semibold text-slate-800">{agentName}</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400">{time}</span>
+                      </div>
+                      {/* Message bubble */}
+                      <div className="px-3 py-2.5">
+                        <p className="text-xs text-slate-700 leading-relaxed">{message}</p>
+                        <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1">
+                          <Plane className="w-2.5 h-2.5" /> re: {tripName}
+                        </p>
+                      </div>
+                      {/* Reply link */}
+                      <div className="px-3 pb-2.5">
+                        <Link
+                          to="/chat"
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:underline"
+                        >
+                          Reply in chat <ArrowRight className="w-3 h-3" />
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
             {/* Notifications */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -453,23 +680,47 @@ export default function DashboardPage() {
               transition={{ delay: 0.15 }}
               className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm"
             >
-              <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                <Bell className="w-4 h-4 text-blue-500" /> Notifications
+              <h3 className="font-semibold text-slate-900 mb-4 flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Bell className="w-4 h-4 text-blue-500" /> Notifications
+                </span>
+                {dynamicNotifications.length > 0 && (
+                  <span className="text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-full">
+                    {dynamicNotifications.length}
+                  </span>
+                )}
               </h3>
-              <div className="space-y-3">
-                {NOTIFICATIONS.map(({ id, type, icon: Icon, text, time }) => (
-                  <div key={id} className="flex gap-3">
-                    <Icon className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
-                      type === 'success' ? 'text-green-500' :
-                      type === 'warning' ? 'text-amber-500' : 'text-blue-500'
-                    }`} />
-                    <div className="flex-1">
-                      <p className="text-slate-700 text-xs leading-relaxed">{text}</p>
-                      <p className="text-slate-400 text-xs mt-1">{time}</p>
+
+              {dynamicNotifications.length === 0 ? (
+                <div className="text-center py-6">
+                  <Bell className="w-8 h-8 text-slate-200 mx-auto mb-2" />
+                  <p className="text-slate-400 text-xs">No notifications yet.</p>
+                  <p className="text-slate-300 text-xs mt-0.5">Updates on your trips will appear here.</p>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                  {dynamicNotifications.map(({ id, type, icon: Icon, text, time }) => (
+                    <div
+                      key={id}
+                      className={`flex gap-3 p-2.5 rounded-xl border ${
+                        type === 'success' ? 'bg-green-50 border-green-100' :
+                        type === 'error'   ? 'bg-red-50 border-red-100' :
+                                            'bg-blue-50 border-blue-100'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+                        type === 'success' ? 'text-green-500' :
+                        type === 'error'   ? 'text-red-500' :
+                                            'text-blue-500'
+                      }`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-slate-700 text-xs leading-relaxed">{text}</p>
+                        {time && <p className="text-slate-400 text-xs mt-1">{time}</p>}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </motion.div>
 
             {/* AI Help Panel */}
