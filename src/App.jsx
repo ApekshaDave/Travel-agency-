@@ -190,7 +190,7 @@ export default function App() {
                 <Route path="/hotels" element={<HotelSearch />} />
                 <Route path="/trains" element={<TrainSearch />} />
                 <Route path="/buses" element={<BusSearch />} />
-                <Route path="/trip-builder" element={<TripBuilder />} />
+                <Route path="/trip-builder" element={<ProtectedRoute><TripBuilder /></ProtectedRoute>} />
                 <Route path="/passenger-details" element={<PassengerDetailsPage />} />
                 <Route path="/review-trip" element={<ReviewTripPage />} />
 
