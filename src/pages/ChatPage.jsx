@@ -29,12 +29,12 @@ function WarningCard({ warning }) {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl"
+      className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl"
     >
-      <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+      <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
       <div>
-        <div className="text-amber-300 text-sm font-semibold mb-1">{warning.title}</div>
-        <div className="text-amber-200/70 text-xs leading-relaxed">{warning.body}</div>
+        <div className="text-amber-700 text-sm font-semibold mb-1">{warning.title}</div>
+        <div className="text-amber-600/80 text-xs leading-relaxed">{warning.body}</div>
       </div>
     </motion.div>
   )
@@ -51,21 +51,25 @@ function Message({ msg }) {
       className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
     >
       <div className={`w-8 h-8 flex-shrink-0 rounded-xl flex items-center justify-center ${isUser
-        ? 'bg-sky-500/20 border border-sky-500/30'
-        : 'bg-gradient-to-br from-gold-500 to-gold-400 shadow-gold-sm'
-        }`}>
+        ? 'bg-slate-100 border border-slate-200'
+        : 'text-white shadow-md'
+        }`}
+        style={!isUser ? { background: 'linear-gradient(135deg, #1A6EBD 0%, #1558A0 100%)' } : {}}
+      >
         {isUser
-          ? <Users className="w-4 h-4 text-sky-400" />
-          : <Sparkles className="w-4 h-4 text-void" />
+          ? <Users className="w-4 h-4 text-slate-500" />
+          : <Sparkles className="w-4 h-4 text-white" />
         }
       </div>
 
       <div className={`max-w-[80%] space-y-3 ${isUser ? 'items-end' : 'items-start'} flex flex-col`}>
         {msg.content && (
           <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${isUser
-            ? 'bg-sky-500/15 border border-sky-500/20 text-slate-900 ml-auto'
-            : 'glass border border-border text-slate-800'
-            } ${isUser ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}>
+            ? 'text-white rounded-tr-sm'
+            : 'bg-white border border-slate-100 text-slate-700 shadow-sm rounded-tl-sm'
+            }`}
+            style={isUser ? { background: 'linear-gradient(135deg, #1A6EBD 0%, #1558A0 100%)' } : {}}
+          >
             <pre className="font-body whitespace-pre-wrap">{msg.content}</pre>
           </div>
         )}
@@ -82,22 +86,22 @@ function Message({ msg }) {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full glass border border-gold-400/20 rounded-2xl p-4 space-y-3 max-w-md"
+            className="w-full bg-white border border-blue-100 rounded-2xl p-4 space-y-3 max-w-md shadow-sm"
           >
             <div className="flex items-start justify-between">
               <div>
-                <span className="px-2 py-0.5 text-[9px] font-mono font-bold bg-gold-400/10 text-gold-400 rounded border border-gold-400/20 uppercase tracking-wider">
+                <span className="px-2 py-0.5 text-[9px] font-mono font-bold bg-blue-50 text-blue-600 rounded border border-blue-100 uppercase tracking-wider">
                   Trip Workspace Synced
                 </span>
-                <h3 className="font-display font-bold text-white text-base mt-1.5 flex items-center gap-1.5">
-                  <Plane className="w-4 h-4 text-gold-400" />
+                <h3 className="font-display font-bold text-slate-900 text-base mt-1.5 flex items-center gap-1.5">
+                  <Plane className="w-4 h-4 text-blue-600" />
                   {msg.finalizedTrip.name}
                 </h3>
-                <p className="text-muted text-xs mt-1">Duration: {msg.finalizedTrip.duration}</p>
+                <p className="text-slate-400 text-xs mt-1">Duration: {msg.finalizedTrip.duration}</p>
               </div>
               <div className="text-right">
-                <span className="text-[10px] text-muted block">Estimated Cost</span>
-                <span className="text-gold-400 font-bold text-sm font-mono">
+                <span className="text-[10px] text-slate-400 block">Estimated Cost</span>
+                <span className="text-blue-600 font-bold text-sm font-mono">
                   {typeof msg.finalizedTrip.budget === 'number'
                     ? `₹${msg.finalizedTrip.budget.toLocaleString()}`
                     : msg.finalizedTrip.budget}
@@ -105,13 +109,14 @@ function Message({ msg }) {
               </div>
             </div>
 
-            <p className="text-muted/80 text-xs leading-relaxed">
+            <p className="text-slate-500 text-xs leading-relaxed">
               All transport options (flights, trains, buses, roadways), hotel stays, top 10 local sights, and food choices are loaded.
             </p>
 
             <Link
               to="/trip-builder"
-              className="flex items-center justify-center gap-2 w-full py-2.5 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-bold text-xs rounded-xl shadow-gold-sm hover:shadow-gold transition-all"
+              className="flex items-center justify-center gap-2 w-full py-2.5 text-white font-bold text-xs rounded-xl shadow-md hover:shadow-lg transition-all"
+              style={{ background: 'linear-gradient(135deg, #1A6EBD 0%, #1558A0 100%)' }}
             >
               Open in Trip Builder
               <ArrowRight className="w-3.5 h-3.5" />
@@ -123,7 +128,7 @@ function Message({ msg }) {
           <WarningCard key={i} warning={w} />
         ))}
 
-        <span className="text-muted text-xs px-1">
+        <span className="text-slate-400 text-xs px-1">
           {new Date(msg.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
@@ -140,13 +145,15 @@ function TypingIndicator() {
       exit={{ opacity: 0 }}
       className="flex gap-3"
     >
-      <div className="w-8 h-8 flex-shrink-0 rounded-xl bg-gradient-to-br from-gold-500 to-gold-400 flex items-center justify-center shadow-gold-sm">
-        <Sparkles className="w-4 h-4 text-void" />
+      <div className="w-8 h-8 flex-shrink-0 rounded-xl flex items-center justify-center text-white shadow-md"
+        style={{ background: 'linear-gradient(135deg, #1A6EBD 0%, #1558A0 100%)' }}
+      >
+        <Sparkles className="w-4 h-4 text-white" />
       </div>
-      <div className="glass border border-border rounded-2xl rounded-tl-sm px-4 py-3">
+      <div className="bg-white border border-slate-100 shadow-sm rounded-2xl rounded-tl-sm px-4 py-3">
         <div className="flex gap-1.5 items-center h-4">
           {[0, 1, 2].map(i => (
-            <span key={i} className="typing-dot w-2 h-2 bg-gold-400 rounded-full" style={{ animationDelay: `${i * 0.2}s` }} />
+            <span key={i} className="typing-dot w-2 h-2 bg-blue-400 rounded-full" style={{ animationDelay: `${i * 0.2}s` }} />
           ))}
         </div>
       </div>
@@ -338,22 +345,25 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen pt-20 flex flex-col">
+    <div className="min-h-screen pt-20 flex flex-col bg-slate-50">
       <div className="flex-1 max-w-4xl mx-auto w-full px-4 flex flex-col h-[calc(100vh-80px)]">
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="py-4 flex items-center justify-between border-b border-border/40"
+          className="py-4 flex items-center justify-between border-b border-slate-200"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-500 to-gold-400 flex items-center justify-center shadow-gold-sm">
-              <Sparkles className="w-5 h-5 text-void" />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md"
+              style={{ background: 'linear-gradient(135deg, #1A6EBD 0%, #1558A0 100%)' }}
+            >
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="font-display font-bold text-white text-lg">VoyageAI Assistant</h1>
-              <div className="flex items-center gap-1.5 text-xs text-sage-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-sage-400 animate-pulse" />
+              <h1 className="font-display font-bold text-slate-900 text-lg">VoyageAI Assistant</h1>
+              <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                 Online · Powered by Groq LPU
               </div>
             </div>
@@ -367,7 +377,7 @@ export default function ChatPage() {
               }])
               setApiHistory([])
             }}
-            className="flex items-center gap-2 px-3 py-2 glass border border-border hover:border-gold-400/30 rounded-xl text-sm text-muted hover:text-white transition-all"
+            className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 hover:border-blue-300 hover:text-blue-600 rounded-xl text-sm text-slate-500 transition-all shadow-sm"
           >
             <RefreshCw className="w-4 h-4" />
             New chat
@@ -396,7 +406,7 @@ export default function ChatPage() {
               <button
                 key={label}
                 onClick={() => sendMessage(prompt)}
-                className="px-3 py-2 glass border border-border hover:border-gold-400/30 rounded-xl text-sm text-muted hover:text-white transition-all"
+                className="px-3 py-2 bg-white border border-slate-200 hover:border-blue-300 hover:text-blue-600 rounded-xl text-sm text-slate-500 transition-all shadow-sm hover:-translate-y-0.5 hover:shadow-md"
               >
                 {label}
               </button>
@@ -404,9 +414,10 @@ export default function ChatPage() {
           </motion.div>
         )}
 
-        <div className="py-4 border-t border-border/40">
+        {/* Input bar */}
+        <div className="py-4 border-t border-slate-200">
           <div
-            className="glass gradient-border rounded-2xl p-3 flex items-end gap-3 cursor-text"
+            className="bg-white border border-slate-200 hover:border-blue-300 focus-within:border-blue-400 focus-within:shadow-[0_0_0_3px_rgba(26,110,189,0.08)] rounded-2xl p-3 flex items-end gap-3 cursor-text transition-all shadow-sm"
             onClick={() => inputRef.current?.focus()}
           >
             <textarea
@@ -415,14 +426,16 @@ export default function ChatPage() {
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Ask me anything — flights, destinations, visas, itineraries..."
-              className="flex-1 bg-transparent text-slate-900 text-sm placeholder-muted resize-none outline-none min-h-[44px] max-h-32 leading-relaxed py-1 relative z-10"
+              className="flex-1 bg-transparent text-slate-800 text-sm placeholder-slate-400 resize-none outline-none min-h-[44px] max-h-32 leading-relaxed py-1"
               rows={1}
             />
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={toggleListening}
-                className={`p-2 transition-colors rounded-lg ${isListening ? 'text-red-400 bg-red-400/10 animate-pulse' : 'text-muted hover:text-sky-400'
+                className={`p-2 transition-colors rounded-lg ${isListening
+                  ? 'text-red-500 bg-red-50 animate-pulse'
+                  : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'
                   }`}
                 title={isListening ? 'Stop listening' : 'Start voice input'}
               >
@@ -434,18 +447,22 @@ export default function ChatPage() {
                 onClick={() => sendMessage()}
                 disabled={!input.trim() || isTyping}
                 className={`p-2.5 rounded-xl transition-all ${input.trim() && !isTyping
-                  ? 'bg-gradient-to-r from-gold-500 to-gold-400 text-void shadow-gold-sm'
-                  : 'bg-surface text-muted cursor-not-allowed'
+                  ? 'text-white shadow-md hover:shadow-lg'
+                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                   }`}
+                style={input.trim() && !isTyping
+                  ? { background: 'linear-gradient(135deg, #1A6EBD 0%, #1558A0 100%)' }
+                  : {}}
               >
                 <Send className="w-4 h-4" />
               </motion.button>
             </div>
           </div>
-          <p className="text-center text-muted/50 text-xs mt-2">
+          <p className="text-center text-slate-400 text-xs mt-2">
             VoyageAI runs on Groq LPU · Ultra-fast inference · Press Enter to send
           </p>
         </div>
+
       </div>
     </div>
   )
