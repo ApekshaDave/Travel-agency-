@@ -12,10 +12,7 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
-const NAV_LINKS = [
-  { to: '/trip-builder', label: 'Trip Builder', icon: Map },
-  { to: '/chat', label: 'AI Chat', icon: Sparkles },
-]
+const NAV_LINKS = []
 
 const USER_LINKS = [
   { to: '/dashboard', label: 'My Trips', icon: LayoutDashboard },
@@ -262,7 +259,7 @@ export default function Navbar() {
 
         {/* Desktop Right */}
         <div className="hidden lg:flex items-center gap-3">
-          {!isStaff && (
+          {user && !isStaff && (
             <GenericDropdown label="My Journey" links={USER_LINKS} active={active} />
           )}
           {isStaff && (
@@ -286,7 +283,7 @@ export default function Navbar() {
                 className="flex items-center gap-2 px-5 py-2 bg-brand-gradient text-white text-sm font-bold rounded-full shadow-brand hover:shadow-brand/40 transition-all"
               >
                 <Sparkles className="w-4 h-4" />
-                AI Assistant
+                AI Travel Guide
               </Link>
             </div>
           )}
@@ -314,29 +311,8 @@ export default function Navbar() {
           >
             <div className="p-5 space-y-5">
 
-              {/* Plan Section */}
-              <div className="space-y-1">
-                <p className="text-xs uppercase tracking-wider text-brand-600 mb-3 px-3 font-bold">Plan Your Trip</p>
-                {NAV_LINKS.map(l => {
-                  const isLinkActive = active === l.to || active.startsWith(l.to + '/')
-                  return (
-                    <Link
-                      key={l.to}
-                      to={l.to}
-                      onClick={() => setMobileOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-xl font-medium transition-all ${
-                        isLinkActive ? 'text-brand-600 bg-brand-50 font-semibold' : 'text-slate-700 hover:bg-slate-50'
-                      }`}
-                    >
-                      <l.icon className={`w-4 h-4 ${isLinkActive ? 'text-brand-500' : 'text-slate-400'}`} />
-                      {l.label}
-                    </Link>
-                  )
-                })}
-              </div>
-
-              {/* My Travel (customers) */}
-              {!isStaff && (
+              {/* My Travel (customers) - only shown when signed in as traveller */}
+              {user && !isStaff && (
                 <div className="space-y-1">
                   <p className="text-xs uppercase tracking-wider text-slate-400 mb-3 px-3 font-bold">My Travel</p>
                   {USER_LINKS.map(l => {
@@ -426,7 +402,7 @@ export default function Navbar() {
                       onClick={() => setMobileOpen(false)}
                       className="w-full py-3 bg-brand-gradient text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-brand"
                     >
-                      <Sparkles className="w-4 h-4" /> Try AI Assistant <ArrowRight className="w-4 h-4" />
+                      <Sparkles className="w-4 h-4" /> Try AI Travel Guide <ArrowRight className="w-4 h-4" />
                     </Link>
                   </div>
                 )}
