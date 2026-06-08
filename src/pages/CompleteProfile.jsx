@@ -95,7 +95,7 @@ export default function CompleteProfile() {
   return (
     <div className="min-h-screen bg-white">
 
-      {/* ── Top bar — matches HomePage footer style ── */}
+      {/* ── Top bar ── */}
       <div className="border-b border-slate-100 px-6 py-4 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm"
@@ -114,11 +114,10 @@ export default function CompleteProfile() {
       {/* ── Page body ── */}
       <div className="flex min-h-[calc(100vh-65px)]">
 
-        {/* Left decorative panel — mirrors LoginPage */}
+        {/* Left decorative panel */}
         <div className="hidden lg:flex lg:w-[42%] relative overflow-hidden flex-col justify-between p-12"
           style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 50%, #EEF2FF 100%)' }}
         >
-          {/* Soft orbs */}
           <div className="absolute top-0 right-0 w-72 h-72 rounded-full bg-blue-300/20 blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-indigo-300/15 blur-3xl pointer-events-none" />
 
@@ -147,9 +146,7 @@ export default function CompleteProfile() {
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-3.5">
                   <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                    item.done
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'bg-white border border-slate-200 text-slate-400'
+                    item.done ? 'bg-blue-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-400'
                   }`}>
                     <item.icon className="w-4 h-4" />
                   </div>
@@ -173,13 +170,7 @@ export default function CompleteProfile() {
         <div className="flex-1 flex items-start justify-center py-12 px-4 overflow-y-auto">
           <div className="w-full max-w-md">
 
-            {/* Mobile header */}
-            <div className="text-center mb-8 lg:hidden">
-              <h1 className="text-slate-900 text-2xl font-bold">Tell us about yourself</h1>
-              <p className="text-slate-500 text-sm mt-1">Just a few details to set up your workspace.</p>
-            </div>
-
-            <div className="hidden lg:block mb-8">
+            <div className="mb-8">
               <h1 className="text-slate-900 text-2xl font-bold">Complete your profile</h1>
               <p className="text-slate-500 text-sm mt-1">Just a few details to personalise your workspace.</p>
             </div>
@@ -229,48 +220,99 @@ export default function CompleteProfile() {
 
               <form onSubmit={handleSubmit} className="space-y-5">
 
-                {/* Full Name */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Full Name</label>
-                  <div className="relative">
-                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => { setName(e.target.value); if (errors.name) setErrors(p => ({ ...p, name: '' })) }}
-                      placeholder="John Doe"
-                      className={inputWithIcon}
-                    />
-                  </div>
-                  {errors.name && <p className="text-red-500 text-xs font-medium">{errors.name}</p>}
-                </div>
-
-                {/* Phone */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Phone Number</label>
-                  <div className="relative">
-                    <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => { setPhone(e.target.value); if (errors.phone) setErrors(p => ({ ...p, phone: '' })) }}
-                      placeholder="+91 98765 43210"
-                      className={inputWithIcon}
-                    />
-                  </div>
-                  {errors.phone && <p className="text-red-500 text-xs font-medium">{errors.phone}</p>}
-                </div>
-
-                {/* Agent-only fields */}
-                <AnimatePresence>
-                  {role === 'agent' && (
+                {/* Role-specific form — slides in/out on role switch */}
+                <AnimatePresence mode="wait">
+                  {role === 'user' ? (
+                    /* ── Traveler form ── */
                     <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="space-y-5 overflow-hidden"
+                      key="user-form"
+                      initial={{ opacity: 0, x: -16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 16 }}
+                      transition={{ duration: 0.22 }}
+                      className="space-y-5"
                     >
-                      {/* Position */}
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-blue-500" />
+                        <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">Traveler Details</span>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Full Name</label>
+                        <div className="relative">
+                          <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => { setName(e.target.value); if (errors.name) setErrors(p => ({ ...p, name: '' })) }}
+                            placeholder="John Doe"
+                            className={inputWithIcon}
+                          />
+                        </div>
+                        {errors.name && <p className="text-red-500 text-xs font-medium">{errors.name}</p>}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Phone Number</label>
+                        <div className="relative">
+                          <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <input
+                            type="tel"
+                            value={phone}
+                            onChange={(e) => { setPhone(e.target.value); if (errors.phone) setErrors(p => ({ ...p, phone: '' })) }}
+                            placeholder="+91 98765 43210"
+                            className={inputWithIcon}
+                          />
+                        </div>
+                        {errors.phone && <p className="text-red-500 text-xs font-medium">{errors.phone}</p>}
+                      </div>
+                    </motion.div>
+
+                  ) : (
+                    /* ── Travel Agent form ── */
+                    <motion.div
+                      key="agent-form"
+                      initial={{ opacity: 0, x: 16 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -16 }}
+                      transition={{ duration: 0.22 }}
+                      className="space-y-5"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-blue-500" />
+                        <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">Agent Details</span>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Full Name</label>
+                        <div className="relative">
+                          <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => { setName(e.target.value); if (errors.name) setErrors(p => ({ ...p, name: '' })) }}
+                            placeholder="John Doe"
+                            className={inputWithIcon}
+                          />
+                        </div>
+                        {errors.name && <p className="text-red-500 text-xs font-medium">{errors.name}</p>}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Phone Number</label>
+                        <div className="relative">
+                          <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                          <input
+                            type="tel"
+                            value={phone}
+                            onChange={(e) => { setPhone(e.target.value); if (errors.phone) setErrors(p => ({ ...p, phone: '' })) }}
+                            placeholder="+91 98765 43210"
+                            className={inputWithIcon}
+                          />
+                        </div>
+                        {errors.phone && <p className="text-red-500 text-xs font-medium">{errors.phone}</p>}
+                      </div>
+
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Your Position</label>
                         <div className="relative">
