@@ -4,13 +4,15 @@ import { Link } from 'react-router-dom'
 import {
   Plane, Calendar, Clock, CheckCircle, 
   Download, RefreshCw, ChevronRight,
-  MapPin, Star, TrendingUp, Sparkles, 
+  MapPin, Sparkles, 
   ArrowRight, Bell, Shield, Map,
   XCircle, UserCheck, Ban, Wifi, Phone, Mail,
   Building2, Briefcase, MessageSquare, Hotel, Coffee,
   Car, ChevronDown, Users, IndianRupee, Tag, Edit3, FileText, Trash2
 } from 'lucide-react'
 import { getCustomerTrips, syncTripsWithSupabase } from '../utils/tripStore'
+
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 import { useAuth } from '../context/AuthContext'
 
 // ─── Notification builder ────────────────────────────────────────────────────
@@ -39,6 +41,19 @@ function buildDynamicNotifications(customerTrips) {
       notes.push({ id: `pending-${entry.id}`, type: 'info', icon: Bell, text: `Waiting for an agent to pick up "${tripName}".`, time })
   })
   return notes
+}
+
+// ─── Build issue-resolved notifications from booking_issues ─────────────────
+function buildIssueNotifications(issues) {
+  return (issues || [])
+    .filter(i => i.status === 'resolved' && i.resolution_note)
+    .map(i => ({
+      id: `issue-resolved-${i.id}`,
+      type: 'success',
+      icon: CheckCircle,
+      text: `Your issue "${i.issue_type || 'request'}" has been resolved. ${i.resolution_note}`,
+      time: i.updated_at ? new Date(i.updated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '',
+    }))
 }
 
 // ─── Icon helper for itinerary item types ────────────────────────────────────
@@ -447,6 +462,7 @@ export default function DashboardPage() {
   const { user } = useAuth()
   const [customerTrips, setCustomerTrips] = useState(() => user ? getCustomerTrips(user.id) : [])
   const [, setLoadingSync] = useState(false)
+  const [myIssues, setMyIssues] = useState([])
   const [drafts, setDrafts] = useState(() => {
     try { return JSON.parse(localStorage.getItem('voyageai_trip_drafts') || '[]') } catch { return [] }
   })
@@ -462,8 +478,17 @@ export default function DashboardPage() {
     const sync = async () => {
       setLoadingSync(true)
       try {
-        const synced = await syncTripsWithSupabase()
+        const [synced, issuesRes] = await Promise.all([
+          syncTripsWithSupabase(),
+          fetch(`${API}/api/booking_issues`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('voyageai_jwt_token')}`,
+              'Content-Type': 'application/json',
+            }
+          }).then(r => r.json()).catch(() => [])
+        ])
         setCustomerTrips(synced.filter(t => t.customer.id === user.id).reverse())
+        setMyIssues(Array.isArray(issuesRes) ? issuesRes : [])
       } catch (err) {
         console.error('Failed to sync customer trips:', err)
       } finally {
@@ -475,7 +500,8 @@ export default function DashboardPage() {
 
   const agentUpdatedTrips     = customerTrips.filter(t => t.agentSentBack)
   const acceptedTrip          = customerTrips.find(t => t.status === 'accepted' && t.assignedAgentName)
-  const dynamicNotifications  = buildDynamicNotifications(customerTrips)
+  const issueNotifications     = buildIssueNotifications(myIssues)
+  const dynamicNotifications   = [...buildDynamicNotifications(customerTrips), ...issueNotifications]
 
   const agentMessages = customerTrips
     .filter(t => t.agentMessage)
@@ -535,9 +561,9 @@ export default function DashboardPage() {
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
-            { label: 'Total Trips',  value: customerTrips.length, icon: Plane,       color: 'text-blue-500',   bg: 'bg-blue-50'  },
-            { label: 'Miles Flown',  value: '4,280',              icon: TrendingUp,  color: 'text-orange-500', bg: 'bg-orange-50' },
-            { label: 'Savings',      value: '₹3,200',             icon: Star,        color: 'text-green-500',  bg: 'bg-green-50'  },
+            { label: 'Total Trips',    value: customerTrips.length,                                                icon: Plane,      color: 'text-blue-500',   bg: 'bg-blue-50'   },
+            { label: 'Confirmed',      value: customerTrips.filter(t => ['booked','confirmed','approved'].includes(t.status)).length, icon: CheckCircle, color: 'text-green-500',  bg: 'bg-green-50'  },
+            { label: 'Notifications',  value: dynamicNotifications.length,                                        icon: Bell,       color: 'text-amber-500',  bg: 'bg-amber-50'  },
           ].map(({ label, value, icon: Icon, color, bg }, i) => (
             <motion.div
               key={label}

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate, Link } from 'react-router-dom';
-import { Users, User, Mail, Phone, CreditCard, ArrowRight } from 'lucide-react';
+import { useNavigate,  } from 'react-router-dom';
+import { Users, User,  ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function PassengerDetailsPage() {

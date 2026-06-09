@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from 'react-router-dom'
 import { ShieldCheck, AlertTriangle, Map, DollarSign, Bell, Home } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
@@ -17,13 +16,13 @@ export default function StaffNav() {
 
   return (
     <div className="fixed top-16 left-0 right-0 z-40 bg-white border-b border-slate-200 shadow-sm">
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-11">
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-12">
         <div className="flex items-center gap-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider mr-3 flex-shrink-0 flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-600" /> Staff Portal
+            <ShieldCheck className="w-3.5 h-3.5" /> Staff Portal
           </span>
           {STAFF_NAV.map(({ to, label, icon: Icon, badge }) => {
-            const isActive = pathname === to || pathname.startsWith(to + '/')
+            const isActive = pathname === to || (to !== '/staff' && pathname.startsWith(to))
             return (
               <Link
                 key={to}
@@ -38,7 +37,7 @@ export default function StaffNav() {
                 {label}
                 {badge && (
                   <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
-                    isActive ? 'bg-white/20 text-white' : 'bg-red-100 text-red-600'
+                    isActive ? 'bg-white/25 text-white' : 'bg-red-100 text-red-600'
                   }`}>
                     {badge}
                   </span>
@@ -47,10 +46,15 @@ export default function StaffNav() {
             )
           })}
         </div>
-        <div className="flex items-center gap-3 flex-shrink-0 ml-4">
-          <span className="text-slate-500 text-xs hidden sm:block">
-            {user?.name} · <span className="text-blue-600 capitalize font-semibold">{user?.role}</span>
-          </span>
+        <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+          <div className="hidden sm:flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+              {user?.name?.charAt(0) || 'S'}
+            </div>
+            <span className="text-slate-600 text-xs">
+              {user?.name} · <span className="text-blue-600 capitalize font-semibold">{user?.role}</span>
+            </span>
+          </div>
         </div>
       </div>
     </div>
