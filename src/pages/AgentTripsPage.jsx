@@ -22,12 +22,12 @@ const VEHICLE_TYPES = [
 ]
 
 const STATUS_CONFIG = {
-  pending: { color: 'text-sand-400', bg: 'badge-pending', label: 'Pending Review', dot: 'bg-sand-400' },
-  accepted: { color: 'text-ocean-400', bg: 'badge-accepted', label: 'Accepted', dot: 'bg-ocean-400' },
-  reviewed: { color: 'text-sky-400', bg: 'badge-reviewed', label: 'Reviewed', dot: 'bg-sky-400' },
-  booked: { color: 'text-forest-400', bg: 'badge-booked', label: 'Booked', dot: 'bg-forest-400' },
-  cancelled: { color: 'text-coral-400', bg: 'badge-cancelled', label: 'Cancelled', dot: 'bg-coral-400' },
-  pending_agent_review: { color: 'text-gold-400', bg: 'bg-gold-400/10', label: 'Pending Review', dot: 'bg-gold-400' },
+  pending: { color: 'text-amber-700', bg: 'bg-amber-50 border border-amber-200', label: 'Pending Review', dot: 'bg-amber-500' },
+  accepted: { color: 'text-blue-700', bg: 'bg-blue-50 border border-blue-200', label: 'Accepted', dot: 'bg-blue-500' },
+  reviewed: { color: 'text-sky-700', bg: 'bg-sky-50 border border-sky-200', label: 'Reviewed', dot: 'bg-sky-500' },
+  booked: { color: 'text-green-700', bg: 'bg-green-50 border border-green-200', label: 'Booked', dot: 'bg-green-500' },
+  cancelled: { color: 'text-red-700', bg: 'bg-red-50 border border-red-200', label: 'Cancelled', dot: 'bg-red-500' },
+  pending_agent_review: { color: 'text-amber-700', bg: 'bg-amber-50 border border-amber-200', label: 'Pending Review', dot: 'bg-amber-500' },
 }
 
 const SEGMENT_ICONS = { flight: '✈️', train: '🚂', bus: '🚌', roadways: '🚗', hotel: '🏨' }
@@ -53,33 +53,33 @@ function DriverPanel({ tripData, passengers, onSave }) {
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: 'auto' }}
       className="mt-4 rounded-2xl p-4 border"
-      style={{ background: 'rgba(247, 201, 72, 0.06)', borderColor: 'rgba(247, 201, 72, 0.2)' }}
+      style={{ background: '#FFF7ED', borderColor: '#FED7AA' }}
     >
       <div className="flex items-center gap-2 mb-3">
-        <Car className="w-4 h-4 text-sand-400" />
-        <p className="text-sand-400 text-xs font-bold uppercase tracking-wider">Road Trip — Driver & Vehicle Assignment</p>
+        <Car className="w-4 h-4 text-amber-600" />
+        <p className="text-amber-700 text-xs font-bold uppercase tracking-wider">Road Trip — Driver & Vehicle Assignment</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-3">
         <div>
-          <label className="text-[10px] text-muted uppercase font-bold block mb-1">Driver Name</label>
+          <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">Driver Name</label>
           <div className="relative">
-            <User className="absolute left-3 top-2.5 w-3.5 h-3.5 text-muted" />
+            <User className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
             <input
               value={driverName} onChange={e => setDriverName(e.target.value)}
               placeholder="Enter driver's full name"
-              className="w-full ai-input pl-8 pr-3 py-2 rounded-xl text-sm"
+              className="w-full border border-slate-200 bg-white text-slate-800 pl-8 pr-3 py-2 rounded-xl text-sm focus:outline-none focus:border-blue-400"
             />
           </div>
         </div>
         <div>
-          <label className="text-[10px] text-muted uppercase font-bold block mb-1">Driver Phone</label>
+          <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">Driver Phone</label>
           <div className="relative">
-            <Phone className="absolute left-3 top-2.5 w-3.5 h-3.5 text-muted" />
+            <Phone className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-400" />
             <input
               value={driverPhone} onChange={e => setDriverPhone(e.target.value)}
               placeholder="+91 98765 43210"
-              className="w-full ai-input pl-8 pr-3 py-2 rounded-xl text-sm"
+              className="w-full border border-slate-200 bg-white text-slate-800 pl-8 pr-3 py-2 rounded-xl text-sm focus:outline-none focus:border-blue-400"
             />
           </div>
         </div>
@@ -87,24 +87,24 @@ function DriverPanel({ tripData, passengers, onSave }) {
 
       <div className="grid grid-cols-2 gap-3 mb-3">
         <div>
-          <label className="text-[10px] text-muted uppercase font-bold block mb-1">Vehicle Type</label>
+          <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">Vehicle Type</label>
           <select
             value={vehicleType} onChange={e => setVehicleType(e.target.value)}
-            className="w-full ai-input px-3 py-2 rounded-xl text-sm"
+            className="w-full border border-slate-200 bg-white text-slate-800 px-3 py-2 rounded-xl text-sm focus:outline-none focus:border-blue-400"
           >
             {VEHICLE_TYPES.map(v => (
-              <option key={v.value} value={v.value} className="bg-deep">
+              <option key={v.value} value={v.value}>
                 {v.label} ({v.capacity} seats)
               </option>
             ))}
           </select>
         </div>
         <div>
-          <label className="text-[10px] text-muted uppercase font-bold block mb-1">Vehicles Needed</label>
-          <div className="px-3 py-2 glass rounded-xl text-sm text-white font-bold flex items-center gap-2">
-            <Car className="w-3.5 h-3.5 text-sand-400" />
+          <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">Vehicles Needed</label>
+          <div className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 font-bold flex items-center gap-2">
+            <Car className="w-3.5 h-3.5 text-amber-600" />
             {vehiclesNeeded} × {vehicleType}
-            <span className="text-muted text-xs font-normal">({passengers} pax)</span>
+            <span className="text-slate-400 text-xs font-normal">({passengers} pax)</span>
           </div>
         </div>
       </div>
@@ -112,7 +112,7 @@ function DriverPanel({ tripData, passengers, onSave }) {
       <button
         onClick={handleSave}
         disabled={saving || !driverName}
-        className="px-4 py-2 rounded-xl text-sm font-bold transition-all btn-ocean flex items-center gap-2 disabled:opacity-50"
+        className="px-4 py-2 rounded-xl text-sm font-bold transition-all text-white flex items-center gap-2 disabled:opacity-50" style={{background:"linear-gradient(135deg,#1A6EBD,#1558A0)"}}
       >
         <CheckCircle className="w-3.5 h-3.5" />
         {saving ? 'Saving…' : 'Save Driver Details'}
@@ -152,7 +152,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.97 }}
-      className="travel-card overflow-hidden"
+      className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden"
       style={{
         borderColor: entry.status === 'pending_agent_review'
           ? 'rgba(247, 201, 72, 0.2)'
@@ -180,11 +180,11 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-white font-bold text-sm">{entry.customer_name || 'Unknown'}</h3>
-                <span className="text-muted text-xs">{entry.customer_email}</span>
+                <h3 className="text-slate-900 font-bold text-sm">{entry.customer_name || 'Unknown'}</h3>
+                <span className="text-slate-400 text-xs">{entry.customer_email}</span>
               </div>
               <div className="flex items-center gap-3 mt-1 flex-wrap">
-                <span className="text-sand-400 font-bold text-base">{trip.name || 'Unnamed Trip'}</span>
+                <span className="text-blue-700 font-bold text-base">{trip.name || 'Unnamed Trip'}</span>
                 {trip.isAI && (
                   <span
                     className="px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1"
@@ -194,12 +194,12 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-3 mt-1 text-xs text-muted flex-wrap">
+              <div className="flex items-center gap-3 mt-1 text-xs text-slate-400 flex-wrap">
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {trip.duration}</span>
                 <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {trip.passengers} pax</span>
                 <span className="flex items-center gap-1">
-                  <DollarSign className="w-3 h-3 text-sand-400" />
-                  <span className="text-sand-400 font-bold">₹{trip.totalCost?.toLocaleString()}</span>
+                  <DollarSign className="w-3 h-3 text-blue-500" />
+                  <span className="text-blue-700 font-bold">₹{trip.totalCost?.toLocaleString()}</span>
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
@@ -217,7 +217,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
             </span>
             <button
               onClick={() => setExpanded(!expanded)}
-              className="p-2 glass border rounded-xl text-muted hover:text-white transition-all"
+              className="p-2 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-700 transition-all shadow-sm"
               style={{ borderColor: 'rgba(255,255,255,0.08)' }}
             >
               {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -230,7 +230,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
           {(trip.segments || []).slice(0, 5).map((seg, i) => (
             <span
               key={i}
-              className="px-2 py-1 glass border rounded-lg text-xs text-slate-600 flex items-center gap-1"
+              className="px-2 py-1 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-600 flex items-center gap-1"
               style={{ borderColor: 'rgba(255,255,255,0.07)' }}
             >
               {SEGMENT_ICONS[seg.type] || '📍'} {seg.from}{seg.to ? ` → ${seg.to}` : ''}
@@ -245,7 +245,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
               onClick={handleAccept}
               disabled={accepting}
-              className="flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 btn-ocean disabled:opacity-60"
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 text-white disabled:opacity-60 rounded-xl" style={{background:"linear-gradient(135deg,#1A6EBD,#1558A0)"}}
             >
               {accepting
                 ? <RefreshCw className="w-4 h-4 animate-spin" />
@@ -255,7 +255,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
             <motion.button
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
               onClick={() => onIgnore(entry.id, entry.customer_name)}
-              className="px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 glass border transition-all hover:border-coral-400/30 hover:text-coral-400"
+              className="px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 bg-white border border-slate-200 transition-all hover:border-red-300 hover:text-red-600 rounded-xl shadow-sm"
               style={{ borderColor: 'rgba(255,255,255,0.08)', color: '#7A9BB5' }}
             >
               <EyeOff className="w-4 h-4" /> Ignore
@@ -267,10 +267,10 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
         {isAccepted && isMine && (
           <div
             className="mt-3 px-3 py-2 rounded-xl text-sm flex items-center gap-2"
-            style={{ background: 'rgba(0,201,177,0.08)', border: '1px solid rgba(0,201,177,0.2)' }}
+            style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}
           >
-            <UserCheck className="w-4 h-4 text-ocean-400" />
-            <span className="text-ocean-400 font-semibold">You are the assigned travel partner for this trip</span>
+            <UserCheck className="w-4 h-4 text-blue-600" />
+            <span className="text-blue-700 font-semibold">You are the assigned travel partner for this trip</span>
           </div>
         )}
 
@@ -278,10 +278,10 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
         {isAccepted && !isMine && (
           <div
             className="mt-3 px-3 py-2 rounded-xl text-sm flex items-center gap-2"
-            style={{ background: 'rgba(69,183,209,0.08)', border: '1px solid rgba(69,183,209,0.2)' }}
+            style={{ background: '#F0F9FF', border: '1px solid #BAE6FD' }}
           >
-            <AlertCircle className="w-4 h-4 text-sky-400" />
-            <span className="text-sky-400 text-xs">Assigned to <strong>{entry.assigned_agent_name}</strong></span>
+            <AlertCircle className="w-4 h-4 text-sky-600" />
+            <span className="text-sky-700 text-xs">Assigned to <strong>{entry.assigned_agent_name}</strong></span>
           </div>
         )}
       </div>
@@ -294,19 +294,19 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden border-t"
-            style={{ borderColor: 'rgba(255,255,255,0.06)' }}
+            style={{ borderColor: undefined }}
           >
             <div className="p-5 space-y-5">
               {/* AI suggestion */}
               {trip.costComparison && (
                 <div
                   className="p-4 rounded-xl"
-                  style={{ background: 'rgba(247,201,72,0.06)', border: '1px solid rgba(247,201,72,0.2)' }}
+                  style={{ background: '#FFF7ED', border: '1px solid #FED7AA' }}
                 >
-                  <p className="text-sand-400 text-xs font-bold mb-1 flex items-center gap-1.5">
+                  <p className="text-amber-700 text-xs font-bold mb-1 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" /> AI Route Suggestion
                   </p>
-                  <p className="text-xs" style={{ color: 'rgba(247,201,72,0.7)' }}>
+                  <p className="text-xs" style={{ color: '#B45309' }}>
                     {trip.costComparison.aiSuggestion}
                   </p>
                 </div>
@@ -315,12 +315,12 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
               {/* Places */}
               {trip.placesToVisit?.length > 0 && (
                 <div>
-                  <p className="text-white text-xs font-bold mb-2 uppercase tracking-wider">Places Requested</p>
+                  <p className="text-slate-700 text-xs font-bold mb-2 uppercase tracking-wider">Places Requested</p>
                   <div className="flex gap-2 flex-wrap">
                     {trip.placesToVisit.slice(0, 6).map((p, i) => (
                       <span
                         key={i}
-                        className="px-2.5 py-1 glass rounded-lg text-xs text-muted"
+                        className="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-500"
                         style={{ border: '1px solid rgba(255,255,255,0.07)' }}
                       >
                         {p.name}
@@ -340,27 +340,27 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
               )}
 
               {/* Agent controls */}
-              <div className="space-y-3 pt-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                <p className="text-white text-xs font-bold uppercase tracking-wider">Agent Actions</p>
+              <div className="space-y-3 pt-3 border-t" style={{ borderColor: undefined }}>
+                <p className="text-slate-700 text-xs font-bold uppercase tracking-wider">Agent Actions</p>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Update Status</label>
+                    <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">Update Status</label>
                     <select
                       value={status} onChange={e => setStatus(e.target.value)}
-                      className="w-full ai-input px-3 py-2 rounded-xl text-sm"
+                      className="w-full border border-slate-200 bg-white text-slate-800 px-3 py-2 rounded-xl text-sm focus:outline-none focus:border-blue-400"
                     >
-                      <option value="pending" className="bg-deep">Pending Review</option>
-                      <option value="accepted" className="bg-deep">Accepted</option>
-                      <option value="reviewed" className="bg-deep">Reviewed</option>
-                      <option value="booked" className="bg-deep">Booked</option>
-                      <option value="cancelled" className="bg-deep">Cancelled</option>
+                      <option value="pending">Pending Review</option>
+                      <option value="accepted">Accepted</option>
+                      <option value="reviewed">Reviewed</option>
+                      <option value="booked">Booked</option>
+                      <option value="cancelled">Cancelled</option>
                     </select>
                   </div>
                   <div>
-                    <label className="text-[10px] text-muted uppercase font-bold block mb-1">Trip Ref ID</label>
+                    <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">Trip Ref ID</label>
                     <div
-                      className="px-3 py-2 glass rounded-xl text-sm text-muted font-mono"
+                      className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-500 font-mono"
                       style={{ border: '1px solid rgba(255,255,255,0.07)' }}
                     >
                       {entry.id.slice(-8).toUpperCase()}
@@ -369,32 +369,32 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
                 </div>
 
                 <div>
-                  <label className="text-[10px] text-muted uppercase font-bold block mb-1">Agent Notes</label>
+                  <label className="text-[10px] text-slate-400 uppercase font-bold block mb-1">Agent Notes</label>
                   <textarea
                     value={notes} onChange={e => setNotes(e.target.value)}
                     placeholder="Add notes for this trip request…"
                     rows={2}
-                    className="w-full ai-input px-3 py-2 rounded-xl text-sm resize-none"
+                    className="w-full border border-slate-200 bg-white text-slate-800 px-3 py-2 rounded-xl text-sm focus:outline-none focus:border-blue-400 resize-none"
                   />
                 </div>
 
                 <div className="flex gap-2">
                   <button
                     onClick={() => onUpdate(entry.id, { status, agent_notes: notes })}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 btn-ocean"
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 text-white rounded-xl" style={{background:"linear-gradient(135deg,#1A6EBD,#1558A0)"}}
                   >
                     <CheckCircle className="w-4 h-4" /> Save Changes
                   </button>
                   <Link
                     to={`/trip-builder?agentView=${entry.id}`}
-                    className="flex-1 py-2.5 glass border rounded-xl text-sm font-bold flex items-center justify-center gap-2 text-sky-400 hover:border-sky-400/30 transition-all"
+                    className="flex-1 py-2.5 bg-sky-50 border border-sky-200 rounded-xl text-sm font-bold flex items-center justify-center gap-2 text-sky-700 hover:bg-sky-100 transition-all"
                     style={{ borderColor: 'rgba(69,183,209,0.2)' }}
                   >
                     <Map className="w-4 h-4" /> View Trip
                   </Link>
                   <button
                     onClick={() => onDelete(entry.id)}
-                    className="p-2.5 glass border rounded-xl text-coral-400 hover:bg-coral-400/10 transition-all"
+                    className="p-2.5 bg-red-50 border border-red-200 rounded-xl text-red-600 hover:bg-red-100 transition-all"
                     style={{ borderColor: 'rgba(255,107,107,0.2)' }}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -543,7 +543,7 @@ export default function AgentTripsPage() {
   const myAccepted = trips.filter(t => t.status === 'accepted' && t.assigned_agent_email === user?.email)
 
   return (
-    <div className="min-h-screen pt-36 pb-16 px-4 travel-hero-bg">
+    <div className="min-h-screen bg-slate-50 pt-36 pb-16 px-4">
       <StaffNav />
       <div className="max-w-4xl mx-auto">
 
@@ -551,14 +551,14 @@ export default function AgentTripsPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-start justify-between flex-wrap gap-4">
             <div>
-              <h1 className="font-display text-3xl font-bold text-white mb-1">
+              <h1 className="font-display text-3xl font-bold text-slate-900 mb-1">
                 Customer Trip Requests
               </h1>
-              <p className="text-muted">Review & accept trip requests — accepted trips assign you as Travel Partner</p>
+              <p className="text-slate-500">Review & accept trip requests — accepted trips assign you as Travel Partner</p>
             </div>
             <button
               onClick={loadTrips}
-              className="p-2.5 glass border rounded-xl text-muted hover:text-white transition-all"
+              className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-700 transition-all shadow-sm"
               style={{ borderColor: 'rgba(255,255,255,0.08)' }}
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -571,13 +571,13 @@ export default function AgentTripsPage() {
           <motion.div
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="mb-6 p-4 rounded-2xl"
-            style={{ background: 'rgba(0,201,177,0.08)', border: '1px solid rgba(0,201,177,0.25)' }}
+            style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}
           >
-            <p className="text-ocean-400 font-bold text-sm flex items-center gap-2 mb-2">
+            <p className="text-blue-700 font-bold text-sm flex items-center gap-2 mb-2">
               <UserCheck className="w-4 h-4" /> You are the Travel Partner for {myAccepted.length} trip(s)
             </p>
             {myAccepted.map(t => (
-              <div key={t.id} className="text-xs text-muted">
+              <div key={t.id} className="text-xs text-slate-500">
                 • {t.customer_name} — {t.trip_data?.name || 'Unnamed Trip'}
               </div>
             ))}
@@ -587,21 +587,21 @@ export default function AgentTripsPage() {
         {/* Stats row */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
           {[
-            { key: 'pending', label: 'Pending', icon: AlertTriangle, color: 'text-sand-400' },
-            { key: 'accepted', label: 'Accepted', icon: UserCheck, color: 'text-ocean-400' },
-            { key: 'reviewed', label: 'Reviewed', icon: FileText, color: 'text-sky-400' },
-            { key: 'booked', label: 'Booked', icon: CheckCircle, color: 'text-forest-400' },
-            { key: 'cancelled', label: 'Cancelled', icon: Trash2, color: 'text-coral-400' },
+            { key: 'pending', label: 'Pending', icon: AlertTriangle, color: 'text-amber-600' },
+            { key: 'accepted', label: 'Accepted', icon: UserCheck, color: 'text-blue-600' },
+            { key: 'reviewed', label: 'Reviewed', icon: FileText, color: 'text-sky-600' },
+            { key: 'booked', label: 'Booked', icon: CheckCircle, color: 'text-green-600' },
+            { key: 'cancelled', label: 'Cancelled', icon: Trash2, color: 'text-red-500' },
           ].map(({ key, label, icon: Icon, color }) => (
             <div
               key={key}
-              className="travel-card p-4 text-center cursor-pointer"
+              className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 text-center cursor-pointer"
               onClick={() => setFilter(key)}
               style={{ borderColor: filter === key ? 'rgba(0,201,177,0.3)' : undefined }}
             >
               <Icon className={`w-4 h-4 ${color} mx-auto mb-2`} />
               <div className={`text-2xl font-bold ${color}`}>{statusCounts[key]}</div>
-              <div className="text-muted text-xs">{label}</div>
+              <div className="text-slate-500 text-xs">{label}</div>
             </div>
           ))}
         </div>
@@ -613,11 +613,11 @@ export default function AgentTripsPage() {
               key={f}
               onClick={() => setFilter(f)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
-                filter === f ? 'text-ocean-400' : 'text-muted hover:text-white'
+                filter === f ? 'text-blue-700' : 'text-slate-500 hover:text-slate-800'
               }`}
               style={{
-                background: filter === f ? 'rgba(0,201,177,0.12)' : 'rgba(22,32,50,0.7)',
-                borderColor: filter === f ? 'rgba(0,201,177,0.3)' : 'rgba(255,255,255,0.08)',
+                background: filter === f ? '#EFF6FF' : 'white',
+                borderColor: filter === f ? '#93C5FD' : '#E2E8F0',
               }}
             >
               {f.charAt(0).toUpperCase() + f.slice(1)} ({statusCounts[f] ?? trips.length})
@@ -629,16 +629,16 @@ export default function AgentTripsPage() {
         {loading ? (
           <div className="text-center py-20">
             <div
-              className="w-12 h-12 border-2 border-ocean-400 border-t-transparent rounded-full mx-auto mb-4"
+              className="w-12 h-12 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
               style={{ animation: 'spin 1s linear infinite' }}
             />
-            <p className="text-muted">Loading trips…</p>
+            <p className="text-slate-500">Loading trips…</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-20 travel-card">
-            <Plane className="w-12 h-12 text-muted/20 mx-auto mb-4" />
-            <h3 className="text-white font-display text-xl mb-2">No trip requests yet</h3>
-            <p className="text-muted text-sm">When customers save trips in Trip Builder, they'll appear here.</p>
+          <div className="text-center py-20 bg-white border border-slate-200 rounded-2xl shadow-sm">
+            <Plane className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+            <h3 className="text-slate-800 font-display text-xl mb-2">No trip requests yet</h3>
+            <p className="text-slate-500 text-sm">When customers save trips in Trip Builder, they'll appear here.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -669,25 +669,25 @@ export default function AgentTripsPage() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               className="w-full rounded-2xl p-4 shadow-card"
-              style={{ background: 'rgba(22,32,50,0.95)', border: '1px solid rgba(255,107,107,0.3)' }}
+              style={{ background: 'white', border: '1px solid #FECACA' }}
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <EyeOff className="w-4 h-4 text-coral-400 flex-shrink-0" />
+                  <EyeOff className="w-4 h-4 text-red-500 flex-shrink-0" />
                   <div>
-                    <p className="text-white text-sm font-semibold">Trip by {customerName} hidden</p>
-                    <p className="text-muted text-xs">Will be permanently ignored in 5s</p>
+                    <p className="text-slate-800 text-sm font-semibold">Trip by {customerName} hidden</p>
+                    <p className="text-slate-400 text-xs">Will be permanently ignored in 5s</p>
                   </div>
                 </div>
                 <button
                   onClick={() => handleUndo(id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold btn-ocean flex-shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white flex-shrink-0" style={{background:"linear-gradient(135deg,#1A6EBD,#1558A0)"}}
                 >
                   <Undo2 className="w-3.5 h-3.5" /> Undo
                 </button>
               </div>
               {/* Progress bar */}
-              <div className="mt-3 h-1 bg-white/5 rounded-full overflow-hidden">
+              <div className="mt-3 h-1 bg-slate-100 rounded-full overflow-hidden">
                 <div
                   className="undo-progress h-full rounded-full"
                   style={{ background: 'linear-gradient(90deg, #FF6B6B, #F7C948)' }}
