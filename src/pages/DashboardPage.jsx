@@ -5,10 +5,10 @@ import {
   Plane, Calendar, Clock, CheckCircle, 
   Download, RefreshCw, ChevronRight,
   MapPin, Star, TrendingUp, Sparkles, 
-  ArrowRight, Bell,  Shield, Map,
+  ArrowRight, Bell, Shield, Map,
   XCircle, UserCheck, Ban, Wifi, Phone, Mail,
   Building2, Briefcase, MessageSquare, Hotel, Coffee,
-  Car, ChevronDown, Users, IndianRupee, Tag
+  Car, ChevronDown, Users, IndianRupee, Tag, Edit3, FileText, Trash2
 } from 'lucide-react'
 import { getCustomerTrips, syncTripsWithSupabase } from '../utils/tripStore'
 import { useAuth } from '../context/AuthContext'
@@ -324,12 +324,138 @@ function DestinationCard({ entry }) {
   )
 }
 
+
+// ─── Draft Card ──────────────────────────────────────────────────────────────
+function DraftCard({ draft, onDelete }) {
+  const trip       = draft.trip || {}
+  const name       = trip.name || trip.destination || 'Trip Plan'
+  const duration   = trip.duration || ''
+  const totalCost  = trip.totalCost
+  const days       = trip.itineraryDays?.length || 0
+  const segments   = trip.segments?.length || 0
+  const highlights = trip.highlights || []
+  const created    = draft.createdAt
+    ? new Date(draft.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+    : ''
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white border border-dashed border-blue-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-300"
+    >
+      <div className="p-5 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4 min-w-0">
+          <div
+            className="w-12 h-12 rounded-2xl flex-shrink-0 flex items-center justify-center shadow-sm"
+            style={{ background: 'linear-gradient(135deg, #DBEAFE 0%, #EFF6FF 100%)' }}
+          >
+            <FileText className="w-5 h-5 text-blue-500" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-display font-bold text-slate-900 text-base leading-tight truncate">{name}</h3>
+              <span className="px-2.5 py-1 rounded-lg text-xs font-semibold border bg-amber-50 text-amber-600 border-amber-100">✎ Draft</span>
+            </div>
+            <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 mt-1">
+              {created && (
+                <span className="flex items-center gap-1 text-xs text-slate-400">
+                  <Clock className="w-3 h-3" /> Saved {created}
+                </span>
+              )}
+              {duration && (
+                <span className="flex items-center gap-1 text-xs text-slate-500">
+                  <Calendar className="w-3 h-3" /> {duration}
+                </span>
+              )}
+              {days > 0 && (
+                <span className="flex items-center gap-1 text-xs text-slate-500">
+                  <MapPin className="w-3 h-3" /> {days} day{days !== 1 ? 's' : ''} planned
+                </span>
+              )}
+              {totalCost && (
+                <span className="flex items-center gap-1 text-xs font-semibold text-blue-600">
+                  <IndianRupee className="w-3 h-3" /> {Number(totalCost).toLocaleString('en-IN')}
+                </span>
+              )}
+            </div>
+            {highlights.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {highlights.slice(0, 2).map((h, i) => (
+                  <span key={i} className="text-[10px] bg-blue-50 border border-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full">{h}</span>
+                ))}
+                {highlights.length > 2 && (
+                  <span className="text-[10px] text-slate-400">+{highlights.length - 2} more</span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => {
+              localStorage.setItem('voyageai_active_trip', JSON.stringify(draft.itinerary))
+              window.location.href = '/review-trip'
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-all shadow-sm"
+          >
+            <Edit3 className="w-3.5 h-3.5" /> Full View
+          </button>
+          <button
+            onClick={() => onDelete(draft.id)}
+            className="p-2 text-slate-300 hover:text-red-400 transition-colors rounded-xl hover:bg-red-50"
+            title="Delete draft"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {segments > 0 && (
+        <div className="border-t border-dashed border-blue-100 px-5 py-3 bg-blue-50/40">
+          <div className="flex items-center gap-4 flex-wrap text-[11px] text-slate-500">
+            {trip.segments?.filter(s => s.type === 'flight').length > 0 && (
+              <span className="flex items-center gap-1">
+                <Plane className="w-3 h-3 text-blue-500" />
+                {trip.segments.filter(s => s.type === 'flight').length} flight{trip.segments.filter(s => s.type === 'flight').length > 1 ? 's' : ''}
+              </span>
+            )}
+            {trip.segments?.filter(s => s.type === 'hotel').length > 0 && (
+              <span className="flex items-center gap-1">
+                <Hotel className="w-3 h-3 text-purple-500" />
+                {trip.segments.filter(s => s.type === 'hotel').length} hotel{trip.segments.filter(s => s.type === 'hotel').length > 1 ? 's' : ''}
+              </span>
+            )}
+            {trip.placesToVisit?.length > 0 && (
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-green-500" />
+                {trip.placesToVisit.length} attraction{trip.placesToVisit.length > 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('all')
   const { user } = useAuth()
   const [customerTrips, setCustomerTrips] = useState(() => user ? getCustomerTrips(user.id) : [])
   const [, setLoadingSync] = useState(false)
+  const [drafts, setDrafts] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('voyageai_trip_drafts') || '[]') } catch { return [] }
+  })
+
+  const deleteDraft = (id) => {
+    const updated = drafts.filter(d => d.id !== id)
+    setDrafts(updated)
+    localStorage.setItem('voyageai_trip_drafts', JSON.stringify(updated))
+  }
 
   useEffect(() => {
     if (!user) return
@@ -471,14 +597,16 @@ export default function DashboardPage() {
             {/* Trips list */}
             <div>
               {/* Tabs */}
-              <div className="flex gap-1 mb-5">
-                {['all', 'upcoming', 'completed'].map(tab => (
+              <div className="flex gap-1 mb-5 flex-wrap">
+                {['all', 'upcoming', 'completed', 'drafts'].map(tab => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
                     className={`px-4 py-2 rounded-xl text-sm font-medium transition-all capitalize ${
                       activeTab === tab
-                        ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                        ? tab === 'drafts'
+                          ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                          : 'bg-blue-50 text-blue-600 border border-blue-100'
                         : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                     }`}
                   >
@@ -488,35 +616,103 @@ export default function DashboardPage() {
                         {customerTrips.length}
                       </span>
                     )}
+                    {tab === 'drafts' && drafts.length > 0 && (
+                      <span className="ml-1.5 text-[10px] bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full font-bold">
+                        {drafts.length}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
 
               <div className="space-y-4">
-                {filteredTrips.map((entry, i) => (
-                  <motion.div
-                    key={entry.id}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.07 }}
-                  >
-                    <DestinationCard entry={entry} />
-                  </motion.div>
-                ))}
+                {/* ── Drafts tab ── */}
+                {activeTab === 'drafts' && (
+                  <>
+                    {drafts.length === 0 ? (
+                      <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200">
+                        <FileText className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                        <p className="text-slate-600 font-semibold">No saved drafts</p>
+                        <p className="text-slate-400 text-sm mt-1 mb-4">Drafts appear here when you click "Review & Confirm Booking" in Trip Builder</p>
+                        <Link
+                          to="/trip-builder"
+                          className="inline-flex items-center gap-2 px-5 py-2.5 text-white text-sm font-bold rounded-xl shadow-sm"
+                          style={{ background: 'linear-gradient(135deg, #1A6EBD 0%, #1558A0 100%)' }}
+                        >
+                          <Sparkles className="w-4 h-4" /> Open Trip Builder
+                        </Link>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs text-slate-400 font-medium">{drafts.length} saved draft{drafts.length !== 1 ? 's' : ''}</p>
+                          <button
+                            onClick={() => { if (window.confirm('Clear all drafts?')) { setDrafts([]); localStorage.removeItem('voyageai_trip_drafts') } }}
+                            className="text-[11px] text-red-400 hover:text-red-500 font-semibold hover:underline"
+                          >
+                            Clear all
+                          </button>
+                        </div>
+                        {drafts.map((draft, i) => (
+                          <motion.div key={draft.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}>
+                            <DraftCard draft={draft} onDelete={deleteDraft} />
+                          </motion.div>
+                        ))}
+                      </>
+                    )}
+                  </>
+                )}
 
-                {filteredTrips.length === 0 && (
-                  <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
-                    <MapPin className="w-10 h-10 text-blue-200 mx-auto mb-3" />
-                    <p className="text-slate-600 font-semibold">No {activeTab === 'all' ? '' : activeTab + ' '}trips yet</p>
-                    <p className="text-slate-400 text-sm mt-1 mb-4">Build your first trip with the AI Trip Builder</p>
-                    <Link
-                      to="/passenger-details"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 text-white text-sm font-bold rounded-xl shadow-sm"
-                      style={{ background: 'linear-gradient(135deg, #1A6EBD 0%, #1558A0 100%)' }}
-                    >
-                      <Sparkles className="w-4 h-4" /> Start Planning
-                    </Link>
-                  </div>
+                {/* ── All / Upcoming / Completed tabs ── */}
+                {activeTab !== 'drafts' && (
+                  <>
+                    {/* Inline drafts hint on 'all' tab */}
+                    {activeTab === 'all' && drafts.length > 0 && (
+                      <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-4 h-4 text-amber-500" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-bold text-slate-900">You have {drafts.length} unsent draft{drafts.length !== 1 ? 's' : ''}</div>
+                            <div className="text-xs text-slate-500">Trip plans saved from Trip Builder, not yet confirmed</div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setActiveTab('drafts')}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-amber-200 text-amber-600 text-xs font-bold rounded-xl hover:bg-amber-50 transition-all flex-shrink-0"
+                        >
+                          View Drafts <ArrowRight className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    {filteredTrips.map((entry, i) => (
+                      <motion.div
+                        key={entry.id}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.07 }}
+                      >
+                        <DestinationCard entry={entry} />
+                      </motion.div>
+                    ))}
+
+                    {filteredTrips.length === 0 && (
+                      <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
+                        <MapPin className="w-10 h-10 text-blue-200 mx-auto mb-3" />
+                        <p className="text-slate-600 font-semibold">No {activeTab === 'all' ? '' : activeTab + ' '}trips yet</p>
+                        <p className="text-slate-400 text-sm mt-1 mb-4">Build your first trip with the AI Trip Builder</p>
+                        <Link
+                          to="/passenger-details"
+                          className="inline-flex items-center gap-2 px-5 py-2.5 text-white text-sm font-bold rounded-xl shadow-sm"
+                          style={{ background: 'linear-gradient(135deg, #1A6EBD 0%, #1558A0 100%)' }}
+                        >
+                          <Sparkles className="w-4 h-4" /> Start Planning
+                        </Link>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>

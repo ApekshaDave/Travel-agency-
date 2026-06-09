@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   Sparkles, Plane, Train, Bus, Building2, Trash2, Clock, ChevronRight,
    DollarSign, Zap, Compass, Landmark, Utensils, Trees, ShoppingBag, MapPin,
-  Edit3, Coffee, Sun, Moon, Calendar as CalendarIcon, HelpCircle, Car, Send, User, ArrowRight
+  Edit3, Coffee, Sun, Moon, Calendar as CalendarIcon, HelpCircle, Car, Send, User, ArrowRight, ChevronDown
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
@@ -325,6 +325,8 @@ export default function TripBuilder() {
   // Navigation tabs
   const [activeTab, setActiveTab] = useState('itinerary')
   const [sandboxAgentMode, setSandboxAgentMode] = useState(false)
+  const [expandedDays, setExpandedDays] = useState({})
+  const toggleDay = (idx) => setExpandedDays(prev => ({ ...prev, [idx]: !prev[idx] }))
 
   const canUseAgentOverride =
     user?.role === 'agent' || user?.role === 'admin'
@@ -392,6 +394,25 @@ export default function TripBuilder() {
     return result.slice(0, 10)
   }
 
+  // Pad itineraryDays to full trip duration
+  const backfillItineraryDays = (days, trip) => {
+    const totalDays = parseInt(trip?.duration) || (Array.isArray(days) ? days.length : 1)
+    const existing = Array.isArray(days) ? [...days] : []
+    const themes = ['Heritage','Adventure','Nature','Culture','Leisure','Shopping','Relaxation','Exploration']
+    const slots = [
+      { morning:{ activity:'Morning Sightseeing', description:'Visit the top local landmark of the day.', duration:'2h', cost:'Free–₹200', tip:'Start early to beat crowds.' }, afternoon:{ activity:'Local Cuisine Lunch', description:'Try a popular regional restaurant recommended by locals.', duration:'1h', cost:'₹300–₹600', tip:'Ask hotel concierge for hidden gems.' }, evening:{ activity:'Sunset Stroll', description:'Walk along the most scenic area of the city as the sun sets.', duration:'1.5h', cost:'Free', tip:'Carry a light jacket for evenings.' } },
+      { morning:{ activity:'Heritage Walk', description:'Guided tour through old city quarters and heritage sites.', duration:'3h', cost:'₹100', tip:'Wear comfortable shoes.' }, afternoon:{ activity:'Museum Visit', description:'Explore the local history and art museum.', duration:'2h', cost:'₹80', tip:'Audio guides available at entrance.' }, evening:{ activity:'Cultural Performance', description:'Watch a classical folk dance or music show.', duration:'1.5h', cost:'₹300', tip:'Book tickets a day in advance.' } },
+      { morning:{ activity:'Nature Excursion', description:'Day trip to nearby scenic landscapes or national park.', duration:'3h', cost:'₹150', tip:'Bring water and sunscreen.' }, afternoon:{ activity:'Local Market Exploration', description:'Browse bustling local bazaars for souvenirs and spices.', duration:'2h', cost:'Free', tip:'Bargain politely for best prices.' }, evening:{ activity:'Rooftop Dinner', description:'Dine at a rooftop restaurant with panoramic city views.', duration:'2h', cost:'₹800–₹1,500', tip:'Reserve a table with a view.' } },
+      { morning:{ activity:'Leisure Breakfast', description:'Slow morning at the hotel or a charming local cafe.', duration:'1h', cost:'₹200–₹400', tip:'Try the local specialty beverage.' }, afternoon:{ activity:'Spa & Wellness', description:'Rejuvenate with a traditional massage or wellness treatment.', duration:'2h', cost:'₹500–₹1,200', tip:'Book in advance for preferred slots.' }, evening:{ activity:'Street Food Tour', description:'Sample the best street food the city has to offer.', duration:'2h', cost:'₹200–₹500', tip:'Follow the crowds for the best stalls.' } },
+    ]
+    while (existing.length < totalDays) {
+      const i = existing.length
+      const slot = slots[i % slots.length]
+      existing.push({ day:i+1, title:`Day ${i+1} — ${themes[i%themes.length]} & Exploration`, theme:themes[i%themes.length], morning:slot.morning, afternoon:slot.afternoon, evening:slot.evening, meals:{ breakfast:'Hotel Breakfast', lunch:'Local Restaurant', dinner:'Recommended Dining Spot' }, transport:'Auto Rickshaw / Local Taxi', estimatedDayBudget:'₹1,500–₹2,500' })
+    }
+    return existing.slice(0, totalDays)
+  }
+
   const handleGenerate = async () => {
     if (!prompt.trim()) return
     setGenerating(true)
@@ -438,19 +459,7 @@ export default function TripBuilder() {
           veg: backfillRestaurants(trip.restaurants?.veg, true),
           nonVeg: backfillRestaurants(trip.restaurants?.nonVeg, false)
         },
-        itineraryDays: trip.itineraryDays || [
-          {
-            day: 1,
-            title: "Arrival and Leisure Walk",
-            theme: "Arrival",
-            morning: { activity: "Airport/Station pickup", description: "Transfer to your selected stay and unpack.", duration: "2h", cost: "Free", tip: "Coordinate with operator beforehand." },
-            afternoon: { activity: "Explore Local Markets", description: "Wander the traditional bazaars and handicraft stores.", duration: "3h", cost: "Free", tip: "Great time to pick souvenirs." },
-            evening: { activity: "Enjoy Sunset at Lakeshore", description: "Watch boats sail against beautiful skyline reflections.", duration: "2h", cost: "₹100", tip: "Grab local street snacks here." },
-            meals: { breakfast: "Resort Diner", lunch: "Sagar Ratna", dinner: "The Mughal Emperor" },
-            transport: "Auto-rickshaws",
-            estimatedDayBudget: "₹1,200"
-          }
-        ],
+        itineraryDays: backfillItineraryDays(trip.itineraryDays, trip),
         placesToVisit: backfillAttractions(trip.placesToVisit),
         passengers: passengerDetails.length > 0 ? passengerDetails : activeTrip?.passengers || []
       }
@@ -497,19 +506,7 @@ export default function TripBuilder() {
         veg: backfillRestaurants(preset.restaurants?.veg, true),
         nonVeg: backfillRestaurants(preset.restaurants?.nonVeg, false)
       },
-      itineraryDays: preset.itineraryDays || [
-        {
-          day: 1,
-          title: "Heritage Fort Walk",
-          theme: "History",
-          morning: { activity: "Airport Transfer", description: "Cab directly to your pre-booked palace resort.", duration: "1.5h", cost: "Free", tip: "Pre-book with travel agency." },
-          afternoon: { activity: "Visit Old Fort Walls", description: "Walk ancient stone battlements and explore artifacts.", duration: "2h", cost: "₹50", tip: "Hire local guides for facts." },
-          evening: { activity: "Bazaar Spice Tour", description: "Guided tour through colorful, pungent old markets.", duration: "2.5h", cost: "Free", tip: "Stay hydrated and watch pockets." },
-          meals: { breakfast: "Airport Cafe", lunch: "Karim's", dinner: "Sattvik CP" },
-          transport: "Auto rickshaw",
-          estimatedDayBudget: "₹1,500"
-        }
-      ],
+      itineraryDays: backfillItineraryDays(preset.itineraryDays, preset),
       placesToVisit: backfillAttractions(preset.placesToVisit),
       passengers: passengerDetails.length > 0 ? passengerDetails : activeTrip?.passengers || []
     }
@@ -1051,98 +1048,286 @@ export default function TripBuilder() {
 
                     {/* ITINERARY TAB */}
                     {activeTab === 'itinerary' && (
-                      <motion.div key="itinerary" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+                      <motion.div key="itinerary" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
 
-                        {/* Day-by-Day Detailed Schedule */}
-                        <div className="space-y-4">
+                        {/* ── Daily Schedule header ── */}
+                        <div className="flex items-center justify-between">
                           <h3 className="font-display text-lg font-bold text-slate-900 flex items-center gap-2">
                             <CalendarIcon className="w-4 h-4 text-blue-500" /> Detailed Daily Schedule
                           </h3>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-slate-400">{activeTrip.itineraryDays?.length || 0} days</span>
+                            <button
+                              onClick={() => {
+                                const allOpen = activeTrip.itineraryDays?.every((_, i) => expandedDays[i])
+                                const next = {}
+                                activeTrip.itineraryDays?.forEach((_, i) => { next[i] = !allOpen })
+                                setExpandedDays(next)
+                              }}
+                              className="text-[11px] font-bold text-blue-600 px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-100 hover:bg-blue-100 transition-all"
+                            >
+                              {activeTrip.itineraryDays?.every((_, i) => expandedDays[i]) ? 'Collapse All' : 'Expand All'}
+                            </button>
+                          </div>
+                        </div>
 
-                          {activeTrip.itineraryDays?.map((day, dIdx) => (
-                            <div key={dIdx} className="bg-white border border-slate-200 rounded-2xl p-5 relative overflow-hidden">
+                        {/* ── Collapsible day cards ── */}
+                        {activeTrip.itineraryDays?.map((day, dIdx) => {
+                          const isOpen = !!expandedDays[dIdx]
+                          return (
+                            <div key={dIdx} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
 
-                              <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
+                              {/* Header row — click to expand/collapse */}
+                              <button
+                                onClick={() => toggleDay(dIdx)}
+                                className="w-full flex items-center justify-between px-4 py-3.5 sm:px-5 hover:bg-slate-50 transition-colors text-left"
+                              >
                                 <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-xl bg-blue-500/15 border border-blue-500/20 flex flex-col items-center justify-center text-blue-500">
+                                  <div className="w-10 h-10 rounded-xl bg-blue-600 flex flex-col items-center justify-center text-white flex-shrink-0 shadow-sm">
                                     <span className="font-bold text-sm leading-none">{day.day}</span>
-                                    <span className="text-[9px] uppercase font-bold tracking-tighter">Day</span>
+                                    <span className="text-[8px] uppercase font-bold tracking-tighter opacity-80">Day</span>
                                   </div>
-                                  <div>
-                                    <h4 className="text-slate-900 font-bold text-base">{day.title}</h4>
-                                    <span className="text-[10px] text-slate-500 font-bold tracking-widest uppercase">{day.theme} · Budget: {day.estimatedDayBudget}</span>
+                                  <div className="text-left">
+                                    <h4 className="text-slate-900 font-bold text-sm sm:text-base leading-snug">{day.title}</h4>
+                                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                      <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">{day.theme}</span>
+                                      <span className="text-[10px] text-slate-400">Budget: {day.estimatedDayBudget}</span>
+                                    </div>
                                   </div>
                                 </div>
-                                {isAgent && (
-                                  <button
-                                    onClick={() => openEditModal('itinerary', dIdx, day)}
-                                    className="p-1.5 text-slate-400 hover:text-blue-500 transition-colors rounded-lg hover:bg-slate-50"
-                                    title="Edit Day Itinerary"
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  {isAgent && (
+                                    <span
+                                      role="button"
+                                      onClick={e => { e.stopPropagation(); openEditModal('itinerary', dIdx, day) }}
+                                      className="p-1.5 text-slate-400 hover:text-blue-500 transition-colors rounded-lg hover:bg-blue-50"
+                                    >
+                                      <Edit3 className="w-3.5 h-3.5" />
+                                    </span>
+                                  )}
+                                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                                </div>
+                              </button>
+
+                              {/* Expandable body */}
+                              <AnimatePresence initial={false}>
+                                {isOpen && (
+                                  <motion.div
+                                    key="day-body"
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.22, ease: 'easeInOut' }}
+                                    className="overflow-hidden"
                                   >
-                                    <Edit3 className="w-3.5 h-3.5" />
-                                  </button>
+                                    <div className="px-4 sm:px-5 pb-5 border-t border-slate-100 pt-4 space-y-4">
+
+                                      {/* Time slots */}
+                                      <div className="space-y-3 pl-2 border-l-2 border-blue-100">
+                                        {[
+                                          { slot: 'morning',   label: 'Morning',   icon: Coffee, color: 'text-amber-500', bg: 'bg-amber-50 border-amber-100' },
+                                          { slot: 'afternoon', label: 'Afternoon', icon: Sun,    color: 'text-blue-500',  bg: 'bg-blue-50 border-blue-100'   },
+                                          { slot: 'evening',   label: 'Evening',   icon: Moon,   color: 'text-indigo-500',bg: 'bg-indigo-50 border-indigo-100'}
+                                        ].map(time => {
+                                          const details = day[time.slot]
+                                          if (!details) return null
+                                          const Ic = time.icon
+                                          return (
+                                            <div key={time.slot} className="flex gap-3">
+                                              <div className={`w-7 h-7 rounded-lg border flex items-center justify-center flex-shrink-0 mt-0.5 ${time.bg}`}>
+                                                <Ic className={`w-3.5 h-3.5 ${time.color}`} />
+                                              </div>
+                                              <div className="flex-1 min-w-0">
+                                                <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">{time.label}</div>
+                                                <h5 className="font-bold text-sm text-slate-900 mt-0.5">{details.activity}</h5>
+                                                <p className="text-slate-500 text-xs leading-relaxed mt-0.5">{details.description}</p>
+                                                <div className="flex items-center gap-2 text-[10px] font-semibold mt-1.5 flex-wrap">
+                                                  <span className="text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">⏱ {details.duration}</span>
+                                                  <span className="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">₹ {details.cost}</span>
+                                                  {details.tip && <span className="text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-100">💡 {details.tip}</span>}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )
+                                        })}
+                                      </div>
+
+                                      {/* Meals */}
+                                      {day.meals && (
+                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                          <div className="text-xs font-bold text-slate-600 mb-3 flex items-center gap-1.5">
+                                            <Utensils className="w-3.5 h-3.5 text-rose-400" /> Meal Recommendations
+                                          </div>
+                                          <div className="grid grid-cols-3 gap-2">
+                                            {[
+                                              { label: 'Breakfast', emoji: '☕', val: day.meals.breakfast },
+                                              { label: 'Lunch',     emoji: '🍱', val: day.meals.lunch     },
+                                              { label: 'Dinner',    emoji: '🍽', val: day.meals.dinner    }
+                                            ].map(({ label, emoji, val }) => (
+                                              <div key={label} className="bg-white rounded-lg border border-slate-100 p-2">
+                                                <div className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">{emoji} {label}</div>
+                                                <div className="text-xs text-slate-700 font-medium leading-tight">{val}</div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Transport */}
+                                      {day.transport && (
+                                        <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                                          <MapPin className="w-3.5 h-3.5 text-sky-400 flex-shrink-0" />
+                                          <span><strong className="text-slate-700">Transport:</strong> {day.transport}</span>
+                                        </div>
+                                      )}
+
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          )
+                        })}
+
+                        {/* ══════════════════════════════════════════
+                            Full Trip Cost Breakdown — expanded view
+                            ══════════════════════════════════════════ */}
+                        <div className="pt-2">
+                          <h3 className="font-display text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
+                            <DollarSign className="w-4 h-4 text-blue-500" /> Full Trip Cost Breakdown
+                            <span className="ml-1 text-[10px] uppercase bg-blue-50 border border-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold">All-Inclusive</span>
+                          </h3>
+
+                          <div className="grid sm:grid-cols-2 gap-3 mb-3">
+
+                            {/* Stays */}
+                            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center flex-shrink-0">
+                                  <Building2 className="w-4 h-4 text-emerald-500" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs font-bold text-slate-700">Stays & Hotels</div>
+                                  <div className="text-[10px] text-slate-400">{activeTrip.segments?.filter(s => s.type === 'hotel').length || 0} segments</div>
+                                </div>
+                                <span className="font-bold text-slate-900 font-mono text-sm">₹{staysCost.toLocaleString()}</span>
+                              </div>
+                              <div className="space-y-1">
+                                {activeTrip.segments?.filter(s => s.type === 'hotel').map((seg, i) => (
+                                  <div key={i} className="flex items-center justify-between text-[11px] py-1.5 border-t border-slate-50">
+                                    <span className="text-slate-500 truncate pr-2">{seg.from}{seg.date ? ` · ${seg.date}` : ''}</span>
+                                    <span className="text-slate-900 font-mono flex-shrink-0">₹{seg.price.toLocaleString()}</span>
+                                  </div>
+                                ))}
+                                {!activeTrip.segments?.filter(s => s.type === 'hotel').length && (
+                                  <div className="text-[11px] text-slate-400 pt-1 border-t border-slate-50">No hotel segments yet</div>
                                 )}
                               </div>
-
-                              <div className="space-y-4 pl-1 border-l border-slate-100">
-                                {/* Morning, Afternoon, Evening Slots */}
-                                {[
-                                  { slot: 'morning', label: 'Morning Slot', icon: Coffee, color: 'text-amber-400' },
-                                  { slot: 'afternoon', label: 'Afternoon Slot', icon: Sun, color: 'text-blue-500' },
-                                  { slot: 'evening', label: 'Evening Slot', icon: Moon, color: 'text-sky-400' }
-                                ].map(time => {
-                                  const details = day[time.slot]
-                                  if (!details) return null
-                                  const IconComponent = time.icon
-                                  return (
-                                    <div key={time.slot} className="flex gap-3">
-                                      <div className="flex flex-col items-center">
-                                        <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
-                                          <IconComponent className={`w-3.5 h-3.5 ${time.color}`} />
-                                        </div>
-                                      </div>
-                                      <div>
-                                        <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">{time.label}</div>
-                                        <h5 className="font-bold text-sm text-slate-900 mt-0.5">{details.activity}</h5>
-                                        <p className="text-slate-500 text-xs leading-relaxed mt-1">{details.description}</p>
-                                        <div className="flex items-center gap-3 text-[10px] font-semibold text-blue-500/80 mt-1">
-                                          <span>⏱ {details.duration}</span>
-                                          <span>💵 Cost: {details.cost}</span>
-                                          {details.tip && <span className="text-sky-300/80">💡 Tip: {details.tip}</span>}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )
-                                })}
-                              </div>
-
-                              {/* Daily dining recommendations */}
-                              {day.meals && (
-                                <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
-                                  <div className="font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
-                                    <Utensils className="w-3.5 h-3.5 text-sage-400" /> Restaurant Recommendations
-                                  </div>
-                                  <div className="grid grid-cols-3 gap-2">
-                                    {[['Breakfast', day.meals.breakfast], ['Lunch', day.meals.lunch], ['Dinner', day.meals.dinner]].map(([meal, desc]) => (
-                                      <div key={meal}>
-                                        <span className="text-slate-400 font-medium text-[10px] uppercase">{meal}</span>
-                                        <p className="text-slate-700 truncate mt-0.5" title={desc}>{desc}</p>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Daily transport tips */}
-                              {day.transport && (
-                                <div className="mt-3 text-[10px] text-slate-500 flex items-center gap-1.5">
-                                  <MapPin className="w-3 h-3 text-sky-400" />
-                                  <span>Daily travel recommendation: {day.transport}</span>
-                                </div>
-                              )}
-
                             </div>
-                          ))}
+
+                            {/* Transport */}
+                            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
+                                  <Plane className="w-4 h-4 text-blue-500" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs font-bold text-slate-700">Transportation</div>
+                                  <div className="text-[10px] text-slate-400">{selectedTransportSegments.length} segments selected</div>
+                                </div>
+                                <span className="font-bold text-slate-900 font-mono text-sm">₹{transportCost.toLocaleString()}</span>
+                              </div>
+                              <div className="space-y-1">
+                                {['flight','train','bus','roadways'].map(mode => {
+                                  const segs = activeTrip.segments?.filter(s => s.type === mode) || []
+                                  if (!segs.length) return null
+                                  const icons = { flight: Plane, train: Train, bus: Bus, roadways: Car }
+                                  const colors = { flight:'text-blue-500', train:'text-sky-500', bus:'text-violet-500', roadways:'text-orange-500' }
+                                  const MIcon = icons[mode]
+                                  return segs.map((seg, i) => (
+                                    <div key={`${mode}-${i}`} className="flex items-center justify-between text-[11px] py-1.5 border-t border-slate-50">
+                                      <div className="flex items-center gap-1.5 truncate pr-2">
+                                        <MIcon className={`w-3 h-3 flex-shrink-0 ${colors[mode]}`} />
+                                        <span className="text-slate-500 truncate capitalize">{mode}: {seg.from}{seg.to ? ` → ${seg.to}` : ''}</span>
+                                      </div>
+                                      <span className="text-slate-900 font-mono flex-shrink-0">₹{seg.price.toLocaleString()}</span>
+                                    </div>
+                                  ))
+                                })}
+                                {!selectedTransportSegments.length && (
+                                  <div className="text-[11px] text-slate-400 pt-1 border-t border-slate-50 flex items-center gap-1.5">
+                                    <Plane className="w-3 h-3" /> No transport selected yet
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Sightseeing */}
+                            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0">
+                                  <Landmark className="w-4 h-4 text-amber-500" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs font-bold text-slate-700">Sightseeing Admissions</div>
+                                  <div className="text-[10px] text-slate-400">{activeTrip.placesToVisit?.length || 0} attractions</div>
+                                </div>
+                                <span className="font-bold text-slate-900 font-mono text-sm">₹{sightsCost.toLocaleString()}</span>
+                              </div>
+                              <div className="space-y-1 max-h-40 overflow-y-auto">
+                                {activeTrip.placesToVisit?.map((p, i) => (
+                                  <div key={i} className="flex items-center justify-between text-[11px] py-1.5 border-t border-slate-50">
+                                    <span className="text-slate-500 truncate pr-2">{i + 1}. {p.name}</span>
+                                    <span className={`flex-shrink-0 font-mono font-semibold ${Number(p.price) > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                      {Number(p.price) > 0 ? `₹${Number(p.price).toLocaleString()}` : 'Free'}
+                                    </span>
+                                  </div>
+                                ))}
+                                {!activeTrip.placesToVisit?.length && (
+                                  <div className="text-[11px] text-slate-400 pt-1 border-t border-slate-50">No attractions added yet</div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Food & Dining */}
+                            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center flex-shrink-0">
+                                  <Utensils className="w-4 h-4 text-rose-500" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-xs font-bold text-slate-700">Est. Food & Dining</div>
+                                  <div className="text-[10px] text-slate-400">{daysCount} days × ₹1,200/day</div>
+                                </div>
+                                <span className="font-bold text-slate-900 font-mono text-sm">₹{estFoodCost.toLocaleString()}</span>
+                              </div>
+                              <div className="space-y-1">
+                                {activeTrip.itineraryDays?.slice(0, 5).map((day, i) => (
+                                  <div key={i} className="flex items-center justify-between text-[11px] py-1.5 border-t border-slate-50">
+                                    <span className="text-slate-500">Day {day.day} — {day.meals?.lunch || 'Local Restaurant'}</span>
+                                    <span className="text-slate-900 font-mono">₹1,200</span>
+                                  </div>
+                                ))}
+                                {daysCount > 5 && (
+                                  <div className="text-[10px] text-slate-400 pt-1.5 border-t border-slate-50">+ {daysCount - 5} more days · ₹1,200/day each</div>
+                                )}
+                              </div>
+                            </div>
+
+                          </div>
+
+                          {/* Grand Total banner */}
+                          <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-5 flex items-center justify-between shadow-lg">
+                            <div>
+                              <div className="text-blue-100 text-xs font-semibold uppercase tracking-wider mb-0.5">Trip Grand Total</div>
+                              <div className="text-white/70 text-[11px]">Stays · Transport · Sights · Food</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-white font-bold text-2xl font-mono">₹{grandTripTotal.toLocaleString()}</div>
+                              <div className="text-blue-200 text-[10px] mt-0.5">{daysCount} days · all-inclusive</div>
+                            </div>
+                          </div>
+
                         </div>
 
                       </motion.div>
@@ -1515,117 +1700,40 @@ export default function TripBuilder() {
                   </AnimatePresence>
                 </div>
 
-                {/* Right: Summary panel — sticky only on xl+ screens, normal flow on smaller screens */}
+                {/* Right: Summary panel — sticky only on xl+ screens */}
                 <div className="space-y-4 xl:sticky xl:top-24">
 
-                  {/* Comprehensive Summary card */}
-                  <div className="bg-white border border-slate-200 rounded-2xl p-5 bg-slate-50">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-blue-500" /> Full Trip Cost Breakdown
-                      </h3>
-                      <span className="text-[8px] uppercase bg-blue-500/20 border border-blue-500/30 text-blue-500 px-2 py-0.5 rounded-full font-bold">
-                        All-Inclusive
-                      </span>
+                  {/* Quick summary + action buttons */}
+                  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+
+                    {/* Mini totals row */}
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      {[
+                        { label: 'Stays',     icon: Building2, color: 'text-emerald-500', bg: 'bg-emerald-50 border-emerald-100', val: staysCost     },
+                        { label: 'Transport', icon: Plane,     color: 'text-blue-500',    bg: 'bg-blue-50 border-blue-100',       val: transportCost },
+                        { label: 'Sights',    icon: Landmark,  color: 'text-amber-500',   bg: 'bg-amber-50 border-amber-100',     val: sightsCost    },
+                        { label: 'Food',      icon: Utensils,  color: 'text-rose-500',    bg: 'bg-rose-50 border-rose-100',       val: estFoodCost   },
+                      ].map(({ label, icon: Ic, color, bg, val }) => (
+                        <div key={label} className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${bg}`}>
+                          <Ic className={`w-3.5 h-3.5 flex-shrink-0 ${color}`} />
+                          <div className="min-w-0">
+                            <div className="text-[10px] text-slate-400 font-medium">{label}</div>
+                            <div className="text-xs text-slate-900 font-bold font-mono">₹{val.toLocaleString()}</div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
 
-                    {/* Selected package components */}
-                    <div className="space-y-2.5 mb-4 text-xs">
-
-                      {/* 1. Stays */}
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <div className="flex items-center gap-2">
-                          <Building2 className="w-3.5 h-3.5 text-sage-400" />
-                          <span className="text-slate-500">Stays & Hotels</span>
-                        </div>
-                        <span className="text-slate-900 font-mono">₹{staysCost.toLocaleString()}</span>
-                      </div>
-
-                      {/* 2. Transportation — broken out per mode */}
-                      {['flight', 'train', 'bus', 'roadways'].map(mode => {
-                        const modeSegs = activeTrip?.segments?.filter(s => s.type === mode) || []
-                        if (modeSegs.length === 0) return null
-                        const modeCost = modeSegs.reduce((sum, s) => sum + (s.price || 0), 0)
-                        const modeIcons = { flight: Plane, train: Train, bus: Bus, roadways: Car }
-                        const modeColors = { flight: 'text-blue-500', train: 'text-sky-400', bus: 'text-violet-400', roadways: 'text-orange-400' }
-                        const MIcon = modeIcons[mode]
-                        return (
-                          <div key={mode} className="flex items-center justify-between border-b border-slate-100 pb-2">
-                            <div className="flex items-center gap-2">
-                              <MIcon className={`w-3.5 h-3.5 ${modeColors[mode]}`} />
-                              <span className="text-slate-500 capitalize">{mode === 'roadways' ? 'Roadways/Cab' : mode.charAt(0).toUpperCase() + mode.slice(1)}</span>
-                            </div>
-                            <span className="text-slate-900 font-mono">₹{modeCost.toLocaleString()}</span>
-                          </div>
-                        )
-                      })}
-
-                      {/* 3. Selected transport detail lines */}
-                      {selectedTransportSegments.length > 0 && (
-                        <div className="border-b border-slate-100 pb-2 pl-5 -mt-1 space-y-1">
-                          {selectedTransportSegments.map(seg => (
-                            <div key={seg.id} className="text-[9px] text-slate-400 truncate" title={seg.detail}>
-                              Selected: {seg.detail}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {selectedTransportSegments.length === 0 && (
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                          <div className="flex items-center gap-2">
-                            <Plane className="w-3.5 h-3.5 text-slate-400" />
-                            <span className="text-slate-500">Transportation</span>
-                          </div>
-                          <span className="text-slate-400 font-mono">Not selected</span>
-                        </div>
-                      )}
-
-                      <div className="border-b border-slate-100 pb-2">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <div className="flex items-center gap-2">
-                            <Landmark className="w-3.5 h-3.5 text-amber-400" />
-                            <span className="text-slate-500">Sightseeing Admissions</span>
-                          </div>
-                          <span className="text-slate-900 font-mono">₹{sightsCost.toLocaleString()}</span>
-                        </div>
-                        {activeTrip?.placesToVisit?.length > 0 && (
-                          <div className="space-y-1 pl-5 max-h-32 overflow-y-auto scrollbar-thin">
-                            {activeTrip.placesToVisit.map((p, i) => (
-                              <div key={i} className="flex items-center justify-between text-[9px]">
-                                <span className="text-slate-400 truncate pr-2" title={p.name}>{i + 1}. {p.name}</span>
-                                <span className={`flex-shrink-0 font-mono ${Number(p.price) > 0 ? 'text-amber-300/80' : 'text-slate-400/60'}`}>
-                                  {Number(p.price) > 0 ? `₹${Number(p.price).toLocaleString()}` : 'Free'}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* 4. Food & Dining Estimate — ₹1,200/day */}
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <div className="flex items-center gap-2">
-                          <Utensils className="w-3.5 h-3.5 text-rose-400" />
-                          <div>
-                            <span className="text-slate-500">Est. Food & Dining</span>
-                            <div className="text-[9px] text-slate-400/60">{daysCount} days × ₹1,200/day</div>
-                          </div>
-                        </div>
-                        <span className="text-slate-900 font-mono">₹{estFoodCost.toLocaleString()}</span>
-                      </div>
-
-                    </div>
-
-                    <div className="pt-3 border-t border-slate-200 flex items-center justify-between mb-4">
+                    {/* Grand total */}
+                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl px-4 py-3 flex items-center justify-between mb-4">
                       <div>
-                        <span className="text-slate-900 font-bold text-sm block">Trip Grand Total</span>
-                        <span className="text-[10px] text-slate-500 italic">Stays + Transport + Sights + Food</span>
+                        <div className="text-blue-100 text-[10px] font-semibold uppercase tracking-wider">Grand Total</div>
+                        <div className="text-white/70 text-[10px]">{daysCount} days · all-inclusive</div>
                       </div>
-                      <span className="text-blue-500 font-bold text-xl font-mono">₹{grandTripTotal.toLocaleString()}</span>
+                      <span className="text-white font-bold text-lg font-mono">₹{grandTripTotal.toLocaleString()}</span>
                     </div>
 
-                    {/* Proceed to Review */}
+                    {/* Action buttons */}
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -1633,7 +1741,7 @@ export default function TripBuilder() {
                         localStorage.setItem('voyageai_active_trip', JSON.stringify(activeTrip))
                         navigate('/review-trip')
                       }}
-                      className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2 text-sm"
+                      className="w-full py-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-sm hover:bg-blue-700 transition-all flex items-center justify-center gap-2 text-sm"
                     >
                       <ArrowRight className="w-4 h-4" /> Review & Confirm Booking
                     </motion.button>
@@ -1661,7 +1769,7 @@ export default function TripBuilder() {
                             toast.success(`Updated itinerary sent to ${activeTrip.customerName}!`)
                           }
                         }}
-                        className="mt-2 w-full py-3 bg-sky-500/15 border border-sky-400/20 text-sky-300 font-bold rounded-xl hover:bg-sky-500/20 transition-all flex items-center justify-center gap-2 text-xs"
+                        className="mt-2 w-full py-3 bg-sky-50 border border-sky-200 text-sky-700 font-bold rounded-xl hover:bg-sky-100 transition-all flex items-center justify-center gap-2 text-xs"
                       >
                         <Send className="w-4 h-4" /> Send Updated Itinerary to Customer
                       </motion.button>
@@ -1669,7 +1777,7 @@ export default function TripBuilder() {
 
                     <Link
                       to="/chat"
-                      className="mt-3 w-full py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-500 hover:text-slate-900 transition-all flex items-center justify-center gap-2"
+                      className="mt-2 w-full py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-500 hover:text-slate-900 transition-all flex items-center justify-center gap-2"
                     >
                       <Sparkles className="w-3.5 h-3.5 text-blue-500" /> Refine details with AI
                     </Link>
@@ -1727,12 +1835,12 @@ export default function TripBuilder() {
                     <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <Sparkles className="w-4 h-4 text-blue-500" />
-                        <span className="text-blue-400 font-semibold text-xs uppercase tracking-wider">Highlights</span>
+                        <span className="text-blue-600 font-semibold text-xs uppercase tracking-wider">Highlights</span>
                       </div>
                       <ul className="space-y-1.5">
                         {activeTrip.highlights.map((h, i) => (
-                          <li key={i} className="text-blue-300/70 text-xs flex items-start gap-1.5">
-                            <span className="text-blue-500 mt-0.5">→</span> {h}
+                          <li key={i} className="text-slate-600 text-xs flex items-start gap-1.5">
+                            <span className="text-blue-500 mt-0.5 flex-shrink-0">→</span> {h}
                           </li>
                         ))}
                       </ul>

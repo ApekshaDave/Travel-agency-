@@ -6,18 +6,26 @@ const groq = new Groq({
   dangerouslyAllowBrowser: true,
 });
 
-// llama-3.1-8b-instant hard limits:
-//   Context window : 131 072 tokens  (input + output combined)
+// llama-3.1-8b-instant limits:
+//   Context window : 131 072 tokens
 //   Max output     : 8 192 tokens
-// We stay well inside both to avoid rate-limit / overflow errors.
+//   Free TPM       : 6 000 tokens/minute
+//
+// Strategy: multiModalApi.js splits large requests into two calls of
+// ~2500 tokens each with a 1.1s gap. This file just enforces a hard
+// ceiling so no single call ever exceeds what the model allows.
+
 const MODEL = "llama-3.1-8b-instant";
-const MAX_OUTPUT_TOKENS = 2048;   // safe ceiling for output
-const MAX_PROMPT_CHARS  = 12000;  // ~3 000 tokens — keeps total context low
+
+// Hard ceiling per call — model supports 8192 but free TPM is 6000/min,
+// so we cap at 4000 to leave headroom for the input tokens.
+const HARD_MAX_OUTPUT = 4000;
+
+// Input prompt character budget (~1 token ≈ 4 chars)
+const MAX_PROMPT_CHARS = 12000; // ~3000 tokens input
 
 /**
- * Truncate a string to `maxChars` characters, appending a notice so the
- * model knows the content was cut. Truncates from the *middle* so both
- * the start and end of the text are preserved (better for structured data).
+ * Truncate a string to maxChars, preserving start and end (middle cut).
  */
 function truncate(text, maxChars = MAX_PROMPT_CHARS) {
   if (!text || text.length <= maxChars) return text;
@@ -30,27 +38,28 @@ function truncate(text, maxChars = MAX_PROMPT_CHARS) {
 }
 
 /**
- * Trim every message's content so the combined prompt fits the budget.
- * System prompt is trimmed first if needed; user messages share the rest.
+ * Trim messages so the combined prompt fits within the character budget.
  */
 function trimMessages(messages, system) {
   const trimmedSystem = truncate(system, 3000);
-
-  // Budget the remaining chars across all messages
   const perMsgBudget = Math.floor(
     (MAX_PROMPT_CHARS - trimmedSystem.length) / Math.max(messages.length, 1)
   );
-
   const trimmedMessages = messages.map((m) => ({
     ...m,
     content: truncate(String(m.content ?? ""), perMsgBudget),
   }));
-
   return { trimmedSystem, trimmedMessages };
 }
 
 export async function callGroq(messages, system, options = {}) {
   const { trimmedSystem, trimmedMessages } = trimMessages(messages, system);
+
+  // Respect the caller's requested maxTokens but never exceed HARD_MAX_OUTPUT
+  const maxTokens = Math.min(
+    options.maxTokens ?? 1000,
+    HARD_MAX_OUTPUT
+  );
 
   const response = await groq.chat.completions.create({
     model: MODEL,
@@ -58,7 +67,7 @@ export async function callGroq(messages, system, options = {}) {
       { role: "system", content: trimmedSystem },
       ...trimmedMessages,
     ],
-    max_tokens: Math.min(options.maxTokens ?? MAX_OUTPUT_TOKENS, MAX_OUTPUT_TOKENS),
+    max_tokens: maxTokens,
     temperature: options.temperature ?? 0.7,
   });
 
@@ -75,7 +84,7 @@ export async function askGroq(prompt, system, options = {}) {
 
 /**
  * Robustly parse JSON from a Groq response.
- * Handles: markdown code fences, leading/trailing text, truncated JSON.
+ * Handles: markdown fences, leading/trailing text, truncated JSON.
  */
 function robustParseJSON(raw) {
   // 1. Strip markdown code fences
@@ -88,11 +97,11 @@ function robustParseJSON(raw) {
     return JSON.parse(cleaned);
   } catch { /* fall through */ }
 
-  // 3. Extract first JSON object or array with brace matching
+  // 3. Extract first JSON object or array via brace matching
   const firstBrace   = cleaned.indexOf("{");
   const firstBracket = cleaned.indexOf("[");
   const start =
-    firstBrace === -1   ? firstBracket
+    firstBrace === -1    ? firstBracket
     : firstBracket === -1 ? firstBrace
     : Math.min(firstBrace, firstBracket);
 
@@ -116,20 +125,20 @@ function robustParseJSON(raw) {
       } catch { /* fall through */ }
     }
 
-    // 4. Truncated JSON — repair and retry
+    // 4. Truncated JSON — attempt repair
     const partial = cleaned.slice(start);
     let openBraces = 0, openBrackets = 0;
     let inString = false, escape = false;
 
     for (const ch of partial) {
-      if (escape)              { escape = false; continue; }
-      if (ch === "\\" && inString) { escape = true; continue; }
-      if (ch === '"')          { inString = !inString; continue; }
-      if (inString)            continue;
-      if      (ch === "{")     openBraces++;
-      else if (ch === "}")     openBraces--;
-      else if (ch === "[")     openBrackets++;
-      else if (ch === "]")     openBrackets--;
+      if (escape)                  { escape = false; continue; }
+      if (ch === "\\" && inString) { escape = true;  continue; }
+      if (ch === '"')              { inString = !inString; continue; }
+      if (inString)                continue;
+      if      (ch === "{")  openBraces++;
+      else if (ch === "}")  openBraces--;
+      else if (ch === "[")  openBrackets++;
+      else if (ch === "]")  openBrackets--;
     }
 
     let repaired = inString ? partial + '"' : partial;
@@ -148,7 +157,7 @@ function robustParseJSON(raw) {
 
 /**
  * Ask Groq and parse the response as JSON.
- * Always instructs the model to return only raw JSON (no markdown fences).
+ * Instructs the model to return only raw JSON (no markdown).
  */
 export async function askGroqJSON(prompt, system, options = {}) {
   const jsonSystem =
@@ -157,9 +166,8 @@ export async function askGroqJSON(prompt, system, options = {}) {
 
   const result = await askGroq(prompt, jsonSystem, {
     ...options,
-    // Cap at MAX_OUTPUT_TOKENS; never ask for more than the model can give
-    maxTokens: Math.min(options.maxTokens ?? MAX_OUTPUT_TOKENS, MAX_OUTPUT_TOKENS),
-    temperature: options.temperature ?? 0.2, // lower temp → more reliable JSON
+    maxTokens: Math.min(options.maxTokens ?? 1000, HARD_MAX_OUTPUT),
+    temperature: options.temperature ?? 0.2,
   });
 
   try {
