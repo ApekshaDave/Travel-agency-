@@ -26,37 +26,37 @@ const REVENUE_DATA = [
 ]
 
 const CATEGORY_DATA = [
-  { name: 'Flight Bookings', value: 248000, color: '#E8B429' },
+  { name: 'Flight Bookings', value: 248000, color: '#3B82F6' },
   { name: 'Corporate', value: 387000, color: '#38B6F0' },
   { name: 'Add-ons', value: 51200, color: '#7EC8A4' },
   { name: 'Insurance', value: 18400, color: '#A78BFA' },
 ]
 
 const CATEGORY_ICONS = {
-  booking: { icon: '✈️', color: 'text-gold-400', bg: 'bg-gold-400/10 border-gold-400/20' },
+  booking: { icon: '✈️', color: 'text-blue-500', bg: 'bg-blue-50 border-blue-100' },
   addon: { icon: '🎒', color: 'text-sky-400', bg: 'bg-sky-400/10 border-sky-400/20' },
   corporate: { icon: '🏢', color: 'text-violet-400', bg: 'bg-violet-400/10 border-violet-400/20' },
   refund: { icon: '↩️', color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/20' },
-  commission: { icon: '💼', color: 'text-muted', bg: 'bg-surface border-border' },
+  commission: { icon: '💼', color: 'text-slate-500', bg: 'bg-slate-100 border-slate-200' },
 }
 
 const STATUS_STYLES = {
-  settled: 'bg-sage-400/10 text-sage-400 border-sage-400/20',
-  processing: 'bg-sky-400/10 text-sky-400 border-sky-400/20',
-  pending: 'bg-amber-400/10 text-amber-400 border-amber-400/20',
-  failed: 'bg-red-500/10 text-red-400 border-red-500/20',
+  settled: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+  processing: 'bg-sky-50 text-sky-600 border-sky-100',
+  pending: 'bg-amber-50 text-amber-600 border-amber-100',
+  failed: 'bg-red-50 text-red-600 border-red-100',
 }
 
 // ── Custom tooltip for charts ─────────────────────────────────────────────────
 function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="glass border border-border rounded-xl p-3 shadow-card">
-      <p className="text-muted text-xs mb-2 font-mono">{label}</p>
+    <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-md">
+      <p className="text-slate-400 text-xs mb-2 font-mono">{label}</p>
       {payload.map(({ name, value, color }) => (
         <div key={name} className="flex items-center justify-between gap-4 text-sm">
           <span style={{ color }} className="text-xs">{name}</span>
-          <span className="text-white font-semibold">{formatINR(value)}</span>
+          <span className="text-slate-900 font-semibold">{formatINR(value)}</span>
         </div>
       ))}
     </div>
@@ -116,8 +116,8 @@ export default function FinanceDashboard() {
       change: '+18.4%',
       positive: true,
       icon: TrendingUp,
-      color: 'text-gold-400',
-      bg: 'bg-gold-400/10 border-gold-400/20',
+      color: 'text-blue-500',
+      bg: 'bg-blue-50 border-blue-100',
     },
     {
       label: 'Total Debits (Mar)',
@@ -125,8 +125,8 @@ export default function FinanceDashboard() {
       change: '-3.2%',
       positive: true,
       icon: TrendingDown,
-      color: 'text-sage-400',
-      bg: 'bg-sage-400/10 border-sage-400/20',
+      color: 'text-emerald-500',
+      bg: 'bg-emerald-50 border-emerald-100',
     },
     {
       label: 'Net Position',
@@ -149,7 +149,7 @@ export default function FinanceDashboard() {
   ]
 
   return (
-    <div className="min-h-screen pt-36 pb-10 px-4">
+    <div className="min-h-screen pt-36 pb-10 px-4 bg-white">
       <StaffNav />
       <div className="max-w-7xl mx-auto">
 
@@ -161,12 +161,12 @@ export default function FinanceDashboard() {
         >
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <div className="w-9 h-9 rounded-xl bg-gold-400/15 border border-gold-400/20 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-gold-400" />
+              <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
+                <DollarSign className="w-5 h-5 text-blue-500" />
               </div>
-              <h1 className="font-display text-3xl font-bold text-white">Finance Dashboard</h1>
+              <h1 className="font-display text-3xl font-bold text-slate-900">Finance Dashboard</h1>
             </div>
-            <p className="text-muted text-sm">Revenue, billing, invoices and payment ledger</p>
+            <p className="text-slate-500 text-sm">Revenue, billing, invoices and payment ledger</p>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
@@ -176,8 +176,8 @@ export default function FinanceDashboard() {
                 key={r}
                 onClick={() => setDateRange(r)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${dateRange === r
-                  ? 'bg-gold-400/15 text-gold-400 border border-gold-400/20'
-                  : 'text-muted hover:text-white border border-transparent'
+                  ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                  : 'text-slate-500 hover:text-slate-900 border border-transparent'
                   }`}
               >
                 {r}
@@ -185,13 +185,13 @@ export default function FinanceDashboard() {
             ))}
             <Link
               to="/finance/invoices"
-              className="flex items-center gap-2 px-3 py-2 glass border border-border hover:border-gold-400/20 rounded-xl text-sm text-muted hover:text-white transition-all"
+              className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 hover:border-blue-200 rounded-xl text-sm text-slate-500 hover:text-slate-900 transition-all"
             >
               <FileText className="w-4 h-4" /> Invoices
             </Link>
             <Link
               to="/finance/billing"
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gold-500 to-gold-400 text-void font-semibold text-sm rounded-xl shadow-gold-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold text-sm rounded-xl shadow-sm hover:bg-blue-700 transition-all"
             >
               <Receipt className="w-4 h-4" /> Billing Manager
             </Link>
@@ -206,22 +206,22 @@ export default function FinanceDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              className={`glass border rounded-2xl p-5 ${bg}`}
+              className={`bg-white border rounded-2xl p-5 shadow-sm ${bg}`}
             >
               <div className="flex items-center justify-between mb-3">
                 <Icon className={`w-5 h-5 ${color}`} />
                 {positive !== null && (
-                  <span className={`text-xs font-semibold flex items-center gap-0.5 ${positive ? 'text-sage-400' : 'text-amber-400'}`}>
+                  <span className={`text-xs font-semibold flex items-center gap-0.5 ${positive ? 'text-emerald-600' : 'text-amber-500'}`}>
                     {positive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                     {change}
                   </span>
                 )}
                 {positive === null && (
-                  <span className="text-xs text-muted">{change}</span>
+                  <span className="text-xs text-slate-400">{change}</span>
                 )}
               </div>
-              <div className="font-bold text-2xl text-white mb-0.5">{value}</div>
-              <div className="text-muted text-xs">{label}</div>
+              <div className="font-bold text-2xl text-slate-900 mb-0.5">{value}</div>
+              <div className="text-slate-500 text-xs">{label}</div>
             </motion.div>
           ))}
         </div>
@@ -233,11 +233,11 @@ export default function FinanceDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="glass border border-border rounded-2xl p-5"
+            className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"
           >
             <div className="flex items-center justify-between mb-5">
-              <h2 className="font-semibold text-white flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-gold-400" /> Revenue Breakdown
+              <h2 className="font-semibold text-slate-900 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-blue-500" /> Revenue Breakdown
               </h2>
               <div className="flex gap-1">
                 {['area', 'bar'].map(t => (
@@ -245,8 +245,8 @@ export default function FinanceDashboard() {
                     key={t}
                     onClick={() => setActiveChart(t)}
                     className={`px-3 py-1 rounded-lg text-xs capitalize transition-all ${activeChart === t
-                      ? 'bg-gold-400/15 text-gold-400 border border-gold-400/20'
-                      : 'text-muted hover:text-white'
+                      ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                      : 'text-slate-400 hover:text-slate-900'
                       }`}
                   >
                     {t}
@@ -258,9 +258,9 @@ export default function FinanceDashboard() {
               {activeChart === 'area' ? (
                 <AreaChart data={filteredRevenueData}>
                   <defs>
-                    <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#E8B429" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#E8B429" stopOpacity={0} />
+                    <linearGradient id="blueGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#38B6F0" stopOpacity={0.3} />
@@ -271,24 +271,24 @@ export default function FinanceDashboard() {
                       <stop offset="95%" stopColor="#7EC8A4" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(30,45,66,0.8)" />
-                  <XAxis dataKey="month" tick={{ fill: '#4B6070', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#4B6070', fontSize: 10 }} axisLine={false} tickLine={false}
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.3)" />
+                  <XAxis dataKey="month" tick={{ fill: '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: '#64748B', fontSize: 10 }} axisLine={false} tickLine={false}
                     tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
                   <Tooltip content={<ChartTooltip />} />
                   <Area type="monotone" dataKey="corporate" name="Corporate" stroke="#38B6F0" strokeWidth={2} fill="url(#skyGrad)" />
-                  <Area type="monotone" dataKey="bookings" name="Bookings" stroke="#E8B429" strokeWidth={2} fill="url(#goldGrad)" />
+                  <Area type="monotone" dataKey="bookings" name="Bookings" stroke="#3B82F6" strokeWidth={2} fill="url(#blueGrad)" />
                   <Area type="monotone" dataKey="addons" name="Add-ons" stroke="#7EC8A4" strokeWidth={2} fill="url(#sageGrad)" />
                 </AreaChart>
               ) : (
                 <BarChart data={filteredRevenueData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(30,45,66,0.8)" />
-                  <XAxis dataKey="month" tick={{ fill: '#4B6070', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#4B6070', fontSize: 10 }} axisLine={false} tickLine={false}
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.3)" />
+                  <XAxis dataKey="month" tick={{ fill: '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: '#64748B', fontSize: 10 }} axisLine={false} tickLine={false}
                     tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
                   <Tooltip content={<ChartTooltip />} />
                   <Bar dataKey="corporate" name="Corporate" fill="#38B6F0" radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="bookings" name="Bookings" fill="#E8B429" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="bookings" name="Bookings" fill="#3B82F6" radius={[3, 3, 0, 0]} />
                   <Bar dataKey="addons" name="Add-ons" fill="#7EC8A4" radius={[3, 3, 0, 0]} />
                 </BarChart>
               )}
@@ -300,10 +300,10 @@ export default function FinanceDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="glass border border-border rounded-2xl p-5"
+            className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"
           >
-            <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
-              <Package className="w-4 h-4 text-gold-400" /> By Category (Mar)
+            <h2 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+              <Package className="w-4 h-4 text-blue-500" /> By Category (Mar)
             </h2>
             <ResponsiveContainer width="100%" height={160}>
               <PieChart>
@@ -320,7 +320,7 @@ export default function FinanceDashboard() {
                     <Cell key={i} fill={color} stroke="transparent" />
                   ))}
                 </Pie>
-                <Tooltip formatter={(v) => formatINR(v)} contentStyle={{ background: '#161F2E', border: '1px solid #1E2D42', borderRadius: 12 }} />
+                <Tooltip formatter={(v) => formatINR(v)} contentStyle={{ background: '#ffffff', border: '1px solid #E2E8F0', borderRadius: 12 }} />
               </PieChart>
             </ResponsiveContainer>
             <div className="space-y-2 mt-2">
@@ -328,9 +328,9 @@ export default function FinanceDashboard() {
                 <div key={name} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: color }} />
-                    <span className="text-muted">{name}</span>
+                    <span className="text-slate-500">{name}</span>
                   </div>
-                  <span className="text-white font-medium">{formatINR(value)}</span>
+                  <span className="text-slate-900 font-medium">{formatINR(value)}</span>
                 </div>
               ))}
             </div>
@@ -340,7 +340,7 @@ export default function FinanceDashboard() {
         {/* Quick actions */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
           {[
-            { icon: FileText, label: 'Generate Invoice', desc: 'Create & send', to: '/finance/invoices', color: 'text-gold-400' },
+            { icon: FileText, label: 'Generate Invoice', desc: 'Create & send', to: '/finance/invoices', color: 'text-blue-500' },
             { icon: Receipt, label: 'Billing Manager', desc: 'Triggers & rules', to: '/finance/billing', color: 'text-sky-400' },
             { icon: RefreshCw, label: 'Process Refunds', desc: 'Pending: 2', to: '/finance/refunds', color: 'text-amber-400' },
             { icon: Building2, label: 'Corporate Statements', desc: 'Monthly reports', to: '/finance/corporate', color: 'text-violet-400' },
@@ -354,11 +354,11 @@ export default function FinanceDashboard() {
             >
               <Link
                 to={to}
-                className="block glass border border-border hover:border-gold-400/20 rounded-2xl p-4 group transition-all duration-200"
+                className="block bg-white border border-slate-200 hover:border-blue-200 hover:shadow-sm rounded-2xl p-4 group transition-all duration-200"
               >
                 <Icon className={`w-6 h-6 ${color} mb-3 group-hover:scale-110 transition-transform`} />
-                <div className="font-semibold text-white text-sm group-hover:text-gold-300 transition-colors">{label}</div>
-                <div className="text-muted text-xs mt-0.5">{desc}</div>
+                <div className="font-semibold text-slate-900 text-sm group-hover:text-blue-600 transition-colors">{label}</div>
+                <div className="text-slate-400 text-xs mt-0.5">{desc}</div>
               </Link>
             </motion.div>
           ))}
@@ -369,27 +369,27 @@ export default function FinanceDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className="glass border border-border rounded-2xl overflow-hidden"
+          className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm"
         >
           {/* Ledger header */}
-          <div className="p-5 border-b border-border/60 flex items-center justify-between flex-wrap gap-3">
-            <h2 className="font-semibold text-white flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-gold-400" /> Transaction Ledger
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between flex-wrap gap-3">
+            <h2 className="font-semibold text-slate-900 flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-blue-500" /> Transaction Ledger
             </h2>
             <div className="flex items-center gap-2 flex-wrap">
               <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted" />
+                <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-slate-400" />
                 <input
                   value={searchTx}
                   onChange={e => setSearchTx(e.target.value)}
                   placeholder="Search transactions..."
-                  className="ai-input pl-8 pr-3 py-2 rounded-lg text-xs w-44"
+                  className="bg-white border border-slate-200 pl-8 pr-3 py-2 rounded-lg text-xs w-44 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <select
                 value={filterCategory}
                 onChange={e => setFilterCategory(e.target.value)}
-                className="ai-input px-3 py-2 rounded-lg text-xs text-muted"
+                className="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All categories</option>
                 <option value="booking">Bookings</option>
@@ -401,21 +401,21 @@ export default function FinanceDashboard() {
               <select
                 value={filterStatus}
                 onChange={e => setFilterStatus(e.target.value)}
-                className="ai-input px-3 py-2 rounded-lg text-xs text-muted"
+                className="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All statuses</option>
                 <option value="settled">Settled</option>
                 <option value="pending">Pending</option>
                 <option value="processing">Processing</option>
               </select>
-              <button className="flex items-center gap-1.5 px-3 py-2 glass border border-border rounded-lg text-xs text-muted hover:text-white transition-all">
+              <button className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-500 hover:text-slate-900 hover:border-blue-200 transition-all">
                 <Download className="w-3.5 h-3.5" /> Export CSV
               </button>
             </div>
           </div>
 
           {/* Column headers */}
-          <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-5 py-2.5 border-b border-border/40 text-xs text-muted uppercase tracking-wider">
+          <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-5 py-2.5 border-b border-slate-100 bg-slate-50 text-xs text-slate-400 uppercase tracking-wider font-semibold">
             <span>Type</span>
             <span>Description</span>
             <span className="hidden sm:block">Ref</span>
@@ -424,9 +424,9 @@ export default function FinanceDashboard() {
           </div>
 
           {/* Rows */}
-          <div className="divide-y divide-border/30">
+          <div className="divide-y divide-slate-100">
             {filteredLedger.length === 0 && (
-              <div className="text-center py-10 text-muted text-sm">
+              <div className="text-center py-10 text-slate-400 text-sm">
                 No transactions match your filter.
               </div>
             )}
@@ -438,7 +438,7 @@ export default function FinanceDashboard() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: i * 0.04 }}
-                  className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 items-center px-5 py-3.5 hover:bg-white/2 transition-colors group"
+                  className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 items-center px-5 py-3.5 hover:bg-slate-50 transition-colors group"
                 >
                   {/* Type icon */}
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm border ${cat.bg} flex-shrink-0`}>
@@ -447,14 +447,14 @@ export default function FinanceDashboard() {
 
                   {/* Description */}
                   <div className="min-w-0">
-                    <div className="text-white text-sm font-medium truncate group-hover:text-gold-300 transition-colors">
+                    <div className="text-slate-900 text-sm font-medium truncate group-hover:text-blue-600 transition-colors">
                       {tx.description}
                     </div>
-                    <div className="text-muted text-xs font-mono mt-0.5">{tx.date} · {tx.id}</div>
+                    <div className="text-slate-400 text-xs font-mono mt-0.5">{tx.date} · {tx.id}</div>
                   </div>
 
                   {/* Booking ref */}
-                  <div className="hidden sm:block font-mono text-xs text-muted whitespace-nowrap">
+                  <div className="hidden sm:block font-mono text-xs text-slate-400 whitespace-nowrap">
                     {tx.bookingRef}
                   </div>
 
@@ -464,7 +464,7 @@ export default function FinanceDashboard() {
                   </span>
 
                   {/* Amount */}
-                  <div className={`text-right font-bold text-sm whitespace-nowrap ${tx.type === 'credit' ? 'text-sage-400' : 'text-amber-400'
+                  <div className={`text-right font-bold text-sm whitespace-nowrap ${tx.type === 'credit' ? 'text-emerald-600' : 'text-amber-500'
                     }`}>
                     {tx.type === 'credit' ? '+' : ''}{formatINR(tx.amount)}
                   </div>
@@ -474,20 +474,20 @@ export default function FinanceDashboard() {
           </div>
 
           {/* Ledger footer totals */}
-          <div className="px-5 py-4 border-t border-border/60 flex items-center justify-between flex-wrap gap-3 bg-surface/30">
-            <div className="text-muted text-xs">{filteredLedger.length} transactions shown</div>
+          <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between flex-wrap gap-3 bg-slate-50">
+            <div className="text-slate-400 text-xs">{filteredLedger.length} transactions shown</div>
             <div className="flex items-center gap-6 text-sm">
               <div className="flex items-center gap-2">
-                <span className="text-muted">Credits:</span>
-                <span className="text-sage-400 font-bold">{formatINR(summary.credits)}</span>
+                <span className="text-slate-500">Credits:</span>
+                <span className="text-emerald-600 font-bold">{formatINR(summary.credits)}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-muted">Debits:</span>
-                <span className="text-amber-400 font-bold">{formatINR(summary.debits)}</span>
+                <span className="text-slate-500">Debits:</span>
+                <span className="text-amber-500 font-bold">{formatINR(summary.debits)}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-muted">Net:</span>
-                <span className="text-white font-bold">{formatINR(summary.net)}</span>
+                <span className="text-slate-500">Net:</span>
+                <span className="text-slate-900 font-bold">{formatINR(summary.net)}</span>
               </div>
             </div>
           </div>

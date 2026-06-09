@@ -2,9 +2,9 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  Sparkles, Plane, Train, Bus, Building2, Trash2, Clock, ChevronRight,
+  Sparkles, Plane, Train, Bus, Building2, Trash2, Clock, ChevronRight, ChevronDown,
    DollarSign, Zap, Compass, Landmark, Utensils, Trees, ShoppingBag, MapPin,
-  Edit3, Coffee, Sun, Moon, Calendar as CalendarIcon, HelpCircle, Car, Send, User, ArrowRight, ChevronDown
+  Edit3, Coffee, Sun, Moon, Calendar as CalendarIcon, HelpCircle, Car, Send, User, ArrowRight
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
@@ -327,6 +327,9 @@ export default function TripBuilder() {
   const [sandboxAgentMode, setSandboxAgentMode] = useState(false)
   const [expandedDays, setExpandedDays] = useState({})
   const toggleDay = (idx) => setExpandedDays(prev => ({ ...prev, [idx]: !prev[idx] }))
+  // Transport mode selector per journey leg ('to' | 'within' | 'from')
+  const [transportMode, setTransportMode] = useState({ to: null, within: null, from: null })
+  const setLegMode = (leg, mode) => setTransportMode(prev => ({ ...prev, [leg]: mode }))
 
   const canUseAgentOverride =
     user?.role === 'agent' || user?.role === 'admin'
@@ -465,6 +468,7 @@ export default function TripBuilder() {
       }
 
       setActiveTrip(enrichedTrip)
+      setTransportMode({ to: null, within: null, from: null })
       toast.success('Trip itinerary generated!')
     } catch (err) {
       setError(err.message || 'Failed to generate itinerary. Check your VITE_GROQ_API_KEY.')
@@ -512,6 +516,7 @@ export default function TripBuilder() {
     }
 
     setActiveTrip(enriched)
+    setTransportMode({ to: null, within: null, from: null })
     setError(null)
     setActiveTab('itinerary')
   }
@@ -639,6 +644,7 @@ export default function TripBuilder() {
     toast.success(`${option.operator} bus selected!`)
   }
 
+  // eslint-disable-next-line no-unused-vars
   const selectRoadwaysOption = (option) => {
     setActiveTrip(prev => {
       const copy = { ...prev }
@@ -1024,7 +1030,7 @@ export default function TripBuilder() {
                         { id: 'itinerary', label: '📋 Plan' },
                         { id: 'transport_to', label: '🛫 To Destination' },
                         { id: 'transport_within', label: '🚗 Within City' },
-                        { id: 'transport_from', label: '🏠 From Dest (Home)' },
+                        { id: 'transport_from', label: '🏠 Return Home' },
                         { id: 'stay', label: '🏨 Stay' },
                         { id: 'attractions', label: '🏛 Sights' },
                         { id: 'dining', label: '🍲 Dining' }
@@ -1333,45 +1339,184 @@ export default function TripBuilder() {
                       </motion.div>
                     )}
 
-                    {/* TRANSPORT TO DESTINATION TAB */}
+                    {/* TRANSPORT_TO TRANSPORT TAB */}
                     {activeTab === 'transport_to' && (
-                      <motion.div key="transport_to" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-display text-lg font-bold text-slate-900">Compare Flight Options (Price/Individual)</h3>
-                          <span className="text-xs text-slate-500">Select an option to replace active flight segment</span>
+                      <motion.div key="transport_to" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-5">
+
+                        {/* Section header */}
+                        <div>
+                          <h3 className="font-display text-lg font-bold text-slate-900">🛫 To Destination — Choose Transport</h3>
+                          <p className="text-xs text-slate-400 mt-0.5">How would you like to travel to your destination?</p>
                         </div>
-                        <div className="space-y-3">
-                          {activeTrip.flightOptions?.map((fOpt, idx) => {
-                            const isActiveFlight = activeTrip.segments.some(s => s.type === 'flight' && s.price === fOpt.price && s.detail.includes(fOpt.flightNo))
+
+                        {/* Mode selector cards */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          {[
+                            { mode: 'flight',   label: 'Flight',   emoji: '✈️',  desc: 'Air travel',         color: 'border-blue-200 bg-blue-50',    active: 'border-blue-500 bg-blue-50 ring-1 ring-blue-400',    icon: 'text-blue-500'   },
+                            { mode: 'train',    label: 'Train',    emoji: '🚂',  desc: 'Rail journey',       color: 'border-sky-200 bg-sky-50',      active: 'border-sky-500 bg-sky-50 ring-1 ring-sky-400',       icon: 'text-sky-500'    },
+                            { mode: 'bus',      label: 'Bus',      emoji: '🚌',  desc: 'Road bus',           color: 'border-violet-200 bg-violet-50',active: 'border-violet-500 bg-violet-50 ring-1 ring-violet-400',icon: 'text-violet-500'},
+                            { mode: 'roadways', label: 'Roadways', emoji: '🚗',  desc: 'Private transfer',   color: 'border-orange-200 bg-orange-50',active: 'border-orange-500 bg-orange-50 ring-1 ring-orange-400',icon: 'text-orange-500'},
+                          ].map(({ mode, label, emoji, desc, color, active }) => {
+                            const isActive = transportMode.to === mode
                             return (
-                              <div key={fOpt.id || idx} className={`glass border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all ${isActiveFlight ? 'border-blue-500 bg-blue-500/5' : 'border-slate-200'}`}>
-                                <div className="flex items-center gap-3">
-                                  <span className="text-2xl">{fOpt.logo || '✈️'}</span>
-                                  <div>
-                                    <h4 className="text-slate-900 font-bold text-sm">{fOpt.airline} <span className="text-slate-400 text-xs font-normal">({fOpt.flightNo})</span></h4>
-                                    <div className="text-slate-500 text-xs flex items-center gap-3 mt-1 font-mono">
-                                      <span>🛫 {fOpt.depart} – {fOpt.arrive}</span>
-                                      <span>⏱ {fOpt.duration}</span>
-                                      <span>💺 {fOpt.stops === 0 ? 'Non-Stop' : `${fOpt.stops} Stops`}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                  <span className="text-blue-500 font-bold text-base">₹{fOpt.price.toLocaleString()}</span>
-                                  <button
-                                    onClick={() => selectFlightOption(fOpt)}
-                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${isActiveFlight
-                                      ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
-                                      : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:opacity-90 shadow-blue-500/10'
-                                      }`}
-                                  >
-                                    {isActiveFlight ? '✓ Selected' : 'Select Flight'}
-                                  </button>
-                                </div>
-                              </div>
+                              <button
+                                key={mode}
+                                onClick={() => setLegMode('to', isActive ? null : mode)}
+                                className={`rounded-2xl border-2 p-4 text-center transition-all hover:shadow-sm ${isActive ? active : `border-slate-200 bg-white hover:${color}`}`}
+                              >
+                                <div className="text-2xl mb-1">{emoji}</div>
+                                <div className={`font-bold text-sm ${isActive ? 'text-slate-900' : 'text-slate-700'}`}>{label}</div>
+                                <div className="text-[10px] text-slate-400 mt-0.5">{desc}</div>
+                                {isActive && <div className="mt-1.5 text-[10px] font-bold text-blue-600 bg-blue-50 rounded-full px-2 py-0.5 border border-blue-100">Selected ✓</div>}
+                              </button>
                             )
                           })}
                         </div>
+
+                        {/* No mode chosen */}
+                        {!transportMode.to && (
+                          <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                            <div className="text-3xl mb-2">🗺️</div>
+                            <p className="text-slate-600 font-semibold text-sm">Choose your preferred transport mode above</p>
+                            <p className="text-slate-400 text-xs mt-1">Available options will appear here once you select a mode</p>
+                          </div>
+                        )}
+
+                        {/* ── FLIGHT options ── */}
+                        {transportMode.to === 'flight' && (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2"><span className="text-lg">✈️</span> Available Flights</h4>
+                              <span className="text-xs text-slate-400">Select to add to your trip package</span>
+                            </div>
+                            {activeTrip.flightOptions?.map((fOpt, idx) => {
+                              const isActiveFlight = activeTrip.segments?.some(s => s.type === 'flight' && s.price === fOpt.price && s.detail?.includes(fOpt.flightNo))
+                              return (
+                                <div key={fOpt.id || idx} className={`bg-white border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all hover:shadow-sm ${isActiveFlight ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-400' : 'border-slate-200 hover:border-blue-200'}`}>
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0 text-lg">{fOpt.logo || '✈️'}</div>
+                                    <div className="min-w-0">
+                                      <h4 className="text-slate-900 font-bold text-sm">{fOpt.airline} <span className="text-slate-400 text-xs font-normal">({fOpt.flightNo})</span></h4>
+                                      <div className="text-slate-500 text-xs flex items-center gap-3 mt-0.5 font-mono flex-wrap">
+                                        <span>🛫 {fOpt.depart} – {fOpt.arrive}</span>
+                                        <span>⏱ {fOpt.duration}</span>
+                                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${fOpt.stops === 0 ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                                          {fOpt.stops === 0 ? 'Non-Stop' : `${fOpt.stops} Stop`}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-3 flex-shrink-0">
+                                    <div className="text-right">
+                                      <div className="text-blue-600 font-bold text-base font-mono">₹{fOpt.price.toLocaleString()}</div>
+                                      <div className="text-[10px] text-slate-400">per person</div>
+                                    </div>
+                                    <button
+                                      onClick={() => selectFlightOption(fOpt)}
+                                      className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${isActiveFlight ? 'bg-blue-100 text-blue-600 border border-blue-200' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'}`}
+                                    >
+                                      {isActiveFlight ? '✓ Selected' : 'Select'}
+                                    </button>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+
+                        {/* ── TRAIN options ── */}
+                        {transportMode.to === 'train' && (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2"><span className="text-lg">🚂</span> Available Trains</h4>
+                              <span className="text-xs text-slate-400">Select to add to your trip package</span>
+                            </div>
+                            {activeTrip.trainOptions?.map((tOpt, idx) => {
+                              const isActiveTrain = activeTrip.segments?.some(s => s.type === 'train' && s.price === tOpt.price && s.detail?.includes(tOpt.trainNo))
+                              return (
+                                <div key={tOpt.id || idx} className={`bg-white border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all hover:shadow-sm ${isActiveTrain ? 'border-sky-500 bg-sky-50 ring-1 ring-sky-400' : 'border-slate-200 hover:border-sky-200'}`}>
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center flex-shrink-0 text-lg">🚂</div>
+                                    <div className="min-w-0">
+                                      <h4 className="text-slate-900 font-bold text-sm">{tOpt.name} <span className="text-slate-400 text-xs font-normal">({tOpt.trainNo})</span></h4>
+                                      <div className="text-slate-500 text-xs flex items-center gap-3 mt-0.5 font-mono flex-wrap">
+                                        <span>🚉 {tOpt.depart} – {tOpt.arrive}</span>
+                                        <span>⏱ {tOpt.duration}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-3 flex-shrink-0">
+                                    <div className="text-right">
+                                      <div className="text-sky-600 font-bold text-base font-mono">₹{tOpt.price.toLocaleString()}</div>
+                                      <div className="text-[10px] text-slate-400">per person</div>
+                                    </div>
+                                    <button
+                                      onClick={() => selectTrainOption(tOpt)}
+                                      className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${isActiveTrain ? 'bg-sky-100 text-sky-600 border border-sky-200' : 'bg-sky-500 text-white hover:bg-sky-600 shadow-sm'}`}
+                                    >
+                                      {isActiveTrain ? '✓ Selected' : 'Select'}
+                                    </button>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+
+                        {/* ── BUS options ── */}
+                        {transportMode.to === 'bus' && (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2"><span className="text-lg">🚌</span> Available Buses</h4>
+                              <span className="text-xs text-slate-400">Select to add to your trip package</span>
+                            </div>
+                            {activeTrip.busOptions?.map((bOpt, idx) => {
+                              const isActiveBus = activeTrip.segments?.some(s => s.type === 'bus' && s.price === bOpt.price && s.detail?.includes(bOpt.operator))
+                              return (
+                                <div key={bOpt.id || idx} className={`bg-white border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all hover:shadow-sm ${isActiveBus ? 'border-violet-500 bg-violet-50 ring-1 ring-violet-400' : 'border-slate-200 hover:border-violet-200'}`}>
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center flex-shrink-0 text-lg">🚌</div>
+                                    <div className="min-w-0">
+                                      <h4 className="text-slate-900 font-bold text-sm">{bOpt.operator} <span className="text-slate-400 text-xs font-normal">({bOpt.type})</span></h4>
+                                      <div className="text-slate-500 text-xs flex items-center gap-3 mt-0.5 font-mono flex-wrap">
+                                        <span>🚌 {bOpt.depart} – {bOpt.arrive}</span>
+                                        <span>⏱ {bOpt.duration}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-3 flex-shrink-0">
+                                    <div className="text-right">
+                                      <div className="text-violet-600 font-bold text-base font-mono">₹{bOpt.price.toLocaleString()}</div>
+                                      <div className="text-[10px] text-slate-400">per person</div>
+                                    </div>
+                                    <button
+                                      onClick={() => selectBusOption(bOpt)}
+                                      className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${isActiveBus ? 'bg-violet-100 text-violet-600 border border-violet-200' : 'bg-violet-600 text-white hover:bg-violet-700 shadow-sm'}`}
+                                    >
+                                      {isActiveBus ? '✓ Selected' : 'Select'}
+                                    </button>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+                              {/* Roadways — agent-only */}
+                              {transportMode.to === 'roadways' && (
+                                <div className="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-6 text-center">
+                                  <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center mx-auto mb-3">
+                                    <Car className="w-6 h-6 text-orange-500" />
+                                  </div>
+                                  <h4 className="font-bold text-slate-900 text-sm mb-1">Roadways / Private Transfer</h4>
+                                  <p className="text-slate-500 text-xs leading-relaxed max-w-xs mx-auto mb-4">
+                                    This option is managed by your assigned travel agent. They will arrange a private driver or cab transfer for this leg if applicable.
+                                  </p>
+                                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-50 border border-orange-100 text-orange-600 text-xs font-bold rounded-xl">
+                                    <Car className="w-3.5 h-3.5" /> Agent will coordinate this transfer
+                                  </div>
+                                </div>
+                              )}
+
                       </motion.div>
                     )}
 
@@ -1429,123 +1574,365 @@ export default function TripBuilder() {
                       </motion.div>
                     )}
 
-                    {/* TRANSPORT WITHIN CITY TAB (Train) */}
+                    {/* TRANSPORT_WITHIN TRANSPORT TAB */}
                     {activeTab === 'transport_within' && (
-                      <motion.div key="transport_within" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-                        <div className="flex items-center justify-between mb-2 text-slate-900">
-                          <h3 className="font-display text-lg font-bold text-slate-900">Compare Train Options (Price/Individual)</h3>
-                          <span className="text-xs text-slate-500">Select an option to replace active train segment</span>
+                      <motion.div key="transport_within" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-5">
+
+                        {/* Section header */}
+                        <div>
+                          <h3 className="font-display text-lg font-bold text-slate-900">🚗 Within City — Choose Transport</h3>
+                          <p className="text-xs text-slate-400 mt-0.5">How would you like to get around within the city?</p>
                         </div>
-                        <div className="space-y-3">
-                          {activeTrip.trainOptions?.map((tOpt, idx) => {
-                            const isActiveTrain = activeTrip.segments.some(s => s.type === 'train' && s.price === tOpt.price && s.detail.includes(tOpt.trainNo))
+
+                        {/* Mode selector cards */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          {[
+                            { mode: 'flight',   label: 'Flight',   emoji: '✈️',  desc: 'Air travel',         color: 'border-blue-200 bg-blue-50',    active: 'border-blue-500 bg-blue-50 ring-1 ring-blue-400',    icon: 'text-blue-500'   },
+                            { mode: 'train',    label: 'Train',    emoji: '🚂',  desc: 'Rail journey',       color: 'border-sky-200 bg-sky-50',      active: 'border-sky-500 bg-sky-50 ring-1 ring-sky-400',       icon: 'text-sky-500'    },
+                            { mode: 'bus',      label: 'Bus',      emoji: '🚌',  desc: 'Road bus',           color: 'border-violet-200 bg-violet-50',active: 'border-violet-500 bg-violet-50 ring-1 ring-violet-400',icon: 'text-violet-500'},
+                            { mode: 'roadways', label: 'Roadways', emoji: '🚗',  desc: 'Private transfer',   color: 'border-orange-200 bg-orange-50',active: 'border-orange-500 bg-orange-50 ring-1 ring-orange-400',icon: 'text-orange-500'},
+                          ].map(({ mode, label, emoji, desc, color, active }) => {
+                            const isActive = transportMode.within === mode
                             return (
-                              <div key={tOpt.id || idx} className={`glass border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all ${isActiveTrain ? 'border-blue-500 bg-blue-500/5' : 'border-slate-200'}`}>
-                                <div className="flex items-center gap-3">
-                                  <span className="text-2xl">🚂</span>
-                                  <div>
-                                    <h4 className="text-slate-900 font-bold text-sm">{tOpt.name} <span className="text-slate-400 text-xs font-normal">({tOpt.trainNo})</span></h4>
-                                    <div className="text-slate-500 text-xs flex items-center gap-3 mt-1 font-mono">
-                                      <span>🛫 {tOpt.depart} – {tOpt.arrive}</span>
-                                      <span>⏱ {tOpt.duration}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                  <span className="text-blue-500 font-bold text-base">₹{tOpt.price.toLocaleString()}</span>
-                                  <button
-                                    onClick={() => selectTrainOption(tOpt)}
-                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${isActiveTrain
-                                      ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
-                                      : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:opacity-90 shadow-blue-500/10'
-                                      }`}
-                                  >
-                                    {isActiveTrain ? '✓ Selected' : 'Select Train'}
-                                  </button>
-                                </div>
-                              </div>
+                              <button
+                                key={mode}
+                                onClick={() => setLegMode('within', isActive ? null : mode)}
+                                className={`rounded-2xl border-2 p-4 text-center transition-all hover:shadow-sm ${isActive ? active : `border-slate-200 bg-white hover:${color}`}`}
+                              >
+                                <div className="text-2xl mb-1">{emoji}</div>
+                                <div className={`font-bold text-sm ${isActive ? 'text-slate-900' : 'text-slate-700'}`}>{label}</div>
+                                <div className="text-[10px] text-slate-400 mt-0.5">{desc}</div>
+                                {isActive && <div className="mt-1.5 text-[10px] font-bold text-blue-600 bg-blue-50 rounded-full px-2 py-0.5 border border-blue-100">Selected ✓</div>}
+                              </button>
                             )
                           })}
                         </div>
+
+                        {/* No mode chosen */}
+                        {!transportMode.within && (
+                          <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                            <div className="text-3xl mb-2">🗺️</div>
+                            <p className="text-slate-600 font-semibold text-sm">Choose your preferred transport mode above</p>
+                            <p className="text-slate-400 text-xs mt-1">Available options will appear here once you select a mode</p>
+                          </div>
+                        )}
+
+                        {/* ── FLIGHT options ── */}
+                        {transportMode.within === 'flight' && (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2"><span className="text-lg">✈️</span> Available Flights</h4>
+                              <span className="text-xs text-slate-400">Select to add to your trip package</span>
+                            </div>
+                            {activeTrip.flightOptions?.map((fOpt, idx) => {
+                              const isActiveFlight = activeTrip.segments?.some(s => s.type === 'flight' && s.price === fOpt.price && s.detail?.includes(fOpt.flightNo))
+                              return (
+                                <div key={fOpt.id || idx} className={`bg-white border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all hover:shadow-sm ${isActiveFlight ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-400' : 'border-slate-200 hover:border-blue-200'}`}>
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0 text-lg">{fOpt.logo || '✈️'}</div>
+                                    <div className="min-w-0">
+                                      <h4 className="text-slate-900 font-bold text-sm">{fOpt.airline} <span className="text-slate-400 text-xs font-normal">({fOpt.flightNo})</span></h4>
+                                      <div className="text-slate-500 text-xs flex items-center gap-3 mt-0.5 font-mono flex-wrap">
+                                        <span>🛫 {fOpt.depart} – {fOpt.arrive}</span>
+                                        <span>⏱ {fOpt.duration}</span>
+                                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${fOpt.stops === 0 ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                                          {fOpt.stops === 0 ? 'Non-Stop' : `${fOpt.stops} Stop`}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-3 flex-shrink-0">
+                                    <div className="text-right">
+                                      <div className="text-blue-600 font-bold text-base font-mono">₹{fOpt.price.toLocaleString()}</div>
+                                      <div className="text-[10px] text-slate-400">per person</div>
+                                    </div>
+                                    <button
+                                      onClick={() => selectFlightOption(fOpt)}
+                                      className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${isActiveFlight ? 'bg-blue-100 text-blue-600 border border-blue-200' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'}`}
+                                    >
+                                      {isActiveFlight ? '✓ Selected' : 'Select'}
+                                    </button>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+
+                        {/* ── TRAIN options ── */}
+                        {transportMode.within === 'train' && (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2"><span className="text-lg">🚂</span> Available Trains</h4>
+                              <span className="text-xs text-slate-400">Select to add to your trip package</span>
+                            </div>
+                            {activeTrip.trainOptions?.map((tOpt, idx) => {
+                              const isActiveTrain = activeTrip.segments?.some(s => s.type === 'train' && s.price === tOpt.price && s.detail?.includes(tOpt.trainNo))
+                              return (
+                                <div key={tOpt.id || idx} className={`bg-white border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all hover:shadow-sm ${isActiveTrain ? 'border-sky-500 bg-sky-50 ring-1 ring-sky-400' : 'border-slate-200 hover:border-sky-200'}`}>
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center flex-shrink-0 text-lg">🚂</div>
+                                    <div className="min-w-0">
+                                      <h4 className="text-slate-900 font-bold text-sm">{tOpt.name} <span className="text-slate-400 text-xs font-normal">({tOpt.trainNo})</span></h4>
+                                      <div className="text-slate-500 text-xs flex items-center gap-3 mt-0.5 font-mono flex-wrap">
+                                        <span>🚉 {tOpt.depart} – {tOpt.arrive}</span>
+                                        <span>⏱ {tOpt.duration}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-3 flex-shrink-0">
+                                    <div className="text-right">
+                                      <div className="text-sky-600 font-bold text-base font-mono">₹{tOpt.price.toLocaleString()}</div>
+                                      <div className="text-[10px] text-slate-400">per person</div>
+                                    </div>
+                                    <button
+                                      onClick={() => selectTrainOption(tOpt)}
+                                      className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${isActiveTrain ? 'bg-sky-100 text-sky-600 border border-sky-200' : 'bg-sky-500 text-white hover:bg-sky-600 shadow-sm'}`}
+                                    >
+                                      {isActiveTrain ? '✓ Selected' : 'Select'}
+                                    </button>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+
+                        {/* ── BUS options ── */}
+                        {transportMode.within === 'bus' && (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2"><span className="text-lg">🚌</span> Available Buses</h4>
+                              <span className="text-xs text-slate-400">Select to add to your trip package</span>
+                            </div>
+                            {activeTrip.busOptions?.map((bOpt, idx) => {
+                              const isActiveBus = activeTrip.segments?.some(s => s.type === 'bus' && s.price === bOpt.price && s.detail?.includes(bOpt.operator))
+                              return (
+                                <div key={bOpt.id || idx} className={`bg-white border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all hover:shadow-sm ${isActiveBus ? 'border-violet-500 bg-violet-50 ring-1 ring-violet-400' : 'border-slate-200 hover:border-violet-200'}`}>
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center flex-shrink-0 text-lg">🚌</div>
+                                    <div className="min-w-0">
+                                      <h4 className="text-slate-900 font-bold text-sm">{bOpt.operator} <span className="text-slate-400 text-xs font-normal">({bOpt.type})</span></h4>
+                                      <div className="text-slate-500 text-xs flex items-center gap-3 mt-0.5 font-mono flex-wrap">
+                                        <span>🚌 {bOpt.depart} – {bOpt.arrive}</span>
+                                        <span>⏱ {bOpt.duration}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-3 flex-shrink-0">
+                                    <div className="text-right">
+                                      <div className="text-violet-600 font-bold text-base font-mono">₹{bOpt.price.toLocaleString()}</div>
+                                      <div className="text-[10px] text-slate-400">per person</div>
+                                    </div>
+                                    <button
+                                      onClick={() => selectBusOption(bOpt)}
+                                      className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${isActiveBus ? 'bg-violet-100 text-violet-600 border border-violet-200' : 'bg-violet-600 text-white hover:bg-violet-700 shadow-sm'}`}
+                                    >
+                                      {isActiveBus ? '✓ Selected' : 'Select'}
+                                    </button>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+                              {/* Roadways — agent-only */}
+                              {transportMode.within === 'roadways' && (
+                                <div className="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-6 text-center">
+                                  <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center mx-auto mb-3">
+                                    <Car className="w-6 h-6 text-orange-500" />
+                                  </div>
+                                  <h4 className="font-bold text-slate-900 text-sm mb-1">Roadways / Private Transfer</h4>
+                                  <p className="text-slate-500 text-xs leading-relaxed max-w-xs mx-auto mb-4">
+                                    This option is managed by your assigned travel agent. They will arrange a private driver or cab transfer for this leg if applicable.
+                                  </p>
+                                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-50 border border-orange-100 text-orange-600 text-xs font-bold rounded-xl">
+                                    <Car className="w-3.5 h-3.5" /> Agent will coordinate this transfer
+                                  </div>
+                                </div>
+                              )}
+
                       </motion.div>
                     )}
 
-                    {/* BUSES TAB */}
-                    {activeTab === 'buses' && (
-                      <motion.div key="buses" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-display text-lg font-bold text-slate-900">Compare Bus Options (Price/Individual)</h3>
-                          <span className="text-xs text-slate-500">Select an option to replace active bus segment</span>
+                    {/* TRANSPORT_FROM TRANSPORT TAB */}
+                    {activeTab === 'transport_from' && (
+                      <motion.div key="transport_from" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-5">
+
+                        {/* Section header */}
+                        <div>
+                          <h3 className="font-display text-lg font-bold text-slate-900">🏠 Return Home — Choose Transport</h3>
+                          <p className="text-xs text-slate-400 mt-0.5">How would you like to travel back from your destination?</p>
                         </div>
-                        <div className="space-y-3">
-                          {activeTrip.busOptions?.map((bOpt, idx) => {
-                            const isActiveBus = activeTrip.segments.some(s => s.type === 'bus' && s.price === bOpt.price && s.detail.includes(bOpt.operator))
+
+                        {/* Mode selector cards */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          {[
+                            { mode: 'flight',   label: 'Flight',   emoji: '✈️',  desc: 'Air travel',         color: 'border-blue-200 bg-blue-50',    active: 'border-blue-500 bg-blue-50 ring-1 ring-blue-400',    icon: 'text-blue-500'   },
+                            { mode: 'train',    label: 'Train',    emoji: '🚂',  desc: 'Rail journey',       color: 'border-sky-200 bg-sky-50',      active: 'border-sky-500 bg-sky-50 ring-1 ring-sky-400',       icon: 'text-sky-500'    },
+                            { mode: 'bus',      label: 'Bus',      emoji: '🚌',  desc: 'Road bus',           color: 'border-violet-200 bg-violet-50',active: 'border-violet-500 bg-violet-50 ring-1 ring-violet-400',icon: 'text-violet-500'},
+                            { mode: 'roadways', label: 'Roadways', emoji: '🚗',  desc: 'Private transfer',   color: 'border-orange-200 bg-orange-50',active: 'border-orange-500 bg-orange-50 ring-1 ring-orange-400',icon: 'text-orange-500'},
+                          ].map(({ mode, label, emoji, desc, color, active }) => {
+                            const isActive = transportMode.from === mode
                             return (
-                              <div key={bOpt.id || idx} className={`glass border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all ${isActiveBus ? 'border-blue-500 bg-blue-500/5' : 'border-slate-200'}`}>
-                                <div className="flex items-center gap-3">
-                                  <span className="text-2xl">🚌</span>
-                                  <div>
-                                    <h4 className="text-slate-900 font-bold text-sm">{bOpt.operator} <span className="text-slate-400 text-xs font-normal">({bOpt.type})</span></h4>
-                                    <div className="text-slate-500 text-xs flex items-center gap-3 mt-1 font-mono">
-                                      <span>🛫 {bOpt.depart} – {bOpt.arrive}</span>
-                                      <span>⏱ {bOpt.duration}</span>
+                              <button
+                                key={mode}
+                                onClick={() => setLegMode('from', isActive ? null : mode)}
+                                className={`rounded-2xl border-2 p-4 text-center transition-all hover:shadow-sm ${isActive ? active : `border-slate-200 bg-white hover:${color}`}`}
+                              >
+                                <div className="text-2xl mb-1">{emoji}</div>
+                                <div className={`font-bold text-sm ${isActive ? 'text-slate-900' : 'text-slate-700'}`}>{label}</div>
+                                <div className="text-[10px] text-slate-400 mt-0.5">{desc}</div>
+                                {isActive && <div className="mt-1.5 text-[10px] font-bold text-blue-600 bg-blue-50 rounded-full px-2 py-0.5 border border-blue-100">Selected ✓</div>}
+                              </button>
+                            )
+                          })}
+                        </div>
+
+                        {/* No mode chosen */}
+                        {!transportMode.from && (
+                          <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                            <div className="text-3xl mb-2">🗺️</div>
+                            <p className="text-slate-600 font-semibold text-sm">Choose your preferred transport mode above</p>
+                            <p className="text-slate-400 text-xs mt-1">Available options will appear here once you select a mode</p>
+                          </div>
+                        )}
+
+                        {/* ── FLIGHT options ── */}
+                        {transportMode.from === 'flight' && (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2"><span className="text-lg">✈️</span> Available Flights</h4>
+                              <span className="text-xs text-slate-400">Select to add to your trip package</span>
+                            </div>
+                            {activeTrip.flightOptions?.map((fOpt, idx) => {
+                              const isActiveFlight = activeTrip.segments?.some(s => s.type === 'flight' && s.price === fOpt.price && s.detail?.includes(fOpt.flightNo))
+                              return (
+                                <div key={fOpt.id || idx} className={`bg-white border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all hover:shadow-sm ${isActiveFlight ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-400' : 'border-slate-200 hover:border-blue-200'}`}>
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0 text-lg">{fOpt.logo || '✈️'}</div>
+                                    <div className="min-w-0">
+                                      <h4 className="text-slate-900 font-bold text-sm">{fOpt.airline} <span className="text-slate-400 text-xs font-normal">({fOpt.flightNo})</span></h4>
+                                      <div className="text-slate-500 text-xs flex items-center gap-3 mt-0.5 font-mono flex-wrap">
+                                        <span>🛫 {fOpt.depart} – {fOpt.arrive}</span>
+                                        <span>⏱ {fOpt.duration}</span>
+                                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${fOpt.stops === 0 ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                                          {fOpt.stops === 0 ? 'Non-Stop' : `${fOpt.stops} Stop`}
+                                        </span>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                  <span className="text-blue-500 font-bold text-base">₹{bOpt.price.toLocaleString()}</span>
-                                  <button
-                                    onClick={() => selectBusOption(bOpt)}
-                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${isActiveBus
-                                      ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
-                                      : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:opacity-90 shadow-blue-500/10'
-                                      }`}
-                                  >
-                                    {isActiveBus ? '✓ Selected' : 'Select Bus'}
-                                  </button>
-                                </div>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* ROADWAYS TAB */}
-                    {activeTab === 'roadways' && (
-                      <motion.div key="roadways" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-display text-lg font-bold text-slate-900">Compare Roadways & Cab Hire (Price/Trip Drop)</h3>
-                          <span className="text-xs text-slate-500">Select an option to replace active roadways segment</span>
-                        </div>
-                        <div className="space-y-3">
-                          {activeTrip.roadwaysOptions?.map((rOpt, idx) => {
-                            const isActiveRoad = activeTrip.segments.some(s => s.type === 'roadways' && s.price === rOpt.price && s.detail.includes(rOpt.provider))
-                            return (
-                              <div key={rOpt.id || idx} className={`glass border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all ${isActiveRoad ? 'border-blue-500 bg-blue-500/5' : 'border-slate-200'}`}>
-                                <div className="flex items-center gap-3">
-                                  <span className="text-2xl">🚗</span>
-                                  <div>
-                                    <h4 className="text-slate-900 font-bold text-sm">{rOpt.vehicle} <span className="text-slate-400 text-xs font-normal">({rOpt.provider})</span></h4>
-                                    <p className="text-slate-500 text-xs mt-1 leading-relaxed">{rOpt.detail}</p>
+                                  <div className="flex items-center gap-3 flex-shrink-0">
+                                    <div className="text-right">
+                                      <div className="text-blue-600 font-bold text-base font-mono">₹{fOpt.price.toLocaleString()}</div>
+                                      <div className="text-[10px] text-slate-400">per person</div>
+                                    </div>
+                                    <button
+                                      onClick={() => selectFlightOption(fOpt)}
+                                      className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${isActiveFlight ? 'bg-blue-100 text-blue-600 border border-blue-200' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'}`}
+                                    >
+                                      {isActiveFlight ? '✓ Selected' : 'Select'}
+                                    </button>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                  <span className="text-blue-500 font-bold text-base">₹{rOpt.price.toLocaleString()}</span>
-                                  <button
-                                    onClick={() => selectRoadwaysOption(rOpt)}
-                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${isActiveRoad
-                                      ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
-                                      : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:opacity-90 shadow-blue-500/10'
-                                      }`}
-                                  >
-                                    {isActiveRoad ? '✓ Selected' : 'Select Roadways'}
-                                  </button>
+                              )
+                            })}
+                          </div>
+                        )}
+
+                        {/* ── TRAIN options ── */}
+                        {transportMode.from === 'train' && (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2"><span className="text-lg">🚂</span> Available Trains</h4>
+                              <span className="text-xs text-slate-400">Select to add to your trip package</span>
+                            </div>
+                            {activeTrip.trainOptions?.map((tOpt, idx) => {
+                              const isActiveTrain = activeTrip.segments?.some(s => s.type === 'train' && s.price === tOpt.price && s.detail?.includes(tOpt.trainNo))
+                              return (
+                                <div key={tOpt.id || idx} className={`bg-white border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all hover:shadow-sm ${isActiveTrain ? 'border-sky-500 bg-sky-50 ring-1 ring-sky-400' : 'border-slate-200 hover:border-sky-200'}`}>
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-100 flex items-center justify-center flex-shrink-0 text-lg">🚂</div>
+                                    <div className="min-w-0">
+                                      <h4 className="text-slate-900 font-bold text-sm">{tOpt.name} <span className="text-slate-400 text-xs font-normal">({tOpt.trainNo})</span></h4>
+                                      <div className="text-slate-500 text-xs flex items-center gap-3 mt-0.5 font-mono flex-wrap">
+                                        <span>🚉 {tOpt.depart} – {tOpt.arrive}</span>
+                                        <span>⏱ {tOpt.duration}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-3 flex-shrink-0">
+                                    <div className="text-right">
+                                      <div className="text-sky-600 font-bold text-base font-mono">₹{tOpt.price.toLocaleString()}</div>
+                                      <div className="text-[10px] text-slate-400">per person</div>
+                                    </div>
+                                    <button
+                                      onClick={() => selectTrainOption(tOpt)}
+                                      className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${isActiveTrain ? 'bg-sky-100 text-sky-600 border border-sky-200' : 'bg-sky-500 text-white hover:bg-sky-600 shadow-sm'}`}
+                                    >
+                                      {isActiveTrain ? '✓ Selected' : 'Select'}
+                                    </button>
+                                  </div>
                                 </div>
-                              </div>
-                            )
-                          })}
-                        </div>
+                              )
+                            })}
+                          </div>
+                        )}
+
+                        {/* ── BUS options ── */}
+                        {transportMode.from === 'bus' && (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2"><span className="text-lg">🚌</span> Available Buses</h4>
+                              <span className="text-xs text-slate-400">Select to add to your trip package</span>
+                            </div>
+                            {activeTrip.busOptions?.map((bOpt, idx) => {
+                              const isActiveBus = activeTrip.segments?.some(s => s.type === 'bus' && s.price === bOpt.price && s.detail?.includes(bOpt.operator))
+                              return (
+                                <div key={bOpt.id || idx} className={`bg-white border rounded-2xl p-4 flex items-center justify-between gap-4 transition-all hover:shadow-sm ${isActiveBus ? 'border-violet-500 bg-violet-50 ring-1 ring-violet-400' : 'border-slate-200 hover:border-violet-200'}`}>
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center flex-shrink-0 text-lg">🚌</div>
+                                    <div className="min-w-0">
+                                      <h4 className="text-slate-900 font-bold text-sm">{bOpt.operator} <span className="text-slate-400 text-xs font-normal">({bOpt.type})</span></h4>
+                                      <div className="text-slate-500 text-xs flex items-center gap-3 mt-0.5 font-mono flex-wrap">
+                                        <span>🚌 {bOpt.depart} – {bOpt.arrive}</span>
+                                        <span>⏱ {bOpt.duration}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-3 flex-shrink-0">
+                                    <div className="text-right">
+                                      <div className="text-violet-600 font-bold text-base font-mono">₹{bOpt.price.toLocaleString()}</div>
+                                      <div className="text-[10px] text-slate-400">per person</div>
+                                    </div>
+                                    <button
+                                      onClick={() => selectBusOption(bOpt)}
+                                      className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${isActiveBus ? 'bg-violet-100 text-violet-600 border border-violet-200' : 'bg-violet-600 text-white hover:bg-violet-700 shadow-sm'}`}
+                                    >
+                                      {isActiveBus ? '✓ Selected' : 'Select'}
+                                    </button>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+                              {/* Roadways — agent-only */}
+                              {transportMode.from === 'roadways' && (
+                                <div className="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-6 text-center">
+                                  <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center mx-auto mb-3">
+                                    <Car className="w-6 h-6 text-orange-500" />
+                                  </div>
+                                  <h4 className="font-bold text-slate-900 text-sm mb-1">Roadways / Private Transfer</h4>
+                                  <p className="text-slate-500 text-xs leading-relaxed max-w-xs mx-auto mb-4">
+                                    This option is managed by your assigned travel agent. They will arrange a private driver or cab transfer for this leg if applicable.
+                                  </p>
+                                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-50 border border-orange-100 text-orange-600 text-xs font-bold rounded-xl">
+                                    <Car className="w-3.5 h-3.5" /> Agent will coordinate this transfer
+                                  </div>
+                                </div>
+                              )}
+
                       </motion.div>
                     )}
 
@@ -1561,7 +1948,7 @@ export default function TripBuilder() {
                             const cat = getCategoryDetails(place.category)
                             const CatIcon = cat.icon
                             return (
-                              <div key={pIdx} className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-between transition-all group hover:border-blue-500/20 relative overflow-hidden bg-slate-50">
+                              <div key={pIdx} className="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col justify-between transition-all group hover:border-blue-500/20 relative overflow-hidden">
                                 <div className="flex items-start justify-between gap-2 mb-3">
                                   <div className="flex items-center gap-2">
                                     <span className="w-7 h-7 rounded-xl bg-blue-500/15 text-blue-500 font-bold text-xs flex items-center justify-center font-mono">
@@ -1628,7 +2015,7 @@ export default function TripBuilder() {
                             </h4>
                             <div className="space-y-3 max-h-[80vh] overflow-y-auto pr-1 scrollbar-thin">
                               {activeTrip.restaurants?.veg?.map((rest, rIdx) => (
-                                <div key={rIdx} className="bg-white border border-emerald-500/20 rounded-2xl p-4 relative bg-emerald-50 hover:border-emerald-500/30 transition-all">
+                                <div key={rIdx} className="bg-emerald-50 border border-emerald-500/20 rounded-2xl p-4 relative hover:border-emerald-500/30 transition-all">
                                   <div className="flex items-start justify-between mb-2">
                                     <div className="flex items-center gap-2">
                                       <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 w-5 h-5 rounded flex items-center justify-center">{(rIdx + 1)}</span>
@@ -1664,7 +2051,7 @@ export default function TripBuilder() {
                             </h4>
                             <div className="space-y-3 max-h-[80vh] overflow-y-auto pr-1 scrollbar-thin">
                               {activeTrip.restaurants?.nonVeg?.map((rest, rIdx) => (
-                                <div key={rIdx} className="bg-white border border-rose-500/20 rounded-2xl p-4 relative bg-rose-50 hover:border-rose-500/30 transition-all">
+                                <div key={rIdx} className="bg-rose-50 border border-rose-500/20 rounded-2xl p-4 relative hover:border-rose-500/30 transition-all">
                                   <div className="flex items-start justify-between mb-2">
                                     <div className="flex items-center gap-2">
                                       <span className="text-[10px] font-mono font-bold text-rose-400 bg-rose-500/10 w-5 h-5 rounded flex items-center justify-center">{(rIdx + 1)}</span>
@@ -1739,6 +2126,31 @@ export default function TripBuilder() {
                       whileTap={{ scale: 0.98 }}
                       onClick={() => {
                         localStorage.setItem('voyageai_active_trip', JSON.stringify(activeTrip))
+                        // Save as draft in My Trips
+                        const draftsRaw = localStorage.getItem('voyageai_trip_drafts')
+                        const drafts = draftsRaw ? JSON.parse(draftsRaw) : []
+                        const draftId = `draft-${Date.now()}`
+                        const newDraft = {
+                          id: draftId,
+                          status: 'draft',
+                          createdAt: new Date().toISOString(),
+                          trip: {
+                            name: activeTrip.tripName || activeTrip.name || activeTrip.destination || 'Trip Plan',
+                            destination: activeTrip.destination || activeTrip.tripName || activeTrip.name || 'Trip',
+                            duration: activeTrip.duration || '',
+                            totalCost: activeTrip.totalCost || null,
+                            segments: activeTrip.segments || [],
+                            itineraryDays: activeTrip.itineraryDays || [],
+                            placesToVisit: activeTrip.placesToVisit || [],
+                            highlights: activeTrip.highlights || [],
+                          },
+                          itinerary: activeTrip,
+                        }
+                        // Replace existing draft for same trip name or push new
+                        const existingIdx = drafts.findIndex(d => d.trip?.name === newDraft.trip.name)
+                        if (existingIdx >= 0) drafts[existingIdx] = newDraft
+                        else drafts.unshift(newDraft)
+                        localStorage.setItem('voyageai_trip_drafts', JSON.stringify(drafts))
                         navigate('/review-trip')
                       }}
                       className="w-full py-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-sm hover:bg-blue-700 transition-all flex items-center justify-center gap-2 text-sm"
