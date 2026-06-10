@@ -245,7 +245,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
               onClick={handleAccept}
               disabled={accepting}
-              className="flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 text-white disabled:opacity-60 rounded-xl" style={{background:"linear-gradient(135deg,#1A6EBD,#1558A0)"}}
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 text-white disabled:opacity-60" style={{background:"linear-gradient(135deg,#1A6EBD,#1558A0)"}}
             >
               {accepting
                 ? <RefreshCw className="w-4 h-4 animate-spin" />
@@ -255,7 +255,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
             <motion.button
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
               onClick={() => onIgnore(entry.id, entry.customer_name)}
-              className="px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 bg-white border border-slate-200 transition-all hover:border-red-300 hover:text-red-600 rounded-xl shadow-sm"
+              className="px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 bg-white border border-slate-200 transition-all hover:border-red-300 hover:text-red-600 shadow-sm"
               style={{ borderColor: 'rgba(255,255,255,0.08)', color: '#7A9BB5' }}
             >
               <EyeOff className="w-4 h-4" /> Ignore
@@ -381,7 +381,7 @@ function TripCard({ entry, onUpdate, onDelete, onAccept, onIgnore, currentUserEm
                 <div className="flex gap-2">
                   <button
                     onClick={() => onUpdate(entry.id, { status, agent_notes: notes })}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 text-white rounded-xl" style={{background:"linear-gradient(135deg,#1A6EBD,#1558A0)"}}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 text-white" style={{background:"linear-gradient(135deg,#1A6EBD,#1558A0)"}}
                   >
                     <CheckCircle className="w-4 h-4" /> Save Changes
                   </button>
