@@ -33,7 +33,7 @@ import FlightStatusPage from './pages/FlightStatusPage'
 // Phase 3
 import FinanceDashboard from './pages/FinanceDashboard'
 import InvoiceManager from './pages/InvoiceManager'
-import CancelRefundPage from './pages/CancelRefundPage'
+import CancelRefundPage from './pages/CancelRefundpage.jsx'
 import BillingManager from './pages/BillingManager'
 import RefundProcessing from './pages/RefundProcessing'
 import CorporateStatements from './pages/CorporateStatements'

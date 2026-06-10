@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import {
   Plane, Train, Bus, Car, Map, ArrowRight,
   ChevronRight, RotateCcw, AlertTriangle, CheckCircle2,
-  Calendar, MapPin, DollarSign, 
+  Calendar, MapPin, IndianRupee, 
 } from 'lucide-react'
 
 // Mock upcoming trips — replace with real data
@@ -313,7 +313,7 @@ export default function CancelRefundPage() {
                             <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                               <span className="text-xs text-slate-500 flex items-center gap-1"><MapPin className="w-3 h-3" /> {seg.from} → {seg.to}</span>
                               <span className="text-xs text-slate-500 flex items-center gap-1"><Calendar className="w-3 h-3" /> {seg.date}</span>
-                              <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1"><DollarSign className="w-3 h-3" /> {seg.price.toLocaleString()}</span>
+                              <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1"><IndianRupee className="w-3 h-3" /> {seg.price.toLocaleString()}</span>
                             </div>
                             {seg.pnr && <p className="text-[10px] text-slate-400 font-mono mt-1">PNR: {seg.pnr}</p>}
                           </div>
