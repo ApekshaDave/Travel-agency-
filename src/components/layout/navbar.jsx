@@ -14,21 +14,9 @@ import toast from 'react-hot-toast'
 
 const NAV_LINKS = []
 
-const USER_LINKS = [
-  { to: '/dashboard', label: 'My Trips', icon: LayoutDashboard },
-  { to: '/post-booking', label: 'Manage Booking', icon: RefreshCw },
-  { to: '/corporate', label: 'Corporate', icon: Building2 },
-]
+const USER_LINKS = []
 
-const STAFF_LINKS = [
-  { to: '/agent', label: 'Agent Desk', icon: AlertTriangle },
-  { to: '/agent/trips', label: 'Trip Requests', icon: Users },
-  { to: '/finance', label: 'Finance Office', icon: DollarSign },
-  { to: '/finance/invoices', label: 'Invoices', icon: FileText },
-  { to: '/finance/billing', label: 'Billing', icon: DollarSign },
-  { to: '/finance/refunds', label: 'Refunds', icon: RefreshCw },
-  { to: '/finance/notifications', label: 'Admin Alerts', icon: Bell },
-]
+const STAFF_LINKS = []
 
 function GenericDropdown({ label, links, active, isStaff }) {
   const [open, setOpen] = useState(false)

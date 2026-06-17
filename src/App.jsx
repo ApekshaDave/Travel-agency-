@@ -59,9 +59,7 @@ export default function App() {
             <ErrorBoundary showDetail={true}>
               <Routes>
                 {/* Phase 1 */}
-                <Route path="/" element={<HomePage />} />
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/flights" element={<SearchPage />} />
+                <Route path="/" element={<ChatPage />} />
                 <Route path="/book" element={<BookingPage />} />
                 <Route path="/chat" element={<ChatPage />} />
                 <Route
